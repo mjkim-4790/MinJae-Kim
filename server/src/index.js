@@ -12,7 +12,8 @@ if (isProd && config.sessionSecret === 'dev-only-insecure-secret-change-me') {
 const app = createApp();
 const httpServer = http.createServer(app);
 
-createRealtime(httpServer);
+const io = createRealtime(httpServer);
+app.set('io', io); // REST 라우트에서 실시간 브로드캐스트가 필요할 때 사용 (예: 팀 배정)
 
 httpServer.listen(config.port, () => {
   console.log(`[server] ${config.env} · http://localhost:${config.port}`);
@@ -20,7 +21,13 @@ httpServer.listen(config.port, () => {
 
 const shutdown = (signal) => {
   console.log(`[server] ${signal} 수신 — 종료합니다`);
-  httpServer.close(() => process.exit(0));
+  // 열려 있는 소켓(운영자/참여자/스크린 탭)이 남아있으면 httpServer.close() 콜백이
+  // 영원히 안 불릴 수 있어 io.close()로 전부 끊어준다. 그래도 안 끝나면 강제 종료.
+  const forceExit = setTimeout(() => process.exit(0), 3000);
+  io.close(() => {
+    clearTimeout(forceExit);
+    process.exit(0);
+  });
 };
 
 process.on('SIGINT', () => shutdown('SIGINT'));

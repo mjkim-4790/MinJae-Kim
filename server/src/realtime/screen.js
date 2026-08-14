@@ -2,7 +2,7 @@ import { isAuthorizedOperator } from './authz.js';
 import { getOrCreateState } from './eventState.js';
 import { normalizeEventCode, roleRoom } from './rooms.js';
 
-const VALID_MODES = new Set(['logo', 'qr']);
+const VALID_MODES = new Set(['logo', 'qr', 'ranking']);
 
 export function registerScreenHandlers(io, socket) {
   socket.on('screen:setMode', (payload = {}, ack) => {

@@ -8,6 +8,7 @@ import {
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 import { getRpsSnapshot, getYourChoice } from './rps.js';
+import { buildScoreboard } from './scoreboard.js';
 
 // 참여자 소켓 재접속/중복접속 처리 (설계문서 §4.3, §7-2)
 //   - 닉네임+숫자4자리 = 재접속 키. 서버 재시작에도 살아남도록 DB(participants)에 저장.
@@ -86,6 +87,7 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       chat: publicChatState(state),
       rps: getRpsSnapshot(code),
       yourRpsChoice: getYourChoice(code, participant.id),
+      scoreboard: buildScoreboard(event.id),
     });
     await broadcastPresence(io, code);
   });

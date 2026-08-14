@@ -2,7 +2,7 @@
 
 모든 작업의 기준 문서: [레크레이션웹_전체구조_설계문서_1.md](레크레이션웹_전체구조_설계문서_1.md)
 
-현재 진행 상태: **Phase 3 — 가위바위보 게임 완료**
+현재 진행 상태: **Phase 4 — 점수/순위 시스템 완료**
 
 ---
 
@@ -84,21 +84,22 @@ npm run build && npm start
 │       │   ├── index.js       better-sqlite3 연결 + 마이그레이션
 │       │   ├── operators.js
 │       │   ├── events.js      4자리 코드 발급 포함
-│       │   └── participants.js
+│       │   └── participants.js  점수 부여·팀 자동배정·팀 합산 쿼리 포함
 │       ├── game/
 │       │   └── rpsEngine.js   가위바위보 판정 순수 함수 (소켓/DB 와 무관, 단위 검증됨)
 │       ├── routes/
 │       │   ├── auth.js        로그인/로그아웃/me
-│       │   └── events.js      이벤트 CRUD·이력 (gameRecords 포함)
+│       │   └── events.js      이벤트 CRUD·이력·팀 자동배정 (gameRecords 포함)
 │       └── realtime/
 │           ├── index.js       소켓 연결 처리, 운영자 세션 인증, 접속 현황 브로드캐스트
 │           ├── rooms.js       룸 이름 규칙 (event:CODE:role)
 │           ├── authz.js       운영자 권한 액션 검증 (isAuthorizedOperator)
 │           ├── players.js     참여자 입장/재접속/중복접속 처리
 │           ├── eventState.js  이벤트별 실시간 상태(스크린 모드/채팅/메시지, 메모리)
-│           ├── screen.js      스크린 모드 전환(로고 ↔ QR)
+│           ├── screen.js      스크린 모드 전환(로고 ↔ QR ↔ 순위)
 │           ├── messages.js    실시간 메시지 송출/고정/삭제/채팅토글
-│           └── rps.js         가위바위보 게임 상태 머신 (§6, 메모리) + game_records 저장
+│           ├── rps.js         가위바위보 게임 상태 머신 (§6, 메모리) + 종료 시 점수 반영
+│           └── scoreboard.js  개인/팀 순위 스냅샷 계산 + scoreboard:update 브로드캐스트
 └── client/                  React + Vite + Socket.IO Client
     └── src/
         ├── App.jsx           3화면 라우팅 (운영자는 중첩 라우트)
@@ -108,14 +109,16 @@ npm run build && npm start
         │   ├── useRealtimeSession.js  역할별 룸 접속 + presence + 초기 상태
         │   ├── usePlayerConnection.js 참여자 입장/자동 재접속
         │   ├── useChat.js             실시간 메시지 상태/액션 (운영자·참여자 공용)
-        │   └── useRpsGame.js          가위바위보 상태 동기화 + 액션 (역할 공용)
-        ├── components/        StatusBar, QrCode, RequireOperator, ChatPanel
+        │   ├── useRpsGame.js          가위바위보 상태 동기화 + 액션 (역할 공용)
+        │   └── useScoreboard.js       개인/팀 순위 상태 동기화 (역할 공용)
+        ├── components/        StatusBar, QrCode, RequireOperator, ChatPanel, RankingBoard
         │   └── rps/            RpsOperatorPanel, RpsPlayerView, RpsScreenView
         └── routes/
             ├── Home.jsx
-            ├── operator/       Login, Events(목록), NewEvent, EventDetail(메시지·스크린·게임 제어)
-            ├── player/         PlayerJoin (프로필 설정 + 대기화면 + 메시지 + 게임)
-            └── screen/         ScreenView (로고/QR 대기화면 ↔ 게임 연출 자동 전환)
+            ├── operator/       Login, Events(목록), NewEvent,
+            │                   EventDetail(메시지·스크린·게임·팀배정·순위 제어)
+            ├── player/         PlayerJoin (프로필 설정 + 대기화면 + 메시지 + 게임 + 순위)
+            └── screen/         ScreenView (로고/QR/순위 대기화면 ↔ 게임 연출 자동 전환)
 ```
 
 ### 룸 규칙 (설계문서 §3.2)
@@ -176,6 +179,26 @@ event:1234:screen     스크린 전용
 - 재접속 시 `player:join` 응답에 게임 스냅샷과 "이번 라운드 내 선택값"을 함께 내려줘
   새로고침해도 같은 화면으로 복원된다.
 
+### 점수/순위 시스템 (설계문서 §9 결정, Phase 4)
+
+- **점수**: 게임(현재 가위바위보)의 최종 승자에게만 동일 점수(기본 100점) 부여,
+  중도 탈락자는 0점. `realtime/rps.js` 의 `ended` 분기에서 `db/participants.js`
+  의 `addScore` 를 호출하고 즉시 `scoreboard:update` 를 브로드캐스트한다.
+- **팀 배정**: 자동 랜덤. `POST /api/events/:id/teams/assign` (팀 수 2~10, 참여자
+  수보다 많으면 거부)에 현재 활성 참여자를 셔플해 균등 배분. 다시 호출하면 전체
+  재배정. 팀 순위는 팀원 개인 점수 합산(`listTeamScores`, SQL `GROUP BY team_id`).
+- **실시간 동기화**: `session:hello`/`player:join` 응답에 `scoreboard` 스냅샷을
+  포함해 재접속 시 즉시 복원되고, 이후 점수가 바뀔 때마다 `scoreboard:update` 로
+  운영자·참여자·스크린 전원에게 브로드캐스트된다 (`realtime/scoreboard.js`).
+- **화면별 표시**: 운영자 화면은 개인 순위 패널 + 참여자 표의 팀/점수 컬럼이 실시간
+  갱신되고, 참여자 화면은 "내 누적 점수"와 순위 목록이 실시간 갱신되며, 대형
+  스크린은 MC 가 "순위 표시" 모드로 전환하면(팀전이면 팀 순위, 개인전이면 개인
+  순위) 큰 화면으로 보여준다. 게임이 진행 중이면 게임 연출이 순위 모드보다
+  우선한다.
+- **운영 안정성 보완**: `httpServer.close()` 가 열려 있는 소켓(브라우저 탭)
+  때문에 영원히 안 끝나는 문제를 발견해, `io.close()` + 3초 강제 종료 타임아웃으로
+  교체했다 (재배포·재시작 시 행 걸림 방지).
+
 ---
 
 ## Phase 0 에서 확인된 것
@@ -222,7 +245,20 @@ event:1234:screen     스크린 전용
       condition) 발견 후 수정 — 뒤늦게 도착하는 초기 확인 결과가 방금 로그인한
       상태를 덮어쓰지 않도록 `settledRef` 가드 추가
 
-## 다음 (Phase 4 — 점수/순위 시스템)
+## Phase 4 에서 확인된 것
 
-누적 점수, 게임별 순위, 개인전/팀전, 스크린 순위 연출. 가위바위보 승리 시 부여할
-점수와 게임별 점수 배분 규칙(§9 미결)을 이 단계에서 결정.
+- [x] 소켓 스모크 테스트 15건(점수 부여, 팀 균등 배정, 검증 로직, 브로드캐스트,
+      재접속 스냅샷 복원 포함) — 전부 통과
+- [x] 브라우저 E2E: 4명 참여 → 2팀 자동 배정(2/2 균등) → RPS 게임 완주 → 승자 팀에
+      100점 반영 → 운영자·참여자·대형 스크린 3화면 모두 실시간 순위 갱신 확인
+- [x] 개인전/팀전 각각 순위 화면 확인 (팀전은 팀 합산, 개인전은 개인별)
+- [x] `screen:setMode('ranking')` 대형 스크린 순위 모드 검증
+- [x] 실제 버그 2건 발견 후 수정:
+      1. 대형 스크린용 `event` 스냅샷에 `mode` 필드가 빠져 있어 팀전 순위 모드가
+         팀 합산이 아니라 개인별로 잘못 표시되던 문제
+      2. 소켓 연결이 남아있으면 서버 graceful shutdown 이 끝나지 않던 문제
+         (`io.close()` + 타임아웃으로 교체)
+
+## 다음 (Phase 5 — 디자인 적용)
+
+/apple-design 스킬로 3화면 전체 스타일링.

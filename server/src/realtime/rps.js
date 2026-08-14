@@ -1,12 +1,16 @@
 import { createGameRecord } from '../db/gameRecords.js';
 import { getEventByCode } from '../db/events.js';
-import { getParticipantById, listParticipantsByEvent } from '../db/participants.js';
+import { addScore, getParticipantById, listParticipantsByEvent } from '../db/participants.js';
 import { CHOICES, judgeRound, resolveBranch } from '../game/rpsEngine.js';
 import { isAuthorizedOperator } from './authz.js';
 import { eventRoom, normalizeEventCode } from './rooms.js';
+import { broadcastScoreboard } from './scoreboard.js';
 
 // 가위바위보 서바이벌 토너먼트 실시간 상태 (설계문서 §6). 이벤트별 서버 메모리에 둔다 (§4.2).
 // 최종 결과만 game_records 에 영구 저장한다.
+
+// 최종 승자에게만 동일 점수 부여, 중도 탈락자는 0점 (§9 결정)
+const WIN_POINTS = 100;
 
 const games = new Map(); // eventCode -> RpsGameState
 const THROTTLE_MS = 200; // §7-3 동시 입력 폭주 대비
@@ -230,15 +234,18 @@ export function registerRpsHandlers(io, socket) {
 
       const event = getEventByCode(code);
       if (event) {
+        branch.finalWinnerIds.forEach((id) => addScore(id, WIN_POINTS));
         createGameRecord({
           eventId: event.id,
           gameType: 'rps',
           result: {
             targetWinners: state.targetWinners,
             rounds: state.round,
+            pointsAwarded: WIN_POINTS,
             finalWinners: branch.finalWinnerIds.map(toParticipantRef),
           },
         });
+        broadcastScoreboard(io, code, event.id);
       }
     } else {
       state.activePool = branch.nextActivePool;

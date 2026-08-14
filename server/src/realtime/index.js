@@ -8,6 +8,7 @@ import { getOrCreateState, publicChatState } from './eventState.js';
 import { clearPlayerSocket, registerPlayerHandlers } from './players.js';
 import { registerMessageHandlers } from './messages.js';
 import { getRpsSnapshot, registerRpsHandlers } from './rps.js';
+import { buildScoreboard } from './scoreboard.js';
 import {
   countInRoom,
   eventRoom,
@@ -87,10 +88,12 @@ export function createRealtime(httpServer) {
         response.chat = publicChatState(state);
         response.screenMode = state.screenMode;
         response.rps = getRpsSnapshot(code);
+        if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {
             code: event.code,
             name: event.name,
+            mode: event.mode,
             logoUrl: event.logo_path ? `/uploads/${event.logo_path}` : null,
           };
         }

@@ -3,16 +3,23 @@ import { Link, useParams } from 'react-router-dom';
 
 import ChatPanel from '../../components/ChatPanel.jsx';
 import QrCode from '../../components/QrCode.jsx';
+import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
 import { useChat } from '../../hooks/useChat.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
+import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { socket } from '../../lib/socket.js';
 import { api } from '../../lib/api.js';
 
 const STATUS_LABEL = { scheduled: '대기', active: '진행중', ended: '종료' };
 const MODE_LABEL = { individual: '개인전', team: '팀전' };
-const SCREEN_MODE_LABEL = { logo: '로고 대기화면', qr: 'QR/코드 표시' };
+const SCREEN_MODE_LABEL = { logo: '로고 대기화면', qr: 'QR/코드 표시', ranking: '순위 표시' };
+const TEAM_ERROR_MESSAGE = {
+  INVALID_TEAM_COUNT: '팀 수를 2~10 사이로 입력하세요',
+  TOO_MANY_TEAMS: '팀 수가 참여자 수보다 많습니다',
+  NO_PARTICIPANTS: '아직 참여자가 없습니다',
+};
 
 export default function OperatorEventDetail() {
   const { id } = useParams();
@@ -38,6 +45,23 @@ export default function OperatorEventDetail() {
   const { presence, init } = useRealtimeSession('operator', event?.code);
   const chat = useChat(event?.code, init?.chat, true);
   const rpsGame = useRpsGame({ eventCode: event?.code, initialState: init?.rps });
+  const scoreboard = useScoreboard(init?.scoreboard);
+
+  const [teamCount, setTeamCount] = useState(2);
+  const [teamBusy, setTeamBusy] = useState(false);
+  const [teamError, setTeamError] = useState(null);
+  const assignTeams = async () => {
+    setTeamBusy(true);
+    setTeamError(null);
+    try {
+      await api.assignTeams(id, teamCount);
+      load();
+    } catch (err) {
+      setTeamError(TEAM_ERROR_MESSAGE[err.code] ?? '팀 배정에 실패했습니다');
+    } finally {
+      setTeamBusy(false);
+    }
+  };
 
   const [screenMode, setScreenModeState] = useState(null);
   useEffect(() => {
@@ -74,6 +98,7 @@ export default function OperatorEventDetail() {
   }
 
   const joinUrl = `${window.location.origin}/join/${event.code}`;
+  const scoreById = new Map(scoreboard.participants.map((p) => [p.id, p]));
 
   return (
     <main className="page">
@@ -152,7 +177,47 @@ export default function OperatorEventDetail() {
           >
             QR/코드 표시
           </button>
+          <button
+            className={screenMode === 'ranking' ? 'button' : 'button button--ghost'}
+            onClick={() => setScreenMode('ranking')}
+          >
+            순위 표시
+          </button>
         </div>
+      </section>
+
+      {event.mode === 'team' && (
+        <section className="panel stack">
+          <h2 className="panel__title">팀 자동 배정</h2>
+          <p className="subtitle">
+            현재 참여자를 무작위로 균등하게 팀에 배정합니다. 다시 누르면 전체를 새로
+            섞어 재배정합니다.
+          </p>
+          <div className="operator-topbar__actions">
+            <input
+              className="input"
+              type="number"
+              min={2}
+              max={10}
+              value={teamCount}
+              onChange={(e) => setTeamCount(Number(e.target.value))}
+              style={{ maxWidth: 100 }}
+            />
+            <button className="button" disabled={teamBusy} onClick={assignTeams}>
+              자동 배정
+            </button>
+          </div>
+          {teamError && <p className="error-text">{teamError}</p>}
+        </section>
+      )}
+
+      <section className="panel stack">
+        <h2 className="panel__title">순위</h2>
+        <RankingBoard
+          participants={scoreboard.participants}
+          teamScores={scoreboard.teamScores}
+          mode={event.mode}
+        />
       </section>
 
       <section className="panel stack">
@@ -198,20 +263,25 @@ export default function OperatorEventDetail() {
             <thead>
               <tr>
                 <th>닉네임</th>
+                {event.mode === 'team' && <th>팀</th>}
                 <th>점수</th>
                 <th>상태</th>
                 <th>참여 시각</th>
               </tr>
             </thead>
             <tbody>
-              {participants.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.nickname}</td>
-                  <td>{p.score}</td>
-                  <td>{p.status}</td>
-                  <td>{new Date(p.joinedAt).toLocaleString('ko-KR')}</td>
-                </tr>
-              ))}
+              {participants.map((p) => {
+                const live = scoreById.get(p.id);
+                return (
+                  <tr key={p.id}>
+                    <td>{p.nickname}</td>
+                    {event.mode === 'team' && <td>{live?.teamId ? `${live.teamId}팀` : '-'}</td>}
+                    <td>{live?.score ?? p.score}</td>
+                    <td>{p.status}</td>
+                    <td>{new Date(p.joinedAt).toLocaleString('ko-KR')}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

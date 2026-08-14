@@ -627,3 +627,69 @@ a.button--ghost {
   max-width: 80vw;
   text-align: center;
 }
+
+/* 순위 (Phase 4) */
+
+.ranking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.ranking-rank {
+  width: 24px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+}
+
+.ranking-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.ranking-score {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.ranking-list--large {
+  gap: 16px;
+  width: min(700px, 90vw);
+}
+
+.ranking-list--large .ranking-item {
+  padding: 18px 24px;
+  border-radius: 16px;
+}
+
+.ranking-list--large .ranking-rank {
+  width: 44px;
+  font-size: clamp(20px, 3vw, 32px);
+}
+
+.ranking-list--large .ranking-name {
+  font-size: clamp(18px, 2.6vw, 28px);
+}
+
+.ranking-list--large .ranking-score {
+  font-size: clamp(18px, 2.6vw, 28px);
+}
+
+.ranking-list--large .ranking-item:first-child {
+  border-color: var(--warn);
+  background: #fdf3d0;
+}

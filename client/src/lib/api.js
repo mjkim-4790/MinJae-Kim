@@ -30,4 +30,9 @@ export const api = {
   createEvent: (formData) => request('/events', { method: 'POST', body: formData }),
   startEvent: (id) => request(`/events/${id}/start`, { method: 'POST' }),
   endEvent: (id) => request(`/events/${id}/end`, { method: 'POST' }),
+  assignTeams: (id, teamCount) =>
+    request(`/events/${id}/teams/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ teamCount }),
+    }),
 };

@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import ChatPanel from '../../components/ChatPanel.jsx';
+import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
 import { useChat } from '../../hooks/useChat.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
+import { useScoreboard } from '../../hooks/useScoreboard.js';
 
 const ERROR_MESSAGE = {
   EVENT_NOT_FOUND: '존재하지 않거나 종료된 코드입니다',
@@ -30,6 +32,7 @@ export default function PlayerJoin() {
     chat: initialChat,
     rps: initialRps,
     yourRpsChoice: initialYourRpsChoice,
+    scoreboard: initialScoreboard,
     error,
     join,
   } = usePlayerConnection(code);
@@ -40,6 +43,8 @@ export default function PlayerJoin() {
     initialState: initialRps,
     initialYourChoice: initialYourRpsChoice,
   });
+  const scoreboard = useScoreboard(initialScoreboard);
+  const myScore = scoreboard.participants.find((p) => p.id === participant?.id)?.score ?? 0;
 
   const [nickname, setNickname] = useState('');
   const [pin, setPin] = useState('');
@@ -88,11 +93,20 @@ export default function PlayerJoin() {
         <section className="panel stack">
           <h2 className="panel__title">내 누적 점수</h2>
           <p className="title" style={{ fontSize: 40 }}>
-            {participant?.score ?? 0}
+            {myScore}
           </p>
         </section>
 
         <RpsPlayerView game={rpsGame} participantId={participant?.id} />
+
+        <section className="panel stack">
+          <h2 className="panel__title">순위</h2>
+          <RankingBoard
+            participants={scoreboard.participants}
+            teamScores={scoreboard.teamScores}
+            mode={event?.mode}
+          />
+        </section>
 
         <section className="panel stack">
           <h2 className="panel__title">실시간 메시지</h2>
