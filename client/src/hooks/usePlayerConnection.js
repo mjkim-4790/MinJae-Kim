@@ -14,6 +14,7 @@ export function usePlayerConnection(eventCode) {
   const [status, setStatus] = useState('idle'); // idle | connecting | joined | reconnecting | kicked | error
   const [participant, setParticipant] = useState(null);
   const [event, setEvent] = useState(null);
+  const [chat, setChat] = useState(null);
   const [error, setError] = useState(null);
 
   const identityRef = useRef(null); // {nickname, pin} — 재연결 시 재사용
@@ -27,6 +28,7 @@ export function usePlayerConnection(eventCode) {
             identityRef.current = { nickname, pin };
             setParticipant(res.participant);
             setEvent(res.event);
+            setChat(res.chat);
             setError(null);
             setStatus('joined');
           } else {
@@ -81,5 +83,5 @@ export function usePlayerConnection(eventCode) {
     };
   }, [performJoin]);
 
-  return { status, participant, event, error, join };
+  return { status, participant, event, chat, error, join };
 }

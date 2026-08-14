@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import ChatPanel from '../../components/ChatPanel.jsx';
+import { useChat } from '../../hooks/useChat.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
 
 const ERROR_MESSAGE = {
@@ -19,7 +21,8 @@ function storageKey(code) {
 
 export default function PlayerJoin() {
   const { code } = useParams();
-  const { status, participant, event, error, join } = usePlayerConnection(code);
+  const { status, participant, event, chat: initialChat, error, join } = usePlayerConnection(code);
+  const chat = useChat(code, initialChat, false);
 
   const [nickname, setNickname] = useState('');
   const [pin, setPin] = useState('');
@@ -70,6 +73,18 @@ export default function PlayerJoin() {
           <p className="title" style={{ fontSize: 40 }}>
             {participant?.score ?? 0}
           </p>
+        </section>
+
+        <section className="panel stack">
+          <h2 className="panel__title">실시간 메시지</h2>
+          <ChatPanel
+            messages={chat.messages}
+            pinnedMessage={chat.pinnedMessage}
+            chatEnabled={chat.chatEnabled}
+            autoScroll={chat.autoScroll}
+            canSend={chat.chatEnabled}
+            onSend={chat.sendMessage}
+          />
         </section>
 
         <p className="subtitle">

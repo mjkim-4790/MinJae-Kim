@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import ChatPanel from '../../components/ChatPanel.jsx';
 import QrCode from '../../components/QrCode.jsx';
+import { useChat } from '../../hooks/useChat.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
+import { socket } from '../../lib/socket.js';
 import { api } from '../../lib/api.js';
 
 const STATUS_LABEL = { scheduled: '대기', active: '진행중', ended: '종료' };
 const MODE_LABEL = { individual: '개인전', team: '팀전' };
+const SCREEN_MODE_LABEL = { logo: '로고 대기화면', qr: 'QR/코드 표시' };
 
 export default function OperatorEventDetail() {
   const { id } = useParams();
@@ -29,7 +33,20 @@ export default function OperatorEventDetail() {
   useEffect(load, [load]);
 
   // 이 이벤트의 실제 코드로 운영자 룸에 접속 — 참여자/스크린과 같은 룸에서 접속 현황을 본다
-  const { presence } = useRealtimeSession('operator', event?.code);
+  const { presence, init } = useRealtimeSession('operator', event?.code);
+  const chat = useChat(event?.code, init?.chat, true);
+
+  const [screenMode, setScreenModeState] = useState(null);
+  useEffect(() => {
+    if (init?.screenMode) setScreenModeState(init.screenMode);
+  }, [init]);
+  useEffect(() => {
+    const onMode = ({ mode }) => setScreenModeState(mode);
+    socket.on('screen:mode', onMode);
+    return () => socket.off('screen:mode', onMode);
+  }, []);
+  const setScreenMode = (mode) =>
+    socket.emit('screen:setMode', { eventCode: event.code, mode }, () => {});
 
   const runAction = async (action) => {
     setBusy(true);
@@ -114,6 +131,43 @@ export default function OperatorEventDetail() {
           </Link>
         </div>
         {error && <p className="error-text">{error}</p>}
+      </section>
+
+      <section className="panel stack">
+        <h2 className="panel__title">대형 스크린 화면</h2>
+        <p className="subtitle">현재: {SCREEN_MODE_LABEL[screenMode] ?? '불러오는 중…'}</p>
+        <div className="operator-topbar__actions">
+          <button
+            className={screenMode === 'logo' ? 'button' : 'button button--ghost'}
+            onClick={() => setScreenMode('logo')}
+          >
+            로고 대기화면
+          </button>
+          <button
+            className={screenMode === 'qr' ? 'button' : 'button button--ghost'}
+            onClick={() => setScreenMode('qr')}
+          >
+            QR/코드 표시
+          </button>
+        </div>
+      </section>
+
+      <section className="panel stack">
+        <h2 className="panel__title">실시간 메시지</h2>
+        <ChatPanel
+          messages={chat.messages}
+          pinnedMessage={chat.pinnedMessage}
+          chatEnabled={chat.chatEnabled}
+          autoScroll={chat.autoScroll}
+          canSend
+          onSend={chat.sendMessage}
+          moderator={{
+            onPin: chat.pinMessage,
+            onDelete: chat.deleteMessage,
+            onToggleChat: chat.setChatEnabled,
+            onToggleAutoScroll: chat.setAutoScroll,
+          }}
+        />
       </section>
 
       <section className="panel stack">

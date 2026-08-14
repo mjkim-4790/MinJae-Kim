@@ -5,6 +5,7 @@ import {
   findParticipant,
   touchLastSeen,
 } from '../db/participants.js';
+import { getOrCreateState, publicChatState } from './eventState.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 
 // 참여자 소켓 재접속/중복접속 처리 (설계문서 §4.3, §7-2)
@@ -71,13 +72,17 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
     socket.data.role = 'player';
     socket.data.eventCode = code;
     socket.data.participantId = participant.id;
+    socket.data.participantNickname = participant.nickname;
     socket.join(eventRoom(code));
     socket.join(roleRoom(code, 'player'));
+
+    const state = getOrCreateState(code, { logoUrl: event.logo_path });
 
     reply({
       ok: true,
       participant: publicParticipant(participant, { reconnected }),
       event: publicEvent(event),
+      chat: publicChatState(state),
     });
     await broadcastPresence(io, code);
   });

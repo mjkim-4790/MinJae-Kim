@@ -14,6 +14,8 @@ const byOperatorStmt = db.prepare(
 const byActiveCodeStmt = db.prepare(
   `SELECT * FROM events WHERE code = ? AND status != 'ended' ORDER BY id DESC LIMIT 1`,
 );
+// 상태 무관하게 코드로 최신 이벤트 찾기 — 운영자 소켓 권한 확인, 스크린 초기 정보 조회용
+const byAnyCodeStmt = db.prepare(`SELECT * FROM events WHERE code = ? ORDER BY id DESC LIMIT 1`);
 const setStatusStmt = db.prepare(
   `UPDATE events SET status = @status, ended_at = @endedAt WHERE id = @id`,
 );
@@ -58,6 +60,10 @@ export function getEventById(id) {
 
 export function getJoinableEventByCode(code) {
   return byActiveCodeStmt.get(code) ?? null;
+}
+
+export function getEventByCode(code) {
+  return byAnyCodeStmt.get(code) ?? null;
 }
 
 export function listEventsByOperator(operatorId) {

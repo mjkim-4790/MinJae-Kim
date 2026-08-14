@@ -2,7 +2,7 @@
 
 모든 작업의 기준 문서: [레크레이션웹_전체구조_설계문서_1.md](레크레이션웹_전체구조_설계문서_1.md)
 
-현재 진행 상태: **Phase 1 — 이벤트/입장 시스템 완료**
+현재 진행 상태: **Phase 2 — 실시간 기반 완료**
 
 ---
 
@@ -89,23 +89,28 @@ npm run build && npm start
 │       │   ├── auth.js        로그인/로그아웃/me
 │       │   └── events.js      이벤트 CRUD·이력
 │       └── realtime/
-│           ├── index.js       소켓 연결 처리, 접속 현황 브로드캐스트
+│           ├── index.js       소켓 연결 처리, 운영자 세션 인증, 접속 현황 브로드캐스트
 │           ├── rooms.js       룸 이름 규칙 (event:CODE:role)
-│           └── players.js     참여자 입장/재접속/중복접속 처리
+│           ├── authz.js       운영자 권한 액션 검증 (isAuthorizedOperator)
+│           ├── players.js     참여자 입장/재접속/중복접속 처리
+│           ├── eventState.js  이벤트별 실시간 상태(스크린 모드/채팅/메시지, 메모리)
+│           ├── screen.js      스크린 모드 전환(로고 ↔ QR)
+│           └── messages.js    실시간 메시지 송출/고정/삭제/채팅토글
 └── client/                  React + Vite + Socket.IO Client
     └── src/
         ├── App.jsx           3화면 라우팅 (운영자는 중첩 라우트)
         ├── lib/{api,socket}.js
         ├── hooks/
         │   ├── useAuth.jsx            운영자 로그인 상태 컨텍스트
-        │   ├── useRealtimeSession.js  역할별 룸 접속 + presence
-        │   └── usePlayerConnection.js 참여자 입장/자동 재접속
-        ├── components/        StatusBar, QrCode, RequireOperator
+        │   ├── useRealtimeSession.js  역할별 룸 접속 + presence + 초기 상태
+        │   ├── usePlayerConnection.js 참여자 입장/자동 재접속
+        │   └── useChat.js             실시간 메시지 상태/액션 (운영자·참여자 공용)
+        ├── components/        StatusBar, QrCode, RequireOperator, ChatPanel
         └── routes/
             ├── Home.jsx
-            ├── operator/       Login, Events(목록), NewEvent, EventDetail
-            ├── player/         PlayerJoin (프로필 설정 + 대기화면)
-            └── screen/         ScreenView (QR/코드 대기화면)
+            ├── operator/       Login, Events(목록), NewEvent, EventDetail(메시지·스크린 제어)
+            ├── player/         PlayerJoin (프로필 설정 + 대기화면 + 메시지)
+            └── screen/         ScreenView (로고/QR 대기화면, 실시간 전환)
 ```
 
 ### 룸 규칙 (설계문서 §3.2)
@@ -127,6 +132,22 @@ event:1234:screen     스크린 전용
 - 같은 신원으로 다른 기기가 접속하면 이전 소켓은 `player:kicked` 를 받고 끊긴다
   (한 사람 = 한 연결).
 - 종료된 이벤트 코드로는 재입장이 거부된다 (`EVENT_NOT_FOUND`).
+
+### 운영자 소켓 권한 (설계문서 §7-4, Phase 2)
+
+- HTTP 로그인 세션을 소켓 핸드셰이크에서도 읽는다 (`io.engine.use(sessionMiddleware)`).
+- `role: 'operator'` 로 `session:hello` 하면 로그인 여부 + 이벤트 소유권을 확인하고,
+  통과해야 `socket.data.isAuthenticatedOperator` 가 켜진다.
+- 스크린 모드 전환·메시지 고정/삭제·채팅 토글은 이 플래그 + 이벤트 코드 일치를 검사한다
+  (`realtime/authz.js`). 로그인 안 한 소켓이나 다른 MC 는 전부 `FORBIDDEN`.
+
+### 실시간 메시지 (설계문서 §5.1·§5.2, §9 결정)
+
+- 참여자 닉네임을 표시하고, MC 는 메시지를 개별 삭제할 수 있다.
+- 메시지는 이벤트별 서버 메모리에 최근 200개까지 보관(§4.2, DB 에는 저장하지 않음),
+  재접속 시 `session:hello`/`player:join` 응답에 스냅샷을 함께 내려준다.
+- 대형 스크린에는 메시지를 표시하지 않는다(운영자+참여자 룸에만 브로드캐스트).
+- MC 는 채팅 비활성화 중에도 계속 메시지를 보낼 수 있다(공지 용도).
 
 ---
 
@@ -150,7 +171,19 @@ event:1234:screen     스크린 전용
 - [x] 브라우저 E2E 확인: 로그인 → 이벤트 생성 → QR 표시 → 참여자 입장 →
       실시간 접속 현황 갱신 → 새로고침 재접속 복구 → 종료 → 이력 조회
 
-## 다음 (Phase 2 — 실시간 기반)
+## Phase 2 에서 확인된 것
 
-룸 구조 위에 실시간 메시지(상단고정/자동스크롤), 스크린 대기화면 로고 표시,
-참여자 목록 실시간 푸시(현재는 수동 새로고침) 추가.
+- [x] HTTP 로그인 세션을 소켓에 연결, 운영자 역할은 로그인+이벤트 소유권 검증 통과해야 활성화
+- [x] 대형 스크린 로고 ↔ QR/코드 모드를 운영자가 실시간 전환(다른 화면들에 즉시 반영)
+- [x] 실시간 메시지 송출(닉네임 표시) · 상단 고정 · 개별 삭제 · 참여자 채팅 활성화 토글 ·
+      자동 스크롤 토글
+- [x] 메시지는 운영자·참여자 룸에만 브로드캐스트(대형 스크린에는 노출 안 함)
+- [x] 채팅 비활성화 중에도 MC 공지는 계속 가능, 참여자는 `CHAT_DISABLED` 로 차단
+- [x] 재접속(새로고침) 시 메시지 이력·고정·채팅 상태 스냅샷 복원
+- [x] 브라우저 3탭(운영자/참여자/스크린) E2E: 메시지 송수신·고정·삭제·채팅토글·
+      스크린모드 전환이 모두 실시간으로 다른 화면에 반영되는지 확인
+
+## 다음 (Phase 3 — 가위바위보 게임)
+
+§6 상태 머신(설정→선택중→운영자 선택→결과→루프/종료) 구현, 3화면 연동, 엣지 케이스
+(전멸 재대결, 패자부활전) 처리.
