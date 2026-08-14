@@ -54,7 +54,7 @@ export default function ChatPanel({
       {pinnedMessage && (
         <div className="chat__pinned">
           <span className="chat__pinned-label">📌 {pinnedMessage.authorName}</span>
-          <span>{pinnedMessage.text}</span>
+          <span className="chat__pinned-text">{pinnedMessage.text}</span>
           {moderator && (
             <button className="chat__icon-btn" onClick={() => moderator.onPin(pinnedMessage.id)}>
               고정 해제
