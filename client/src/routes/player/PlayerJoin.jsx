@@ -92,9 +92,7 @@ export default function PlayerJoin() {
 
         <section className="panel stack">
           <h2 className="panel__title">내 누적 점수</h2>
-          <p className="title" style={{ fontSize: 40 }}>
-            {myScore}
-          </p>
+          <p className="stat-number">{myScore}</p>
         </section>
 
         <RpsPlayerView game={rpsGame} participantId={participant?.id} />

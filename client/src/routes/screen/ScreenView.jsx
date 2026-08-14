@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 
 import QrCode from '../../components/QrCode.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
@@ -9,6 +10,9 @@ import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { socket } from '../../lib/socket.js';
+
+// 모드가 바뀔 때마다 "새 화면이 도착한다"는 느낌을 주는 크로스페이드+스케일 전환.
+const materialize = { type: 'spring', bounce: 0.15, duration: 0.5 };
 
 // 대형 스크린 (설계문서 §5.3) — 조작 없는 표시 전용 화면.
 // 대기 모드: 주최사 로고(행사 전) / 참여 QR + 코드 / 누적 순위. 게임이 진행 중이면
@@ -32,6 +36,7 @@ export default function ScreenView() {
 
   const event = init?.event;
   const gameActive = rpsGame.state.status !== 'idle';
+  const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
   if (gameActive) {
@@ -69,7 +74,17 @@ export default function ScreenView() {
   return (
     <main className="page page--screen">
       <StatusBar status={status} session={session} presence={presence} />
-      {content}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={contentKey}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.97 }}
+          transition={materialize}
+        >
+          {content}
+        </motion.div>
+      </AnimatePresence>
     </main>
   );
 }

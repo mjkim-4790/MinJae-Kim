@@ -1,4 +1,7 @@
+import { AnimatePresence, motion } from 'motion/react';
+
 import { HandIcon } from './HandIcons.jsx';
+import { springPop, springTap } from '../../lib/motionPresets.js';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
 
 function branchMessage(outcome, won) {
@@ -43,7 +46,14 @@ export default function RpsPlayerView({ game, participantId }) {
       <section className="panel stack">
         <h2 className="panel__title">가위바위보 서바이벌 — 종료</h2>
         {isFinalWinner ? (
-          <p className="rps-final-banner">🏆 최종 승자입니다!</p>
+          <motion.p
+            className="rps-final-banner"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springPop}
+          >
+            🏆 최종 승자입니다!
+          </motion.p>
         ) : (
           <p className="rps-spectator">
             게임이 종료됐습니다. 최종 승자: {state.finalWinners?.map((w) => w.nickname).join(', ')}
@@ -68,40 +78,67 @@ export default function RpsPlayerView({ game, participantId }) {
         </p>
       )}
 
-      {inRound && state.status === 'selecting' && (
-        <>
-          {yourChoice ? (
-            <div className="rps-your-choice">
+      <AnimatePresence mode="wait">
+        {inRound && state.status === 'selecting' && (
+          <motion.div
+            key={yourChoice ? 'chosen' : 'choosing'}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={springPop}
+          >
+            {yourChoice ? (
+              <div className="rps-your-choice">
+                <HandIcon choice={yourChoice} size={56} />
+                <p>선택 완료! 결과를 기다려주세요.</p>
+              </div>
+            ) : (
+              <div className="rps-choice-row">
+                {CHOICES.map((c) => (
+                  <motion.button
+                    key={c}
+                    className="rps-choice-btn"
+                    onClick={() => choose(c)}
+                    whileTap={{ scale: 0.92 }}
+                    transition={springTap}
+                  >
+                    <HandIcon choice={c} size={40} />
+                    {CHOICE_META[c].label}
+                  </motion.button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {inRound && state.status === 'locked' && (
+          <motion.div
+            key="locked"
+            className="rps-your-choice"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springPop}
+          >
+            {yourChoice ? (
               <HandIcon choice={yourChoice} size={56} />
-              <p>선택 완료! 결과를 기다려주세요.</p>
-            </div>
-          ) : (
-            <div className="rps-choice-row">
-              {CHOICES.map((c) => (
-                <button key={c} className="rps-choice-btn" onClick={() => choose(c)}>
-                  <HandIcon choice={c} size={40} />
-                  {CHOICE_META[c].label}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+            ) : (
+              <span className="rps-choice-emoji">🤔</span>
+            )}
+            <p>입력이 잠겼습니다. 두구두구…</p>
+          </motion.div>
+        )}
 
-      {inRound && state.status === 'locked' && (
-        <div className="rps-your-choice">
-          {yourChoice ? (
-            <HandIcon choice={yourChoice} size={56} />
-          ) : (
-            <span className="rps-choice-emoji">🤔</span>
-          )}
-          <p>입력이 잠겼습니다. 두구두구…</p>
-        </div>
-      )}
-
-      {state.status === 'result' && state.roundResult && (
-        <RoundResult state={state} participantId={participantId} />
-      )}
+        {state.status === 'result' && state.roundResult && (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springPop}
+          >
+            <RoundResult state={state} participantId={participantId} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

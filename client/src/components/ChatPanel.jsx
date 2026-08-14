@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+
+import { springPop, springSettle } from '../lib/motionPresets.js';
 
 /**
  * 실시간 메시지 패널. 운영자 화면(moderator=true)과 참여자 화면이 공유한다.
@@ -51,44 +54,63 @@ export default function ChatPanel({
         </div>
       )}
 
-      {pinnedMessage && (
-        <div className="chat__pinned">
-          <span className="chat__pinned-label">📌 {pinnedMessage.authorName}</span>
-          <span className="chat__pinned-text">{pinnedMessage.text}</span>
-          {moderator && (
-            <button className="chat__icon-btn" onClick={() => moderator.onPin(pinnedMessage.id)}>
-              고정 해제
-            </button>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {pinnedMessage && (
+          <motion.div
+            key={pinnedMessage.id}
+            className="chat__pinned"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={springPop}
+          >
+            <span className="chat__pinned-label">📌 {pinnedMessage.authorName}</span>
+            <span className="chat__pinned-text">{pinnedMessage.text}</span>
+            {moderator && (
+              <button className="chat__icon-btn" onClick={() => moderator.onPin(pinnedMessage.id)}>
+                고정 해제
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="chat__list" ref={listRef}>
         {messages.length === 0 && <p className="subtitle">아직 메시지가 없습니다.</p>}
-        {messages.map((m) => (
-          <div key={m.id} className={`chat__message chat__message--${m.authorType}`}>
-            <div className="chat__message-meta">
-              <span className="chat__author">{m.authorName}</span>
-              <span className="chat__time">
-                {new Date(m.createdAt).toLocaleTimeString('ko-KR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-            </div>
-            <p className="chat__text">{m.text}</p>
-            {moderator && (
-              <div className="chat__row-actions">
-                <button className="chat__icon-btn" onClick={() => moderator.onPin(m.id)}>
-                  고정
-                </button>
-                <button className="chat__icon-btn" onClick={() => moderator.onDelete(m.id)}>
-                  삭제
-                </button>
+        <AnimatePresence initial={false}>
+          {messages.map((m) => (
+            <motion.div
+              key={m.id}
+              className={`chat__message chat__message--${m.authorType}`}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={springSettle}
+            >
+              <div className="chat__message-meta">
+                <span className="chat__author">{m.authorName}</span>
+                <span className="chat__time">
+                  {new Date(m.createdAt).toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+              <p className="chat__text">{m.text}</p>
+              {moderator && (
+                <div className="chat__row-actions">
+                  <button className="chat__icon-btn" onClick={() => moderator.onPin(m.id)}>
+                    고정
+                  </button>
+                  <button className="chat__icon-btn" onClick={() => moderator.onDelete(m.id)}>
+                    삭제
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {canSend ? (

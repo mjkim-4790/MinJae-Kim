@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { MotionConfig } from 'motion/react';
 
 import RequireOperator from './components/RequireOperator.jsx';
 import Home from './routes/Home.jsx';
@@ -15,19 +16,22 @@ import ScreenView from './routes/screen/ScreenView.jsx';
 //   /screen/:code    대형 스크린 (노트북+프로젝터) — 조작 없는 표시 전용
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
+    // reducedMotion="user" — OS의 "동작 줄이기" 설정을 motion/react 애니메이션 전체에 자동 반영.
+    <MotionConfig reducedMotion="user">
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-      <Route path="/operator/login" element={<OperatorLogin />} />
-      <Route path="/operator" element={<RequireOperator />}>
-        <Route index element={<OperatorEvents />} />
-        <Route path="new" element={<OperatorNewEvent />} />
-        <Route path="events/:id" element={<OperatorEventDetail />} />
-      </Route>
+        <Route path="/operator/login" element={<OperatorLogin />} />
+        <Route path="/operator" element={<RequireOperator />}>
+          <Route index element={<OperatorEvents />} />
+          <Route path="new" element={<OperatorNewEvent />} />
+          <Route path="events/:id" element={<OperatorEventDetail />} />
+        </Route>
 
-      <Route path="/join/:code" element={<PlayerJoin />} />
-      <Route path="/screen/:code" element={<ScreenView />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="/join/:code" element={<PlayerJoin />} />
+        <Route path="/screen/:code" element={<ScreenView />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </MotionConfig>
   );
 }

@@ -1,8 +1,9 @@
-/* Phase 0 최소 스타일. 전체 디자인(/apple-design)은 Phase 5 에서 적용한다. */
+/* Phase 5 — /apple-design: 즉각적 반응, 스프링 모션, 머티리얼, 크기별 타이포그래피 */
 
 :root {
   --bg: #fcfaf5;
   --surface: #ffffff;
+  --surface-translucent: rgba(255, 255, 255, 0.72);
   --line: #e7e0d4;
   --text: #211f1c;
   --muted: #8b8478;
@@ -10,6 +11,17 @@
   --ok: #1f9e4d;
   --warn: #b4780a;
   --bad: #d92d20;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  /* 큰 카드일수록 두껍게 (§12 머티리얼 무게) */
+  --shadow-sm: 0 1px 2px rgba(33, 31, 28, 0.04), 0 1px 1px rgba(33, 31, 28, 0.03);
+  --shadow-md: 0 4px 16px rgba(33, 31, 28, 0.06), 0 1px 2px rgba(33, 31, 28, 0.04);
+  --shadow-lg: 0 12px 32px rgba(33, 31, 28, 0.10), 0 2px 6px rgba(33, 31, 28, 0.05);
+
+  --press-ease: cubic-bezier(0.32, 0.72, 0, 1);
 
   color-scheme: light;
 }
@@ -31,6 +43,19 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
     system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* 축소 모션 환경에서는 크게 움직이는 연출 대신 옅은 페이드로 (§14) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .page {
@@ -58,6 +83,7 @@ body {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .subtitle {
@@ -65,6 +91,16 @@ body {
   color: var(--muted);
   font-size: 15px;
   line-height: 1.5;
+}
+
+/* 크기가 커질수록 트래킹은 좁히고 리딩은 촘촘하게 (§15) */
+.stat-number {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .input {
@@ -87,12 +123,27 @@ body {
 .button {
   padding: 14px 18px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--accent);
   color: #fff;
   font-size: 17px;
   font-weight: 600;
   cursor: pointer;
+  transform: scale(1);
+  transition: transform 120ms var(--press-ease), background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* 누른 순간 즉시 반응 — release 를 기다리지 않는다 (§1 Response) */
+.button:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+@media (hover: hover) {
+  .button:not(:disabled):hover {
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .button:disabled {
@@ -124,9 +175,24 @@ body {
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
+  border-radius: var(--radius-sm);
   font-size: 13px;
+  /* 콘텐츠가 아래로 스크롤돼도 항상 보이는 반투명 층 (§12 머티리얼) */
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .statusbar {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 .statusbar__meta {
@@ -155,8 +221,9 @@ body {
 .panel {
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .panel__title {
@@ -310,10 +377,24 @@ a.button--ghost {
   gap: 6px;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: inherit;
   text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transform: scale(1);
+  transition: transform 120ms var(--press-ease), box-shadow 150ms ease;
+}
+
+.event-card:active {
+  transform: scale(0.98);
+  transition-duration: 80ms;
+}
+
+@media (hover: hover) {
+  .event-card:hover {
+    box-shadow: var(--shadow-md);
+  }
 }
 
 .event-card__head {

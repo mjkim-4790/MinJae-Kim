@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { HandIcon } from './HandIcons.jsx';
+import { springPop, springTap } from '../../lib/motionPresets.js';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
 
 const ERROR_MESSAGE = {
@@ -55,9 +57,14 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
     return (
       <div className="stack">
         {state.status === 'ended' && state.finalWinners && (
-          <div className="rps-final-banner">
+          <motion.div
+            className="rps-final-banner"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springPop}
+          >
             🏆 최종 승자: {state.finalWinners.map((w) => w.nickname).join(', ')}
-          </div>
+          </motion.div>
         )}
         <label className="field">
           <span className="field__label">목표 승자 수 (현재 참여자 {activeParticipantCount}명)</span>
@@ -93,73 +100,98 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
       </p>
       <p className="subtitle">참여자: {activeNicknames.join(', ') || '없음'}</p>
 
-      {state.status === 'selecting' && (
-        <div className="stack">
-          <p>
-            선택 완료 {chosenCount}/{state.activeParticipantIds.length}
-            {' '}
-            <TimerBadge timerEndsAt={state.timerEndsAt} />
-          </p>
-          <div className="operator-topbar__actions">
-            <button className="button button--ghost" disabled={busy} onClick={() => run(startTimer, 15)}>
-              모래시계 시작 (15초)
-            </button>
-            <button className="button" disabled={busy} onClick={() => run(lock)}>
-              마감
-            </button>
-          </div>
-        </div>
-      )}
-
-      {state.status === 'locked' && (
-        <div className="stack">
-          <p className="badge badge--info">참여자 입력 잠김 — 두구두구…</p>
-          <div className="rps-choice-row">
-            {CHOICES.map((c) => (
-              <button
-                key={c}
-                className={`rps-choice-btn ${operatorPick === c ? 'rps-choice-btn--active' : ''}`}
-                onClick={() => setOperatorPick(c)}
-              >
-                <HandIcon choice={c} size={40} />
-                {CHOICE_META[c].label}
-              </button>
-            ))}
-          </div>
-          <button
-            className="button"
-            disabled={busy || !operatorPick}
-            onClick={async () => {
-              const res = await run(confirm, operatorPick);
-              if (res?.ok) setOperatorPick(null);
-            }}
+      <AnimatePresence mode="wait">
+        {state.status === 'selecting' && (
+          <motion.div
+            key="selecting"
+            className="stack"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={springPop}
           >
-            확인
-          </button>
-        </div>
-      )}
+            <p>
+              선택 완료 {chosenCount}/{state.activeParticipantIds.length}
+              {' '}
+              <TimerBadge timerEndsAt={state.timerEndsAt} />
+            </p>
+            <div className="operator-topbar__actions">
+              <button className="button button--ghost" disabled={busy} onClick={() => run(startTimer, 15)}>
+                모래시계 시작 (15초)
+              </button>
+              <button className="button" disabled={busy} onClick={() => run(lock)}>
+                마감
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-      {state.status === 'result' && state.roundResult && (
-        <div className="stack">
-          <p className="rps-inline">
-            MC 의 선택: <HandIcon choice={state.operatorChoice} size={28} /> {CHOICE_META[state.operatorChoice].label}
-          </p>
-          <p className="chat__message--player" style={{ padding: 8, borderRadius: 8 }}>
-            생존: {state.roundResult.winners.map((w) => w.nickname).join(', ') || '없음'}
-          </p>
-          <p className="chat__message--operator" style={{ padding: 8, borderRadius: 8 }}>
-            탈락: {state.roundResult.nonWinners.map((w) => w.nickname).join(', ') || '없음'}
-          </p>
-          <div className="operator-topbar__actions">
-            <button className="button button--ghost" disabled={busy} onClick={() => run(restartRound)}>
-              다시 시작
+        {state.status === 'locked' && (
+          <motion.div
+            key="locked"
+            className="stack"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={springPop}
+          >
+            <p className="badge badge--info">참여자 입력 잠김 — 두구두구…</p>
+            <div className="rps-choice-row">
+              {CHOICES.map((c) => (
+                <motion.button
+                  key={c}
+                  className={`rps-choice-btn ${operatorPick === c ? 'rps-choice-btn--active' : ''}`}
+                  onClick={() => setOperatorPick(c)}
+                  whileTap={{ scale: 0.92 }}
+                  transition={springTap}
+                >
+                  <HandIcon choice={c} size={40} />
+                  {CHOICE_META[c].label}
+                </motion.button>
+              ))}
+            </div>
+            <button
+              className="button"
+              disabled={busy || !operatorPick}
+              onClick={async () => {
+                const res = await run(confirm, operatorPick);
+                if (res?.ok) setOperatorPick(null);
+              }}
+            >
+              확인
             </button>
-            <button className="button" disabled={busy} onClick={() => run(advance)}>
-              다음
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+
+        {state.status === 'result' && state.roundResult && (
+          <motion.div
+            key="result"
+            className="stack"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={springPop}
+          >
+            <p className="rps-inline">
+              MC 의 선택: <HandIcon choice={state.operatorChoice} size={28} /> {CHOICE_META[state.operatorChoice].label}
+            </p>
+            <p className="chat__message--player" style={{ padding: 8, borderRadius: 8 }}>
+              생존: {state.roundResult.winners.map((w) => w.nickname).join(', ') || '없음'}
+            </p>
+            <p className="chat__message--operator" style={{ padding: 8, borderRadius: 8 }}>
+              탈락: {state.roundResult.nonWinners.map((w) => w.nickname).join(', ') || '없음'}
+            </p>
+            <div className="operator-topbar__actions">
+              <button className="button button--ghost" disabled={busy} onClick={() => run(restartRound)}>
+                다시 시작
+              </button>
+              <button className="button" disabled={busy} onClick={() => run(advance)}>
+                다음
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && <p className="error-text">{error}</p>}
 
