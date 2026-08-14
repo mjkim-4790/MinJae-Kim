@@ -7,6 +7,7 @@ import {
   listEventsByOperator,
   setEventStatus,
 } from '../db/events.js';
+import { listGameRecordsByEvent } from '../db/gameRecords.js';
 import { listParticipantsByEvent } from '../db/participants.js';
 import { uploadLogo } from '../uploads.js';
 
@@ -82,7 +83,9 @@ eventsRouter.get('/:id', (req, res) => {
     joinedAt: p.joined_at,
   }));
 
-  res.json({ ok: true, event: toPublicEvent(event), participants });
+  const gameRecords = listGameRecordsByEvent(event.id);
+
+  res.json({ ok: true, event: toPublicEvent(event), participants, gameRecords });
 });
 
 eventsRouter.post('/:id/start', (req, res) => {

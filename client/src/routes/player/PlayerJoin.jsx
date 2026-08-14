@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import ChatPanel from '../../components/ChatPanel.jsx';
+import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
 import { useChat } from '../../hooks/useChat.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
+import { useRpsGame } from '../../hooks/useRpsGame.js';
 
 const ERROR_MESSAGE = {
   EVENT_NOT_FOUND: '존재하지 않거나 종료된 코드입니다',
@@ -21,8 +23,23 @@ function storageKey(code) {
 
 export default function PlayerJoin() {
   const { code } = useParams();
-  const { status, participant, event, chat: initialChat, error, join } = usePlayerConnection(code);
+  const {
+    status,
+    participant,
+    event,
+    chat: initialChat,
+    rps: initialRps,
+    yourRpsChoice: initialYourRpsChoice,
+    error,
+    join,
+  } = usePlayerConnection(code);
   const chat = useChat(code, initialChat, false);
+  const rpsGame = useRpsGame({
+    eventCode: code,
+    participantId: participant?.id ?? null,
+    initialState: initialRps,
+    initialYourChoice: initialYourRpsChoice,
+  });
 
   const [nickname, setNickname] = useState('');
   const [pin, setPin] = useState('');
@@ -74,6 +91,8 @@ export default function PlayerJoin() {
             {participant?.score ?? 0}
           </p>
         </section>
+
+        <RpsPlayerView game={rpsGame} participantId={participant?.id} />
 
         <section className="panel stack">
           <h2 className="panel__title">실시간 메시지</h2>

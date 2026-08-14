@@ -15,6 +15,8 @@ export function usePlayerConnection(eventCode) {
   const [participant, setParticipant] = useState(null);
   const [event, setEvent] = useState(null);
   const [chat, setChat] = useState(null);
+  const [rps, setRps] = useState(null);
+  const [yourRpsChoice, setYourRpsChoice] = useState(null);
   const [error, setError] = useState(null);
 
   const identityRef = useRef(null); // {nickname, pin} — 재연결 시 재사용
@@ -29,6 +31,8 @@ export function usePlayerConnection(eventCode) {
             setParticipant(res.participant);
             setEvent(res.event);
             setChat(res.chat);
+            setRps(res.rps);
+            setYourRpsChoice(res.yourRpsChoice ?? null);
             setError(null);
             setStatus('joined');
           } else {
@@ -83,5 +87,5 @@ export function usePlayerConnection(eventCode) {
     };
   }, [performJoin]);
 
-  return { status, participant, event, chat, error, join };
+  return { status, participant, event, chat, rps, yourRpsChoice, error, join };
 }

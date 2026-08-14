@@ -518,3 +518,106 @@ a.button--ghost {
 .chat__compose .input {
   flex: 1;
 }
+
+/* 가위바위보 서바이벌 (Phase 3) */
+
+.rps-final-banner {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fdf3d0;
+  color: var(--warn);
+  font-weight: 700;
+  font-size: 17px;
+  text-align: center;
+}
+
+.rps-choice-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rps-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 88px;
+  padding: 16px 10px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rps-choice-btn--active {
+  border-color: var(--accent);
+  background: #e4f0ff;
+}
+
+.rps-choice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rps-choice-emoji {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.rps-your-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.rps-your-choice .rps-choice-emoji {
+  font-size: 56px;
+}
+
+.rps-spectator {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--line);
+  color: var(--muted);
+  text-align: center;
+}
+
+.rps-result-line {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.rps-result-line--win {
+  background: #e3f6e9;
+  color: var(--ok);
+}
+
+.rps-result-line--lose {
+  background: #fdecea;
+  color: var(--bad);
+}
+
+/* 대형 스크린 게임 연출 */
+
+.screen__rps-emoji {
+  font-size: clamp(80px, 14vw, 180px);
+  line-height: 1;
+}
+
+.screen__rps-list {
+  font-size: clamp(16px, 2vw, 24px);
+  color: var(--muted);
+  max-width: 80vw;
+  text-align: center;
+}

@@ -2,7 +2,7 @@
 
 모든 작업의 기준 문서: [레크레이션웹_전체구조_설계문서_1.md](레크레이션웹_전체구조_설계문서_1.md)
 
-현재 진행 상태: **Phase 2 — 실시간 기반 완료**
+현재 진행 상태: **Phase 3 — 가위바위보 게임 완료**
 
 ---
 
@@ -85,9 +85,11 @@ npm run build && npm start
 │       │   ├── operators.js
 │       │   ├── events.js      4자리 코드 발급 포함
 │       │   └── participants.js
+│       ├── game/
+│       │   └── rpsEngine.js   가위바위보 판정 순수 함수 (소켓/DB 와 무관, 단위 검증됨)
 │       ├── routes/
 │       │   ├── auth.js        로그인/로그아웃/me
-│       │   └── events.js      이벤트 CRUD·이력
+│       │   └── events.js      이벤트 CRUD·이력 (gameRecords 포함)
 │       └── realtime/
 │           ├── index.js       소켓 연결 처리, 운영자 세션 인증, 접속 현황 브로드캐스트
 │           ├── rooms.js       룸 이름 규칙 (event:CODE:role)
@@ -95,22 +97,25 @@ npm run build && npm start
 │           ├── players.js     참여자 입장/재접속/중복접속 처리
 │           ├── eventState.js  이벤트별 실시간 상태(스크린 모드/채팅/메시지, 메모리)
 │           ├── screen.js      스크린 모드 전환(로고 ↔ QR)
-│           └── messages.js    실시간 메시지 송출/고정/삭제/채팅토글
+│           ├── messages.js    실시간 메시지 송출/고정/삭제/채팅토글
+│           └── rps.js         가위바위보 게임 상태 머신 (§6, 메모리) + game_records 저장
 └── client/                  React + Vite + Socket.IO Client
     └── src/
         ├── App.jsx           3화면 라우팅 (운영자는 중첩 라우트)
-        ├── lib/{api,socket}.js
+        ├── lib/{api,socket,rps}.js
         ├── hooks/
         │   ├── useAuth.jsx            운영자 로그인 상태 컨텍스트
         │   ├── useRealtimeSession.js  역할별 룸 접속 + presence + 초기 상태
         │   ├── usePlayerConnection.js 참여자 입장/자동 재접속
-        │   └── useChat.js             실시간 메시지 상태/액션 (운영자·참여자 공용)
+        │   ├── useChat.js             실시간 메시지 상태/액션 (운영자·참여자 공용)
+        │   └── useRpsGame.js          가위바위보 상태 동기화 + 액션 (역할 공용)
         ├── components/        StatusBar, QrCode, RequireOperator, ChatPanel
+        │   └── rps/            RpsOperatorPanel, RpsPlayerView, RpsScreenView
         └── routes/
             ├── Home.jsx
-            ├── operator/       Login, Events(목록), NewEvent, EventDetail(메시지·스크린 제어)
-            ├── player/         PlayerJoin (프로필 설정 + 대기화면 + 메시지)
-            └── screen/         ScreenView (로고/QR 대기화면, 실시간 전환)
+            ├── operator/       Login, Events(목록), NewEvent, EventDetail(메시지·스크린·게임 제어)
+            ├── player/         PlayerJoin (프로필 설정 + 대기화면 + 메시지 + 게임)
+            └── screen/         ScreenView (로고/QR 대기화면 ↔ 게임 연출 자동 전환)
 ```
 
 ### 룸 규칙 (설계문서 §3.2)
@@ -149,6 +154,28 @@ event:1234:screen     스크린 전용
 - 대형 스크린에는 메시지를 표시하지 않는다(운영자+참여자 룸에만 브로드캐스트).
 - MC 는 채팅 비활성화 중에도 계속 메시지를 보낼 수 있다(공지 용도).
 
+### 가위바위보 서바이벌 토너먼트 (설계문서 §6, Phase 3)
+
+- 상태: `idle → selecting → locked → result → (selecting 로 루프 | ended)`.
+  전부 `realtime/rps.js` 가 이벤트별 메모리에서 관리하고, 판정/분기 로직은
+  `game/rpsEngine.js` 의 순수 함수(`judgeRound`, `resolveBranch`)로 분리해 별도 검증했다.
+- 판정 분기(§6.2) 4가지 모두 구현·검증:
+  - **초과**(생존자 > 목표): 확정자+이번 승자를 합쳐 다시 좁혀나간다.
+  - **정확히 도달**: 종료, `game_records` 에 최종 승자 저장.
+  - **전멸**(승자 0명): 라운드 무효, 같은 인원으로 재대결(라운드 번호 유지).
+  - **부족**: 이번 승자는 확정 진출, 나머지는 패자부활전.
+  - 선택하지 않은 참여자(무응답)는 자동으로 비승자 처리.
+- 참여자에게는 본인 라운드 결과만, 운영자 확인 전까지는 아무에게도 MC 의 선택을
+  보여주지 않는다(`locked` 동안 `operatorChoice` 는 브로드캐스트에서 제외).
+- 대형 스크린은 게임이 진행 중이면(status !== idle) 로고/QR 모드 대신 자동으로
+  게임 연출(참여 현황·모래시계·MC 의 손·최종 승자)로 전환된다.
+- 모래시계는 마감을 자동으로 트리거하지 않는 순수 시각 연출이다(§9 결정) — 실제
+  마감은 MC 의 수동 "마감" 클릭으로 확정.
+- 운영자 액션(`rps:start/lock/confirm/advance/restartRound/reset`)은 전부
+  `isAuthorizedOperator` 검증을 거친다. 참여자는 자기 차례에만 `rps:choose` 가능.
+- 재접속 시 `player:join` 응답에 게임 스냅샷과 "이번 라운드 내 선택값"을 함께 내려줘
+  새로고침해도 같은 화면으로 복원된다.
+
 ---
 
 ## Phase 0 에서 확인된 것
@@ -183,7 +210,19 @@ event:1234:screen     스크린 전용
 - [x] 브라우저 3탭(운영자/참여자/스크린) E2E: 메시지 송수신·고정·삭제·채팅토글·
       스크린모드 전환이 모두 실시간으로 다른 화면에 반영되는지 확인
 
-## 다음 (Phase 3 — 가위바위보 게임)
+## Phase 3 에서 확인된 것
 
-§6 상태 머신(설정→선택중→운영자 선택→결과→루프/종료) 구현, 3화면 연동, 엣지 케이스
-(전멸 재대결, 패자부활전) 처리.
+- [x] 판정 엔진 단위 검증(10개 케이스) + 소켓 스모크 테스트(38개 체크, §6.2 4개 분기
+      전부 포함) + 재접속 복원 검증(7개 체크) — 전부 통과
+- [x] 브라우저 3탭(운영자/참여자 2명/스크린) E2E: 목표 1명 게임 한 판 완주
+      (선택→마감→운영자 선택→확인→결과→다음→종료), 3화면 모두 실시간 반영 확인
+- [x] `game_records` 저장 확인 (최종 승자·라운드 수)
+- [x] 운영자 권한 검증(비로그인/참여자의 게임 제어 시도 거부)
+- [x] `useAuth` 초기 세션 확인과 로그인이 겹칠 때 상태가 꼬이는 경쟁 상태(race
+      condition) 발견 후 수정 — 뒤늦게 도착하는 초기 확인 결과가 방금 로그인한
+      상태를 덮어쓰지 않도록 `settledRef` 가드 추가
+
+## 다음 (Phase 4 — 점수/순위 시스템)
+
+누적 점수, 게임별 순위, 개인전/팀전, 스크린 순위 연출. 가위바위보 승리 시 부여할
+점수와 게임별 점수 배분 규칙(§9 미결)을 이 단계에서 결정.

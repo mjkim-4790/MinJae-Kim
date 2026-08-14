@@ -7,6 +7,7 @@ import { getEventByCode } from '../db/events.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { clearPlayerSocket, registerPlayerHandlers } from './players.js';
 import { registerMessageHandlers } from './messages.js';
+import { getRpsSnapshot, registerRpsHandlers } from './rps.js';
 import {
   countInRoom,
   eventRoom,
@@ -20,7 +21,7 @@ import { registerScreenHandlers } from './screen.js';
 // 3화면(운영자/참여자/스크린)이 같은 룸에 접속한다 (session:hello).
 // 참여자는 추가로 player:join 으로 닉네임+숫자4자리 신원을 확인/재접속한다 (players.js).
 // 운영자는 로그인 세션 + 이벤트 소유권을 확인해야 스크린 전환/메시지 삭제 등을 할 수 있다 (authz.js).
-// 게임 상태 머신은 Phase 3 에서 이 위에 얹는다.
+// 가위바위보 게임 상태 머신은 rps.js (§6).
 
 export function createRealtime(httpServer) {
   const io = new Server(httpServer, {
@@ -39,6 +40,7 @@ export function createRealtime(httpServer) {
     registerPlayerHandlers(io, socket, { broadcastPresence });
     registerScreenHandlers(io, socket);
     registerMessageHandlers(io, socket);
+    registerRpsHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -84,6 +86,7 @@ export function createRealtime(httpServer) {
         const state = getOrCreateState(code, { logoUrl: event?.logo_path });
         response.chat = publicChatState(state);
         response.screenMode = state.screenMode;
+        response.rps = getRpsSnapshot(code);
         if (role === 'screen' && event) {
           response.event = {
             code: event.code,

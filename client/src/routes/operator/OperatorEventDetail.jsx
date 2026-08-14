@@ -3,8 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 
 import ChatPanel from '../../components/ChatPanel.jsx';
 import QrCode from '../../components/QrCode.jsx';
+import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
 import { useChat } from '../../hooks/useChat.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
+import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { socket } from '../../lib/socket.js';
 import { api } from '../../lib/api.js';
 
@@ -35,6 +37,7 @@ export default function OperatorEventDetail() {
   // 이 이벤트의 실제 코드로 운영자 룸에 접속 — 참여자/스크린과 같은 룸에서 접속 현황을 본다
   const { presence, init } = useRealtimeSession('operator', event?.code);
   const chat = useChat(event?.code, init?.chat, true);
+  const rpsGame = useRpsGame({ eventCode: event?.code, initialState: init?.rps });
 
   const [screenMode, setScreenModeState] = useState(null);
   useEffect(() => {
@@ -150,6 +153,15 @@ export default function OperatorEventDetail() {
             QR/코드 표시
           </button>
         </div>
+      </section>
+
+      <section className="panel stack">
+        <h2 className="panel__title">가위바위보 서바이벌</h2>
+        <RpsOperatorPanel
+          game={rpsGame}
+          participants={participants}
+          activeParticipantCount={participants.filter((p) => p.status === 'active').length}
+        />
       </section>
 
       <section className="panel stack">
