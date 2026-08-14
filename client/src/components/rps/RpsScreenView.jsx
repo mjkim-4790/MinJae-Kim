@@ -60,7 +60,7 @@ export default function RpsScreenView({ state }) {
   return (
     <div className="screen__center">
       <p className="screen__eyebrow">라운드 {state.round} · 목표 {state.targetWinners}명</p>
-      <p className="screen__rps-emoji">✂️🪨📄</p>
+      <p className="screen__rps-emoji">✊✋✌️</p>
       <p className="screen__rps-list">
         선택 완료 {state.chosenParticipantIds.length}/{state.activeParticipantIds.length}
       </p>
