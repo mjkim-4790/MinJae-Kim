@@ -1,17 +1,17 @@
 /* Phase 0 최소 스타일. 전체 디자인(/apple-design)은 Phase 5 에서 적용한다. */
 
 :root {
-  --bg: #0b0b0c;
-  --surface: #161618;
-  --line: #2a2a2e;
-  --text: #f5f5f7;
-  --muted: #9a9aa2;
+  --bg: #fcfaf5;
+  --surface: #ffffff;
+  --line: #e7e0d4;
+  --text: #211f1c;
+  --muted: #8b8478;
   --accent: #0a84ff;
-  --ok: #30d158;
-  --warn: #ffd60a;
-  --bad: #ff453a;
+  --ok: #1f9e4d;
+  --warn: #b4780a;
+  --bad: #d92d20;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -278,17 +278,17 @@ a.button--ghost {
 }
 
 .badge--scheduled {
-  background: rgba(255, 214, 10, 0.15);
+  background: #fbf0da;
   color: var(--warn);
 }
 
 .badge--active {
-  background: rgba(48, 209, 88, 0.15);
+  background: #e3f6e9;
   color: var(--ok);
 }
 
 .badge--ended {
-  background: rgba(154, 154, 162, 0.15);
+  background: var(--line);
   color: var(--muted);
 }
 
@@ -390,6 +390,6 @@ a.button--ghost {
 }
 
 .badge--info {
-  background: rgba(10, 132, 255, 0.15);
+  background: #e4f0ff;
   color: var(--accent);
 }

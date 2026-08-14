@@ -110,7 +110,7 @@ export default function OperatorEventDetail() {
             </button>
           )}
           <Link className="button button--ghost" to={`/screen/${event.code}`} target="_blank">
-            대형 스크린 열기
+            화면공유
           </Link>
         </div>
         {error && <p className="error-text">{error}</p>}
