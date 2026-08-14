@@ -208,3 +208,188 @@ body {
   color: var(--muted);
   font-size: clamp(14px, 1.5vw, 20px);
 }
+
+/* Phase 1 — 운영자/참여자 공용 UI */
+
+.error-text {
+  margin: 0;
+  color: var(--bad);
+  font-size: 14px;
+}
+
+.button--ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.button--danger {
+  background: var(--bad);
+}
+
+a.button,
+a.button--ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.back-link {
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.operator-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.operator-topbar__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--line);
+  color: var(--muted);
+}
+
+.badge--scheduled {
+  background: rgba(255, 214, 10, 0.15);
+  color: var(--warn);
+}
+
+.badge--active {
+  background: rgba(48, 209, 88, 0.15);
+  color: var(--ok);
+}
+
+.badge--ended {
+  background: rgba(154, 154, 162, 0.15);
+  color: var(--muted);
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.event-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.event-card__code {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+}
+
+.event-card__name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.event-card__meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.event-logo-preview {
+  max-width: 200px;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 8px;
+  background: #fff;
+}
+
+.join-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.join-display__code {
+  font-size: 40px;
+}
+
+.qrcode {
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+}
+
+.qrcode--loading {
+  background: var(--line);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.pin-input {
+  display: flex;
+  gap: 8px;
+}
+
+.badge--info {
+  background: rgba(10, 132, 255, 0.15);
+  color: var(--accent);
+}

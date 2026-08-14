@@ -17,6 +17,13 @@ export const config = {
   corsOrigins: originsFromEnv.length
     ? originsFromEnv
     : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+
+  // 테스트 등에서 별도 DB 파일을 쓰고 싶을 때만 지정. 기본은 server/data/recreation.sqlite
+  dbPath: process.env.DB_PATH || undefined,
+
+  maxLogoSizeBytes: 5 * 1024 * 1024, // 5MB
+
+  sessionSecret: process.env.SESSION_SECRET || 'dev-only-insecure-secret-change-me',
 };
 
 export const isProd = config.env === 'production';

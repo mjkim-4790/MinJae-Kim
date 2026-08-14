@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 
 import { config } from '../config.js';
+import { clearPlayerSocket, registerPlayerHandlers } from './players.js';
 import {
   countInRoom,
   eventRoom,
@@ -9,8 +10,9 @@ import {
   roleRoom,
 } from './rooms.js';
 
-// Phase 0: 3화면(운영자/참여자/스크린)이 서버와 같은 룸에서 연결되는지까지만 확인한다.
-// 이벤트 개설·참여자 식별·게임 상태 머신은 Phase 1~3 에서 이 위에 얹는다.
+// 3화면(운영자/참여자/스크린)이 같은 룸에 접속한다 (session:hello).
+// 참여자는 추가로 player:join 으로 닉네임+숫자4자리 신원을 확인/재접속한다 (players.js).
+// 게임 상태 머신은 Phase 3 에서 이 위에 얹는다.
 
 export function createRealtime(httpServer) {
   const io = new Server(httpServer, {
@@ -20,6 +22,9 @@ export function createRealtime(httpServer) {
   io.on('connection', (socket) => {
     socket.data.role = null;
     socket.data.eventCode = null;
+    socket.data.participantId = null;
+
+    registerPlayerHandlers(io, socket, { broadcastPresence });
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -56,6 +61,9 @@ export function createRealtime(httpServer) {
     });
 
     socket.on('disconnect', async () => {
+      if (socket.data.participantId) {
+        clearPlayerSocket(socket.data.participantId, socket.id);
+      }
       if (socket.data.eventCode) await broadcastPresence(io, socket.data.eventCode);
     });
   });
