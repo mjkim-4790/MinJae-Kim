@@ -458,6 +458,19 @@ a.button--ghost {
   border-color: transparent;
 }
 
+.chat__message--operator .chat__author {
+  color: var(--accent);
+}
+
+.chat__message--player {
+  background: #eaf7ee;
+  border-color: transparent;
+}
+
+.chat__message--player .chat__author {
+  color: var(--ok);
+}
+
 .chat__message-meta {
   display: flex;
   justify-content: space-between;
