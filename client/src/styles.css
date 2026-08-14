@@ -569,6 +569,12 @@ a.button--ghost {
   line-height: 1;
 }
 
+.rps-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .rps-your-choice {
   display: flex;
   flex-direction: column;

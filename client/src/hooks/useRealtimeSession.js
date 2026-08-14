@@ -4,7 +4,8 @@ import { socket } from '../lib/socket.js';
 
 /**
  * 역할(role)과 이벤트 코드로 서버 룸에 접속하고, 연결 상태와 접속 현황을 돌려준다.
- * 운영자/스크린 역할은 접속 시 채팅 초기 상태와 스크린 모드도 함께 받는다 (Phase 2).
+ * 운영자/스크린 역할은 접속 시 채팅·가위바위보 게임 초기 상태와 스크린 모드도
+ * 함께 받는다 (재접속 시 어느 단계든 즉시 복원 — 설계문서 §7-1).
  *
  * @param {'operator'|'player'|'screen'} role
  * @param {string} [eventCode] 없으면 서버가 LOBBY 룸으로 처리
@@ -13,7 +14,7 @@ export function useRealtimeSession(role, eventCode) {
   const [status, setStatus] = useState(socket.connected ? 'connected' : 'connecting');
   const [session, setSession] = useState(null);
   const [presence, setPresence] = useState(null);
-  const [init, setInit] = useState(null); // { chat, screenMode, event? }
+  const [init, setInit] = useState(null); // { chat, screenMode, rps, event? }
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function useRealtimeSession(role, eventCode) {
       socket.emit('session:hello', { role, eventCode }, (res) => {
         if (res?.ok) {
           setSession(res.session);
-          setInit({ chat: res.chat, screenMode: res.screenMode, event: res.event });
+          setInit({ chat: res.chat, screenMode: res.screenMode, rps: res.rps, event: res.event });
           setError(null);
         } else {
           setError(res?.error ?? 'UNKNOWN_ERROR');

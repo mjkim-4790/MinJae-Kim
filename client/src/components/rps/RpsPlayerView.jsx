@@ -1,3 +1,4 @@
+import { HandIcon } from './HandIcons.jsx';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
 
 function branchMessage(outcome, won) {
@@ -21,7 +22,11 @@ function RoundResult({ state, participantId }) {
 
   return (
     <div className={`rps-result-line ${won ? 'rps-result-line--win' : 'rps-result-line--lose'}`}>
-      MC: {CHOICE_META[state.operatorChoice].emoji} · {branchMessage(outcome, won)}
+      <span className="rps-inline">
+        MC: <HandIcon choice={state.operatorChoice} size={22} />
+      </span>
+      {' · '}
+      {branchMessage(outcome, won)}
     </div>
   );
 }
@@ -67,14 +72,14 @@ export default function RpsPlayerView({ game, participantId }) {
         <>
           {yourChoice ? (
             <div className="rps-your-choice">
-              <span className="rps-choice-emoji">{CHOICE_META[yourChoice].emoji}</span>
+              <HandIcon choice={yourChoice} size={56} />
               <p>선택 완료! 결과를 기다려주세요.</p>
             </div>
           ) : (
             <div className="rps-choice-row">
               {CHOICES.map((c) => (
                 <button key={c} className="rps-choice-btn" onClick={() => choose(c)}>
-                  <span className="rps-choice-emoji">{CHOICE_META[c].emoji}</span>
+                  <HandIcon choice={c} size={40} />
                   {CHOICE_META[c].label}
                 </button>
               ))}
@@ -85,7 +90,11 @@ export default function RpsPlayerView({ game, participantId }) {
 
       {inRound && state.status === 'locked' && (
         <div className="rps-your-choice">
-          <span className="rps-choice-emoji">{yourChoice ? CHOICE_META[yourChoice].emoji : '🤔'}</span>
+          {yourChoice ? (
+            <HandIcon choice={yourChoice} size={56} />
+          ) : (
+            <span className="rps-choice-emoji">🤔</span>
+          )}
           <p>입력이 잠겼습니다. 두구두구…</p>
         </div>
       )}

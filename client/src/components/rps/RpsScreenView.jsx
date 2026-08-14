@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { CHOICE_META } from '../../lib/rps.js';
+import { HandIcon } from './HandIcons.jsx';
+import { CHOICES } from '../../lib/rps.js';
 
 function useCountdown(timerEndsAt) {
   const [remaining, setRemaining] = useState(null);
@@ -37,7 +38,7 @@ export default function RpsScreenView({ state }) {
     return (
       <div className="screen__center">
         <p className="screen__eyebrow">MC 의 선택</p>
-        <p className="screen__rps-emoji">{CHOICE_META[state.operatorChoice].emoji}</p>
+        <HandIcon choice={state.operatorChoice} size={140} />
         <p className="screen__rps-list">
           생존 {state.roundResult.winners.length}명 · 탈락 {state.roundResult.nonWinners.length}명
         </p>
@@ -60,7 +61,11 @@ export default function RpsScreenView({ state }) {
   return (
     <div className="screen__center">
       <p className="screen__eyebrow">라운드 {state.round} · 목표 {state.targetWinners}명</p>
-      <p className="screen__rps-emoji">✊✋✌️</p>
+      <div className="rps-choice-row" style={{ justifyContent: 'center' }}>
+        {CHOICES.map((c) => (
+          <HandIcon key={c} choice={c} size={72} />
+        ))}
+      </div>
       <p className="screen__rps-list">
         선택 완료 {state.chosenParticipantIds.length}/{state.activeParticipantIds.length}
       </p>

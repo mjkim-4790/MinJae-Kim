@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { HandIcon } from './HandIcons.jsx';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
 
 const ERROR_MESSAGE = {
@@ -120,7 +121,7 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
                 className={`rps-choice-btn ${operatorPick === c ? 'rps-choice-btn--active' : ''}`}
                 onClick={() => setOperatorPick(c)}
               >
-                <span className="rps-choice-emoji">{CHOICE_META[c].emoji}</span>
+                <HandIcon choice={c} size={40} />
                 {CHOICE_META[c].label}
               </button>
             ))}
@@ -140,8 +141,8 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
 
       {state.status === 'result' && state.roundResult && (
         <div className="stack">
-          <p>
-            MC 의 선택: {CHOICE_META[state.operatorChoice].emoji} {CHOICE_META[state.operatorChoice].label}
+          <p className="rps-inline">
+            MC 의 선택: <HandIcon choice={state.operatorChoice} size={28} /> {CHOICE_META[state.operatorChoice].label}
           </p>
           <p className="chat__message--player" style={{ padding: 8, borderRadius: 8 }}>
             생존: {state.roundResult.winners.map((w) => w.nickname).join(', ') || '없음'}
