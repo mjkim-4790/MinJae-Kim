@@ -1,5 +1,6 @@
 import http from 'node:http';
 
+import { bootstrapOperatorIfConfigured } from './auth/bootstrap.js';
 import { createApp } from './app.js';
 import { config, isProd } from './config.js';
 import { createRealtime } from './realtime/index.js';
@@ -8,6 +9,8 @@ if (isProd && config.sessionSecret === 'dev-only-insecure-secret-change-me') {
   console.error('[server] SESSION_SECRET 이 개발용 기본값입니다. 운영 배포 전 .env 에서 교체하세요.');
   process.exit(1);
 }
+
+await bootstrapOperatorIfConfigured();
 
 const app = createApp();
 const httpServer = http.createServer(app);

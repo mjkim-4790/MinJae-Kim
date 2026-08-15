@@ -59,19 +59,28 @@ npm run build && npm start
    저장소 선택 → `render.yaml` 을 인식하면 그대로 **Apply**.
 3. 첫 배포가 끝나면 발급된 `https://*.onrender.com` 주소로 접속되는지 확인
    (`/api/health` 가 `{"ok":true,...}` 를 반환하면 정상).
-4. Render 셸(대시보드의 **Shell** 탭)에서 운영자 계정을 만든다:
-   ```bash
-   node server/scripts/create-operator.mjs --email mc@example.com --name "홍길동"
+4. 운영자 계정을 만든다. **무료 티어는 Shell 탭 자체가 막혀 있어서**(Starter 플랜부터
+   지원) `create-operator.mjs` 를 직접 실행할 수 없다 — 대신 서버가 부팅할 때 자동으로
+   만들도록 Render 의 **Environment** 탭에서 환경변수를 추가한다:
    ```
+   BOOTSTRAP_OPERATOR_EMAIL=mc@example.com
+   BOOTSTRAP_OPERATOR_PASSWORD=원하는 비밀번호
+   BOOTSTRAP_OPERATOR_NAME=홍길동
+   ```
+   저장하면 재배포되면서 해당 이메일 계정이 없을 때만 자동 생성된다(이미 있으면
+   건너뛴다). 계정을 만든 뒤에는 이 환경변수들을 지워도 무방하다.
 
 **무료 티어에서 꼭 알아야 할 것 (2026년 기준):**
+- **Shell/SSH 미지원.** 서버에 직접 명령을 실행할 방법이 없다 — 운영자 계정은 위
+  `BOOTSTRAP_OPERATOR_*` 방식으로만 만들 수 있다.
 - **15분 무사용 시 슬립.** 행사 시작 30분 전엔 미리 접속해 깨워둔다 (설계문서 §3.3).
 - **디스크가 영구 저장되지 않는다.** 무료 웹서비스는 퍼시스턴트 디스크를 붙일 수 없어서,
   재배포(또는 드물게 플랫폼 쪽 재시작)가 일어나면 SQLite 파일(`server/data/`)과 업로드된
-  로고(`server/uploads/`)가 초기화된다. 시험 단계에서는 "행사 직전에 운영자 계정과
-  이벤트를 새로 만든다"는 전제로 감안하고 쓰고, 데이터를 계속 보존해야 하는 시점이 되면
-  Render 의 유료 플랜(퍼시스턴트 디스크) 또는 설계문서가 이미 예정해둔 PostgreSQL 전환으로
-  넘어간다.
+  로고(`server/uploads/`)가 초기화된다. `BOOTSTRAP_OPERATOR_*` 를 계속 켜두면 재배포
+  때마다 운영자 계정은 자동으로 다시 생기지만, 만들어둔 이벤트/참여자 데이터는 그대로
+  사라지니 "행사 직전에 이벤트를 새로 만든다"는 전제로 쓴다. 데이터를 계속 보존해야
+  하는 시점이 되면 Render 의 유료 플랜(퍼시스턴트 디스크) 또는 설계문서가 이미
+  예정해둔 PostgreSQL 전환으로 넘어간다.
 - 같은 서버가 클라이언트까지 서빙하므로(§ 위 "운영 빌드" 참고) 배포 환경에서는 별도
   `CORS_ORIGINS` 설정이 필요 없다 (동일 출처).
 

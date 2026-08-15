@@ -24,6 +24,13 @@ export const config = {
   maxLogoSizeBytes: 5 * 1024 * 1024, // 5MB
 
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-insecure-secret-change-me',
+
+  // Shell 이 없는 무료 티어 배포용 — 지정돼 있으면 부팅 시 없는 경우에만 운영자 계정을 만든다.
+  bootstrapOperator: {
+    email: process.env.BOOTSTRAP_OPERATOR_EMAIL || null,
+    password: process.env.BOOTSTRAP_OPERATOR_PASSWORD || null,
+    name: process.env.BOOTSTRAP_OPERATOR_NAME || 'MC',
+  },
 };
 
 export const isProd = config.env === 'production';
