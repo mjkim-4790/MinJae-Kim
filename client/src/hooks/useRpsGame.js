@@ -10,6 +10,7 @@ const IDLE_STATE = {
   chosenParticipantIds: [],
   confirmedWinnerIds: [],
   timerEndsAt: null,
+  timerDecorative: false,
   roundResult: null,
   operatorChoice: null,
   finalWinners: null,
@@ -69,7 +70,8 @@ export function useRpsGame({ eventCode, participantId = null, initialState, init
     [eventCode],
   );
   const startTimer = useCallback(
-    (seconds) => new Promise((resolve) => socket.emit('rps:timer', { eventCode, seconds }, resolve)),
+    (seconds, decorative) =>
+      new Promise((resolve) => socket.emit('rps:timer', { eventCode, seconds, decorative }, resolve)),
     [eventCode],
   );
   const lock = useCallback(

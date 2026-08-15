@@ -15,6 +15,15 @@ const WIN_POINTS = 100;
 const games = new Map(); // eventCode -> RpsGameState
 const THROTTLE_MS = 200; // §7-3 동시 입력 폭주 대비
 const pendingBroadcast = new Map(); // eventCode -> timeout handle
+const pendingAutoLock = new Map(); // eventCode -> timeout handle (모래시계 종료 시 자동 마감, §9 결정 2026-08-16)
+
+function clearAutoLock(code) {
+  const handle = pendingAutoLock.get(code);
+  if (handle) {
+    clearTimeout(handle);
+    pendingAutoLock.delete(code);
+  }
+}
 
 function createInitialState() {
   return {
@@ -26,7 +35,8 @@ function createInitialState() {
     choices: new Map(), // participantId -> choice (이번 라운드)
     lastResult: null, // { operatorChoice, winnerIds, nonWinnerIds, choices, branch }
     finalWinnerIds: null,
-    timerEndsAt: null, // 모래시계 연출용, 마감을 자동으로 트리거하지 않음 (§9 결정)
+    timerEndsAt: null, // 모래시계 종료 시각. 끝나면 자동으로 마감된다 (§9 결정 2026-08-16)
+    timerDecorative: false, // 숫자 카운트다운과 별개로 순수 장식 애니메이션도 보여줄지
   };
 }
 
@@ -54,6 +64,7 @@ function publicState(state) {
     chosenParticipantIds: [...state.choices.keys()],
     confirmedWinnerIds: state.confirmedWinnerIds,
     timerEndsAt: state.timerEndsAt,
+    timerDecorative: state.timerDecorative,
     roundResult: null,
     operatorChoice: null,
     finalWinners: null,
@@ -120,6 +131,7 @@ export function registerRpsHandlers(io, socket) {
       return reply({ ok: false, error: 'INVALID_TARGET' });
     }
 
+    clearAutoLock(code);
     Object.assign(state, createInitialState());
     state.status = 'selecting';
     state.round = 1;
@@ -165,6 +177,23 @@ export function registerRpsHandlers(io, socket) {
 
     const seconds = Math.min(120, Math.max(5, Number(payload.seconds) || 15));
     state.timerEndsAt = Date.now() + seconds * 1000;
+    state.timerDecorative = Boolean(payload.decorative);
+
+    // 시간이 끝나면 자동으로 마감한다 (§9 결정 2026-08-16). 재시작/수동마감 시 아래에서 취소.
+    clearAutoLock(code);
+    pendingAutoLock.set(
+      code,
+      setTimeout(() => {
+        pendingAutoLock.delete(code);
+        const s = getState(code);
+        if (s.status !== 'selecting') return; // 이미 다른 경로로 상태가 바뀐 경우 방지
+        s.status = 'locked';
+        s.timerEndsAt = null;
+        s.timerDecorative = false;
+        broadcastNow(io, code);
+      }, seconds * 1000),
+    );
+
     reply({ ok: true, timerEndsAt: state.timerEndsAt });
     broadcastNow(io, code);
   });
@@ -177,8 +206,10 @@ export function registerRpsHandlers(io, socket) {
     const state = getState(code);
     if (state.status !== 'selecting') return reply({ ok: false, error: 'NOT_SELECTING' });
 
+    clearAutoLock(code);
     state.status = 'locked';
     state.timerEndsAt = null;
+    state.timerDecorative = false;
     reply({ ok: true });
     broadcastNow(io, code);
   });
@@ -270,9 +301,11 @@ export function registerRpsHandlers(io, socket) {
       return reply({ ok: false, error: 'INVALID_STATUS' });
     }
 
+    clearAutoLock(code);
     state.choices = new Map();
     state.lastResult = null;
     state.timerEndsAt = null;
+    state.timerDecorative = false;
     state.status = 'selecting';
 
     reply({ ok: true });
@@ -284,6 +317,7 @@ export function registerRpsHandlers(io, socket) {
     const code = normalizeEventCode(payload.eventCode);
     if (!isAuthorizedOperator(socket, code)) return reply({ ok: false, error: 'FORBIDDEN' });
 
+    clearAutoLock(code);
     games.set(code, createInitialState());
     reply({ ok: true });
     broadcastNow(io, code);

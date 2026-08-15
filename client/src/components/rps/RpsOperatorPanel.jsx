@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import HourglassAnimation from './HourglassAnimation.jsx';
 import { HandIcon } from './HandIcons.jsx';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
@@ -41,6 +42,8 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
   const [operatorPick, setOperatorPick] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(15);
+  const [timerDecorative, setTimerDecorative] = useState(false);
 
   const participantsById = new Map(participants.map((p) => [p.id, p]));
 
@@ -115,9 +118,42 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
               {' '}
               <TimerBadge timerEndsAt={state.timerEndsAt} />
             </p>
+            {state.timerDecorative && state.timerEndsAt && (
+              <motion.div
+                style={{ display: 'flex', justifyContent: 'center' }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={springPop}
+              >
+                <HourglassAnimation size={56} />
+              </motion.div>
+            )}
             <div className="operator-topbar__actions">
-              <button className="button button--ghost" disabled={busy} onClick={() => run(startTimer, 15)}>
-                모래시계 시작 (15초)
+              <label className="field" style={{ width: 88 }}>
+                <span className="field__label">초</span>
+                <input
+                  className="input"
+                  type="number"
+                  min={5}
+                  max={120}
+                  value={timerSeconds}
+                  onChange={(e) => setTimerSeconds(Number(e.target.value))}
+                />
+              </label>
+              <label className="chat__toggle">
+                <input
+                  type="checkbox"
+                  checked={timerDecorative}
+                  onChange={(e) => setTimerDecorative(e.target.checked)}
+                />
+                장식 애니메이션
+              </label>
+              <button
+                className="button button--ghost"
+                disabled={busy}
+                onClick={() => run(startTimer, timerSeconds, timerDecorative)}
+              >
+                모래시계 시작
               </button>
               <button className="button" disabled={busy} onClick={() => run(lock)}>
                 마감

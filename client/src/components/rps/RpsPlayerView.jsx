@@ -1,8 +1,28 @@
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import HourglassAnimation from './HourglassAnimation.jsx';
 import { HandIcon } from './HandIcons.jsx';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
+
+function TimerBadge({ timerEndsAt }) {
+  const [remaining, setRemaining] = useState(null);
+
+  useEffect(() => {
+    if (!timerEndsAt) {
+      setRemaining(null);
+      return undefined;
+    }
+    const tick = () => setRemaining(Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [timerEndsAt]);
+
+  if (remaining === null) return null;
+  return <span className="badge badge--info">⏳ {remaining}초</span>;
+}
 
 function branchMessage(outcome, won) {
   if (won) return outcome === 'ended' ? '목표 달성! 최종 생존했습니다 🎉' : '생존했습니다! 다음 라운드로';
@@ -69,6 +89,21 @@ export default function RpsPlayerView({ game, participantId }) {
   return (
     <section className="panel stack">
       <h2 className="panel__title">가위바위보 서바이벌 — 라운드 {state.round}</h2>
+
+      {state.status === 'selecting' && state.timerEndsAt && (
+        <div className="stack" style={{ alignItems: 'center' }}>
+          <TimerBadge timerEndsAt={state.timerEndsAt} />
+          {state.timerDecorative && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springPop}
+            >
+              <HourglassAnimation size={48} />
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {!inRound && (
         <p className="rps-spectator">
