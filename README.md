@@ -2,7 +2,9 @@
 
 모든 작업의 기준 문서: [레크레이션웹_전체구조_설계문서_1.md](레크레이션웹_전체구조_설계문서_1.md)
 
-현재 진행 상태: **Phase 6 — 배포/시험 진행 중** (배포 설정 완료, 실제 배포는 GitHub 연결 대기)
+현재 진행 상태: **Phase 6 — 배포 완료, 실전 시험 대기**
+
+배포 주소: https://recreation-web.onrender.com (Render 무료 티어 · 15분 무사용 시 슬립)
 
 ---
 
@@ -328,7 +330,7 @@ event:1234:screen     스크린 전용
 - [x] 저작권: 참고 이미지(Urbanbrush "BBOMBBOM")를 그대로 재현하지 않고, 같은
       스타일의 독자적인 SVG 라인아트 손 모양 아이콘(`HandIcons.jsx`)으로 대체
 
-## Phase 6 에서 확인된 것 (진행 중)
+## Phase 6 에서 확인된 것
 
 - [x] Render 배포 설정 준비: [`render.yaml`](render.yaml) 블루프린트(빌드/시작 명령,
       헬스체크 `/api/health`, `SESSION_SECRET` 자동 생성, `singapore` 리전)
@@ -344,10 +346,22 @@ event:1234:screen     스크린 전용
       마이크로태스크가 반영되기 전에 다음 상태 브로드캐스트가 같은 틱에서 먼저
       도착해 무시되는 경우가 있었다 (특히 게임 종료 시점). 액션을 시작하는 순간
       동기적으로 갱신되는 phase 비교 방식으로 바꿔 해결
-- [ ] 실제 Render 배포 (GitHub 저장소 연결 필요 — 아직 원격 저장소 없음)
-- [ ] 배포된 주소 기준 50명 부하 재검증
+- [x] 실제 Render 배포 완료 (https://recreation-web.onrender.com). 배포 중 실제로
+      마주친 문제 2건과 해결:
+      1. 빌드 실패(`vite: not found`) — `NODE_ENV=production` 이 빌드 단계에도
+         적용돼 npm 이 devDependencies 를 건너뛴 것이 원인. `buildCommand` 를
+         `npm install --include=dev && npm run build` 로 수정
+      2. 무료 티어는 **Shell 탭 자체가 없어서** `create-operator.mjs` 를 실행할
+         방법이 없었음 — `BOOTSTRAP_OPERATOR_EMAIL/PASSWORD/NAME` 환경변수를
+         읽어 서버 부팅 시 없으면 자동 생성하는 부트스트랩(`auth/bootstrap.js`)
+         을 추가해 해결
+- [x] 배포된 주소(`https://recreation-web.onrender.com`) 기준 50명 부하 재검증 통과:
+      50/50 동시 접속 1.2초, 핑 왕복 지연 p50 117ms(로컬 대비 늘었지만 Singapore
+      리전 실네트워크 지연으로 정상 범위), 가위바위보 한 판이 4라운드·3.1초에
+      정확한 결과로 완주
 - [ ] 실전 시험 진행 후 보완
 
-## 다음
+## 다음 (Phase 7+)
 
-Phase 6 마무리(실제 배포 + 배포 환경 재검증) 후 Phase 7+(게임 추가, 규모 확장, 결제).
+설계문서 §8 로드맵 기준 게임 추가(OX·터치·추첨·빙고·초성·투표·설문), 100/500명
+규모 확장, 결제 기능. 그 전에 실제 행사에서 한 번 써보고 나온 문제를 먼저 보완한다.
