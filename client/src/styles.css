@@ -774,3 +774,88 @@ a.button--ghost {
   border-color: var(--warn);
   background: #fdf3d0;
 }
+
+/* 운영자 게임 선택 그리드 — 아이콘 + 이름, 좁은 화면에서 자동 줄바꿈 */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.game-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 120ms var(--press-ease), box-shadow 120ms var(--press-ease);
+}
+
+@media (hover: hover) {
+  .game-tile:not(:disabled):hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.game-tile__icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #eef4ff;
+  color: var(--text);
+}
+
+.game-tile__name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* 목록으로 나와 있어도 지금 뭐가 돌아가는지 보이게 */
+.game-tile__badge {
+  position: absolute;
+  top: -6px;
+  right: -14px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.game-tile__soon {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.game-tile--soon {
+  cursor: not-allowed;
+  background: transparent;
+  border-style: dashed;
+}
+
+.game-tile--soon .game-tile__icon {
+  background: #f1efe9;
+  color: var(--muted);
+}
+
+.game-tile--soon .game-tile__name {
+  color: var(--muted);
+  font-weight: 500;
+}

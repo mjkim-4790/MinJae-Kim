@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import ChatPanel from '../../components/ChatPanel.jsx';
+import GamePicker from '../../components/games/GamePicker.jsx';
 import QrCode from '../../components/QrCode.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
+import { gameById } from '../../lib/games.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
@@ -63,6 +65,15 @@ export default function OperatorEventDetail() {
       setTeamBusy(false);
     }
   };
+
+  // 어떤 게임을 펼쳐볼지. null 이면 게임 선택 그리드를 보여준다.
+  const [selectedGameId, setSelectedGameId] = useState(null);
+  // 현재 서버에서 실제로 돌아가고 있는 게임 (지금은 가위바위보뿐)
+  const runningGameId = rpsGame.state.status !== 'idle' ? 'rps' : null;
+  // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
+  useEffect(() => {
+    if (runningGameId) setSelectedGameId((cur) => cur ?? runningGameId);
+  }, [runningGameId]);
 
   const [screenMode, setScreenModeState] = useState(null);
   useEffect(() => {
@@ -171,7 +182,7 @@ export default function OperatorEventDetail() {
       </section>
 
       <section className="panel stack">
-        <h2 className="panel__title">대형 스크린 화면</h2>
+        <h2 className="panel__title">화면공유</h2>
         <p className="subtitle">현재: {SCREEN_MODE_LABEL[screenMode] ?? '불러오는 중…'}</p>
         <div className="operator-topbar__actions">
           <button
@@ -193,6 +204,60 @@ export default function OperatorEventDetail() {
             순위 표시
           </button>
         </div>
+      </section>
+
+      <section className="panel stack">
+        <h2 className="panel__title">실시간 메시지</h2>
+        <ChatPanel
+          messages={chat.messages}
+          pinnedMessage={chat.pinnedMessage}
+          chatEnabled={chat.chatEnabled}
+          autoScroll={chat.autoScroll}
+          canSend
+          onSend={chat.sendMessage}
+          moderator={{
+            onPin: chat.pinMessage,
+            onDelete: chat.deleteMessage,
+            onToggleChat: chat.setChatEnabled,
+            onToggleAutoScroll: chat.setAutoScroll,
+          }}
+        />
+      </section>
+
+      <section className="panel stack">
+        {selectedGameId ? (
+          <>
+            <div className="operator-topbar">
+              <h2 className="panel__title" style={{ margin: 0 }}>
+                {gameById(selectedGameId)?.name}
+              </h2>
+              <button className="button button--ghost" onClick={() => setSelectedGameId(null)}>
+                ← 게임 목록
+              </button>
+            </div>
+            {selectedGameId === 'rps' && (
+              <RpsOperatorPanel
+                game={rpsGame}
+                participants={participants}
+                activeParticipantCount={participants.filter((p) => p.status === 'active').length}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <h2 className="panel__title">게임</h2>
+            <GamePicker onSelect={setSelectedGameId} runningGameId={runningGameId} />
+          </>
+        )}
+      </section>
+
+      <section className="panel stack">
+        <h2 className="panel__title">순위</h2>
+        <RankingBoard
+          participants={scoreboard.participants}
+          teamScores={scoreboard.teamScores}
+          mode={event.mode}
+        />
       </section>
 
       {event.mode === 'team' && (
@@ -219,42 +284,6 @@ export default function OperatorEventDetail() {
           {teamError && <p className="error-text">{teamError}</p>}
         </section>
       )}
-
-      <section className="panel stack">
-        <h2 className="panel__title">순위</h2>
-        <RankingBoard
-          participants={scoreboard.participants}
-          teamScores={scoreboard.teamScores}
-          mode={event.mode}
-        />
-      </section>
-
-      <section className="panel stack">
-        <h2 className="panel__title">가위바위보 서바이벌</h2>
-        <RpsOperatorPanel
-          game={rpsGame}
-          participants={participants}
-          activeParticipantCount={participants.filter((p) => p.status === 'active').length}
-        />
-      </section>
-
-      <section className="panel stack">
-        <h2 className="panel__title">실시간 메시지</h2>
-        <ChatPanel
-          messages={chat.messages}
-          pinnedMessage={chat.pinnedMessage}
-          chatEnabled={chat.chatEnabled}
-          autoScroll={chat.autoScroll}
-          canSend
-          onSend={chat.sendMessage}
-          moderator={{
-            onPin: chat.pinMessage,
-            onDelete: chat.deleteMessage,
-            onToggleChat: chat.setChatEnabled,
-            onToggleAutoScroll: chat.setAutoScroll,
-          }}
-        />
-      </section>
 
       <section className="panel stack">
         <div className="operator-topbar">
