@@ -10,6 +10,7 @@ import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { socket } from '../../lib/socket.js';
+import { joinUrlFor } from '../../lib/joinUrl.js';
 
 // 모드가 바뀔 때마다 "새 화면이 도착한다"는 느낌을 주는 크로스페이드+스케일 전환.
 const materialize = { type: 'spring', bounce: 0.15, duration: 0.5 };
@@ -22,7 +23,7 @@ export default function ScreenView() {
   const { status, session, presence, init } = useRealtimeSession('screen', code);
   const rpsGame = useRpsGame({ eventCode: code, initialState: init?.rps });
   const scoreboard = useScoreboard(init?.scoreboard);
-  const joinUrl = `${window.location.origin}/join/${code}`;
+  const joinUrl = joinUrlFor(code);
 
   const [mode, setMode] = useState(null);
   useEffect(() => {

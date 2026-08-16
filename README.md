@@ -37,9 +37,20 @@ node server/scripts/create-operator.mjs --email mc@example.com --name "홍길동
 
 ### 스마트폰으로 같이 테스트할 때
 
-`npm run dev` 실행 시 터미널에 표시되는 `Network:` 주소(예: `http://192.168.0.10:5173`)로
-같은 Wi-Fi 의 폰에서 접속한다. 서버 CORS 는 `server/.env` 의 `CORS_ORIGINS` 에
-같은 주소를 추가한다 (`server/.env.example` 참고).
+**별도 설정 없이 그냥 QR 을 찍으면 된다** (폰이 노트북과 같은 Wi-Fi 에만 있으면 됨).
+
+운영자가 `localhost:5173` 으로 열어두더라도 참여 QR 에는 노트북의 LAN 주소
+(`http://192.168.x.x:5173/join/CODE`)가 들어간다. `localhost` 는 "그 기기 자신"을 뜻해서,
+QR 에 그대로 담기면 폰이 자기 자신에 접속하려다 실패하기 때문이다. 이를 막기 위해:
+
+- `client/vite.config.js` 가 **개발 서버 실행 시에만** 노트북 LAN IP 를 찾아
+  `__DEV_LAN_ORIGIN__` 으로 주입하고, `client/src/lib/joinUrl.js` 가 주소창이
+  `localhost` 일 때만 이 값으로 바꿔치기한다 (운영 빌드에는 주입되지 않음).
+- 서버도 개발 모드에서는 이 노트북의 LAN IP 를 CORS 허용 출처에 자동으로 넣는다
+  (`server/src/config.js`). Wi-Fi 가 바뀌어 IP 가 달라져도 `.env` 를 고칠 필요가 없다.
+
+특정 출처만 허용하고 싶으면 `server/.env` 의 `CORS_ORIGINS` 에 직접 지정한다
+(값이 있으면 자동 감지 대신 그 목록만 쓴다).
 
 ### 운영 빌드 (단일 서비스)
 

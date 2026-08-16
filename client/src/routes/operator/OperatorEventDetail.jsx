@@ -11,6 +11,7 @@ import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { socket } from '../../lib/socket.js';
 import { api } from '../../lib/api.js';
+import { isLocalOnlyOrigin, joinUrlFor, publicOrigin } from '../../lib/joinUrl.js';
 
 const STATUS_LABEL = { scheduled: '대기', active: '진행중', ended: '종료' };
 const MODE_LABEL = { individual: '개인전', team: '팀전' };
@@ -97,7 +98,9 @@ export default function OperatorEventDetail() {
     );
   }
 
-  const joinUrl = `${window.location.origin}/join/${event.code}`;
+  const joinUrl = joinUrlFor(event.code);
+  // 로컬 개발에서 localhost 로 열었는데 LAN 주소조차 못 찾은 경우엔 QR 이 폰에서 안 열린다.
+  const qrUnreachable = isLocalOnlyOrigin() && joinUrl.startsWith(window.location.origin);
   const scoreById = new Map(scoreboard.participants.map((p) => [p.id, p]));
 
   return (
@@ -133,6 +136,12 @@ export default function OperatorEventDetail() {
             <QrCode value={joinUrl} />
             <p className="screen__code join-display__code">{event.code}</p>
             <p className="subtitle">{joinUrl}</p>
+            {qrUnreachable && (
+              <p className="error-text">
+                이 주소는 이 컴퓨터에서만 열립니다. 휴대폰으로 참여하려면 노트북의 Wi-Fi 주소
+                (예: http://192.168.0.10:5173)로 접속한 뒤 이 화면을 다시 여세요.
+              </p>
+            )}
           </div>
         )}
       </section>
