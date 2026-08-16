@@ -98,15 +98,6 @@ export default function PlayerJoin() {
         <RpsPlayerView game={rpsGame} participantId={participant?.id} />
 
         <section className="panel stack">
-          <h2 className="panel__title">순위</h2>
-          <RankingBoard
-            participants={scoreboard.participants}
-            teamScores={scoreboard.teamScores}
-            mode={event?.mode}
-          />
-        </section>
-
-        <section className="panel stack">
           <h2 className="panel__title">실시간 메시지</h2>
           <ChatPanel
             messages={chat.messages}
@@ -115,6 +106,15 @@ export default function PlayerJoin() {
             autoScroll={chat.autoScroll}
             canSend={chat.chatEnabled}
             onSend={chat.sendMessage}
+          />
+        </section>
+
+        <section className="panel stack">
+          <h2 className="panel__title">순위</h2>
+          <RankingBoard
+            participants={scoreboard.participants}
+            teamScores={scoreboard.teamScores}
+            mode={event?.mode}
           />
         </section>
 

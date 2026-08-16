@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import HourglassAnimation from './HourglassAnimation.jsx';
-import { HandIcon } from './HandIcons.jsx';
+import { ChoiceEmoji } from './ChoiceEmoji.jsx';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
 
@@ -181,7 +181,7 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
                   whileTap={{ scale: 0.92 }}
                   transition={springTap}
                 >
-                  <HandIcon choice={c} size={40} />
+                  <ChoiceEmoji choice={c} size={40} />
                   {CHOICE_META[c].label}
                 </motion.button>
               ))}
@@ -209,7 +209,7 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
             transition={springPop}
           >
             <p className="rps-inline">
-              MC 의 선택: <HandIcon choice={state.operatorChoice} size={28} /> {CHOICE_META[state.operatorChoice].label}
+              MC 의 선택: <ChoiceEmoji choice={state.operatorChoice} size={28} /> {CHOICE_META[state.operatorChoice].label}
             </p>
             <p className="chat__message--player" style={{ padding: 8, borderRadius: 8 }}>
               생존: {state.roundResult.winners.map((w) => w.nickname).join(', ') || '없음'}

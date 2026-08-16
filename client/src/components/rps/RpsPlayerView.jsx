@@ -1,28 +1,12 @@
-import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import HourglassAnimation from './HourglassAnimation.jsx';
-import { HandIcon } from './HandIcons.jsx';
+import { ChoiceEmoji } from './ChoiceEmoji.jsx';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 import { CHOICE_META, CHOICES } from '../../lib/rps.js';
 
-function TimerBadge({ timerEndsAt }) {
-  const [remaining, setRemaining] = useState(null);
-
-  useEffect(() => {
-    if (!timerEndsAt) {
-      setRemaining(null);
-      return undefined;
-    }
-    const tick = () => setRemaining(Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000)));
-    tick();
-    const id = setInterval(tick, 250);
-    return () => clearInterval(id);
-  }, [timerEndsAt]);
-
-  if (remaining === null) return null;
-  return <span className="badge badge--info">⏳ {remaining}초</span>;
-}
+// 하단 고정 선택 시트 전용 스프링 — Apple 이 "Drawer / sheet" 에 쓰는 값(damping 0.8,
+// response 0.3)에 가깝게 맞춘 살짝의 바운스. 큰 리빌(springPop)보다는 차분하다.
+const sheetSpring = { type: 'spring', bounce: 0.2, duration: 0.35 };
 
 function branchMessage(outcome, won) {
   if (won) return outcome === 'ended' ? '목표 달성! 최종 생존했습니다 🎉' : '생존했습니다! 다음 라운드로';
@@ -46,11 +30,46 @@ function RoundResult({ state, participantId }) {
   return (
     <div className={`rps-result-line ${won ? 'rps-result-line--win' : 'rps-result-line--lose'}`}>
       <span className="rps-inline">
-        MC: <HandIcon choice={state.operatorChoice} size={22} />
+        MC: <ChoiceEmoji choice={state.operatorChoice} size={22} />
       </span>
       {' · '}
       {branchMessage(outcome, won)}
     </div>
+  );
+}
+
+// 화면 하단에 고정으로 올라오는 선택 시트. 내 차례일 때만 나타나고 고르면 바로 내려간다
+// (§12 머티리얼 — 반투명 층이 콘텐츠 위로 떠 있는 느낌, §7 공간 일관성 — 아래에서 나와
+// 아래로 사라지는 왕복 경로).
+function ChoiceSheet({ open, onChoose }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="rps-choice-sheet"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={sheetSpring}
+        >
+          <p className="rps-choice-sheet__hint">가위·바위·보 중 하나를 선택하세요</p>
+          <div className="rps-choice-row rps-choice-row--sheet">
+            {CHOICES.map((c) => (
+              <motion.button
+                key={c}
+                className="rps-choice-btn rps-choice-btn--sheet"
+                onClick={() => onChoose(c)}
+                whileTap={{ scale: 0.92 }}
+                transition={springTap}
+              >
+                <ChoiceEmoji choice={c} size={56} />
+                {CHOICE_META[c].label}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -85,95 +104,80 @@ export default function RpsPlayerView({ game, participantId }) {
 
   const inRound = state.activeParticipantIds.includes(participantId);
   const isConfirmedWinner = state.confirmedWinnerIds.includes(participantId);
+  const waitingForChoice = inRound && state.status === 'selecting' && !yourChoice;
 
   return (
-    <section className="panel stack">
-      <h2 className="panel__title">가위바위보 서바이벌 — 라운드 {state.round}</h2>
+    <>
+      <section className="panel stack">
+        <h2 className="panel__title">가위바위보 서바이벌 — 라운드 {state.round}</h2>
 
-      {state.status === 'selecting' && state.timerEndsAt && (
-        <div className="stack" style={{ alignItems: 'center' }}>
-          <TimerBadge timerEndsAt={state.timerEndsAt} />
-          {state.timerDecorative && (
+        {!inRound && (
+          <p className="rps-spectator">
+            {isConfirmedWinner
+              ? '다음 라운드 진출이 확정됐습니다. 잠시만 기다려주세요.'
+              : '이번 게임에서 탈락했습니다. 계속 지켜봐주세요.'}
+          </p>
+        )}
+
+        <AnimatePresence mode="wait">
+          {waitingForChoice && (
+            <motion.p
+              key="waiting"
+              className="rps-spectator"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={springPop}
+            >
+              아래에서 선택해주세요 👇
+            </motion.p>
+          )}
+
+          {inRound && state.status === 'selecting' && yourChoice && (
             <motion.div
+              key="chosen"
+              className="rps-your-choice"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={springPop}
+            >
+              <ChoiceEmoji choice={yourChoice} size={56} />
+              <p>선택 완료! 결과를 기다려주세요.</p>
+            </motion.div>
+          )}
+
+          {inRound && state.status === 'locked' && (
+            <motion.div
+              key="locked"
+              className="rps-your-choice"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={springPop}
             >
-              <HourglassAnimation size={48} />
+              {yourChoice ? (
+                <ChoiceEmoji choice={yourChoice} size={56} />
+              ) : (
+                <span className="rps-choice-emoji">🤔</span>
+              )}
+              <p>입력이 잠겼습니다. 두구두구…</p>
             </motion.div>
           )}
-        </div>
-      )}
 
-      {!inRound && (
-        <p className="rps-spectator">
-          {isConfirmedWinner
-            ? '다음 라운드 진출이 확정됐습니다. 잠시만 기다려주세요.'
-            : '이번 게임에서 탈락했습니다. 계속 지켜봐주세요.'}
-        </p>
-      )}
+          {state.status === 'result' && state.roundResult && (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springPop}
+            >
+              <RoundResult state={state} participantId={participantId} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
 
-      <AnimatePresence mode="wait">
-        {inRound && state.status === 'selecting' && (
-          <motion.div
-            key={yourChoice ? 'chosen' : 'choosing'}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={springPop}
-          >
-            {yourChoice ? (
-              <div className="rps-your-choice">
-                <HandIcon choice={yourChoice} size={56} />
-                <p>선택 완료! 결과를 기다려주세요.</p>
-              </div>
-            ) : (
-              <div className="rps-choice-row">
-                {CHOICES.map((c) => (
-                  <motion.button
-                    key={c}
-                    className="rps-choice-btn"
-                    onClick={() => choose(c)}
-                    whileTap={{ scale: 0.92 }}
-                    transition={springTap}
-                  >
-                    <HandIcon choice={c} size={40} />
-                    {CHOICE_META[c].label}
-                  </motion.button>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {inRound && state.status === 'locked' && (
-          <motion.div
-            key="locked"
-            className="rps-your-choice"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={springPop}
-          >
-            {yourChoice ? (
-              <HandIcon choice={yourChoice} size={56} />
-            ) : (
-              <span className="rps-choice-emoji">🤔</span>
-            )}
-            <p>입력이 잠겼습니다. 두구두구…</p>
-          </motion.div>
-        )}
-
-        {state.status === 'result' && state.roundResult && (
-          <motion.div
-            key="result"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={springPop}
-          >
-            <RoundResult state={state} participantId={participantId} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </section>
+      <ChoiceSheet open={waitingForChoice} onChoose={choose} />
+    </>
   );
 }

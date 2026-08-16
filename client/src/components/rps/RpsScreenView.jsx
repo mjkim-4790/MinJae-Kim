@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
-import { HandIcon } from './HandIcons.jsx';
+import { ChoiceEmoji } from './ChoiceEmoji.jsx';
 import { springPop } from '../../lib/motionPresets.js';
 import { CHOICES } from '../../lib/rps.js';
 
@@ -60,7 +60,7 @@ export default function RpsScreenView({ state }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ ...screenPop, delay: 0.08 }}
           >
-            <HandIcon choice={state.operatorChoice} size={140} />
+            <ChoiceEmoji choice={state.operatorChoice} size={140} />
           </motion.div>
           <p className="screen__rps-list">
             생존 {state.roundResult.winners.length}명 · 탈락 {state.roundResult.nonWinners.length}명
@@ -96,7 +96,7 @@ export default function RpsScreenView({ state }) {
           <p className="screen__eyebrow">라운드 {state.round} · 목표 {state.targetWinners}명</p>
           <div className="rps-choice-row" style={{ justifyContent: 'center' }}>
             {CHOICES.map((c) => (
-              <HandIcon key={c} choice={c} size={72} />
+              <ChoiceEmoji key={c} choice={c} size={72} />
             ))}
           </div>
           <p className="screen__rps-list">
