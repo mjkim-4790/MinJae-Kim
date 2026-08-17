@@ -14,7 +14,7 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: ""
-      # Shell 이 없는 무료 티어에서 최초 운영자 계정을 만들기 위한 값 (README 참고).
+      # Shell 이 없는 무료 티어에서 운영자 계정을 만들기 위한 값 (README 참고).
       # sync: false 라 Render 대시보드의 Environment 탭에서 직접 값을 채워 넣어야 한다.
       - key: BOOTSTRAP_OPERATOR_EMAIL
         sync: false
@@ -22,3 +22,6 @@ services:
         sync: false
       - key: BOOTSTRAP_OPERATOR_NAME
         sync: false
+      # 운영자를 한 명 더 만들려면 대시보드에서 아래처럼 _2 를 붙인 키를 직접 추가한다
+      # (render.yaml 에 미리 선언 안 해도 Environment 탭에서 커스텀 변수로 추가 가능).
+      # BOOTSTRAP_OPERATOR_EMAIL_2, BOOTSTRAP_OPERATOR_PASSWORD_2, BOOTSTRAP_OPERATOR_NAME_2

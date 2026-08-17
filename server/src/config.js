@@ -11,6 +11,22 @@ const toList = (value) =>
 const originsFromEnv = toList(process.env.CORS_ORIGINS);
 const env = process.env.NODE_ENV ?? 'development';
 
+// BOOTSTRAP_OPERATOR_EMAIL / _PASSWORD / _NAME (첫 번째 계정) 에 이어
+// _EMAIL_2 / _PASSWORD_2 / _NAME_2, _EMAIL_3 ... 처럼 번호를 붙이면 여러 운영자를
+// 한 번에 부트스트랩할 수 있다. Render 대시보드는 plain key/value 만 넣으면 되므로
+// JSON 보다 이 방식이 다루기 쉽다. 번호가 끊기는 지점에서 스캔을 멈춘다.
+function collectBootstrapOperators() {
+  const operators = [];
+  for (let i = 1; ; i += 1) {
+    const suffix = i === 1 ? '' : `_${i}`;
+    const email = process.env[`BOOTSTRAP_OPERATOR_EMAIL${suffix}`];
+    const password = process.env[`BOOTSTRAP_OPERATOR_PASSWORD${suffix}`];
+    if (!email || !password) break;
+    operators.push({ email, password, name: process.env[`BOOTSTRAP_OPERATOR_NAME${suffix}`] || 'MC' });
+  }
+  return operators;
+}
+
 // 개발 중 스마트폰 테스트용 — 이 노트북의 LAN IP 를 전부 허용 출처에 넣는다.
 // Wi-Fi 가 바뀌어 IP 가 달라져도 .env 를 고칠 필요가 없다. 운영에서는 쓰지 않는다
 // (서버가 클라이언트 빌드를 함께 서빙해 동일 출처가 되므로).
@@ -43,12 +59,8 @@ export const config = {
 
   sessionSecret: process.env.SESSION_SECRET || 'dev-only-insecure-secret-change-me',
 
-  // Shell 이 없는 무료 티어 배포용 — 지정돼 있으면 부팅 시 없는 경우에만 운영자 계정을 만든다.
-  bootstrapOperator: {
-    email: process.env.BOOTSTRAP_OPERATOR_EMAIL || null,
-    password: process.env.BOOTSTRAP_OPERATOR_PASSWORD || null,
-    name: process.env.BOOTSTRAP_OPERATOR_NAME || 'MC',
-  },
+  // Shell 이 없는 무료 티어 배포용 — 지정된 각 계정을 부팅 시 없는 경우에만 만든다.
+  bootstrapOperators: collectBootstrapOperators(),
 };
 
 export const isProd = config.env === 'production';
