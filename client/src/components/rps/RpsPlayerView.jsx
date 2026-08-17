@@ -212,11 +212,14 @@ export default function RpsPlayerView({ game, participantId }) {
               exit={{ opacity: 0 }}
               transition={springPop}
             >
-              {yourChoice ? (
-                <ChoiceEmoji choice={yourChoice} size={64} />
-              ) : (
-                <span className="rps-choice-emoji">❓</span>
-              )}
+              {/* result 단계에서는 이미 결과 모달로 이번 라운드 선택을 보여줬으니,
+                  패자부활전으로 넘어가는 이 화면에서는 지난 선택을 다시 보여주지 않는다 */}
+              {state.status !== 'result' &&
+                (yourChoice ? (
+                  <ChoiceEmoji choice={yourChoice} size={64} />
+                ) : (
+                  <span className="rps-choice-emoji">❓</span>
+                ))}
               <p className="rps-waiting__text">{waitingLabel}</p>
               <WaitingDots />
             </motion.div>
