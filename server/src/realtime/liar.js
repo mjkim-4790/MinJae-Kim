@@ -30,8 +30,8 @@ function createInitialState() {
     activePool: [],
     liarParticipantId: null,
     words: new Map(), // participantId -> word (비공개 — publicState 에 절대 넣지 않는다)
-    turnOrder: [],
-    currentTurnIndex: 0,
+    turnOrder: [], // 참고용 발언 순서 — 진행은 현장에서 참여자들이 자발적으로 넘긴다
+    suspects: new Set(), // "의심" 버튼을 누른 participantId
     votes: new Map(), // voterId -> accusedId
     lastResult: null,
   };
@@ -59,7 +59,7 @@ function publicState(state) {
     category: state.category,
     activeParticipantIds: state.activePool,
     turnOrder: state.turnOrder,
-    currentTurnParticipantId: state.turnOrder[state.currentTurnIndex] ?? null,
+    suspectedParticipantIds: [...state.suspects],
     votedParticipantIds: [...state.votes.keys()],
     result: null,
   };
@@ -168,7 +168,10 @@ export function registerLiarHandlers(io, socket) {
     await pushWordsToPlayers(io, code, state);
   });
 
-  socket.on('liar:next', (payload = {}, ack) => {
+  // 발언 순서 진행은 이제 앱이 관여하지 않는다 — 현장에서 참여자들이 자발적으로 다음
+  // 사람에게 넘긴다. 대신 "의심" 버튼을 눌러 의심을 표시하고, 활성 참여자 과반수가
+  // 누르면 자동으로 투표 단계로 전환한다 (운영 결정 2026-08-17).
+  socket.on('liar:suspect', (payload = {}, ack) => {
     const reply = typeof ack === 'function' ? ack : () => {};
     const code = normalizeEventCode(payload.eventCode);
     if (socket.data.role !== 'player' || !socket.data.participantId || socket.data.eventCode !== code) {
@@ -177,31 +180,18 @@ export function registerLiarHandlers(io, socket) {
 
     const state = getState(code);
     if (state.status !== 'describing') return reply({ ok: false, error: 'NOT_DESCRIBING' });
-    if (!state.activePool.includes(socket.data.participantId)) {
+    const participantId = socket.data.participantId;
+    if (!state.activePool.includes(participantId)) {
       return reply({ ok: false, error: 'NOT_IN_ROUND' });
     }
 
-    state.currentTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
+    state.suspects.add(participantId);
     reply({ ok: true });
-    broadcastNow(io, code);
-  });
 
-  // 의심스러운 사람이 있으면 누구든 눌러서 바로 투표 단계로 넘긴다 (운영 결정: 1명이라도 누르면 즉시 진행).
-  socket.on('liar:stop', (payload = {}, ack) => {
-    const reply = typeof ack === 'function' ? ack : () => {};
-    const code = normalizeEventCode(payload.eventCode);
-    if (socket.data.role !== 'player' || !socket.data.participantId || socket.data.eventCode !== code) {
-      return reply({ ok: false, error: 'FORBIDDEN' });
+    // 과반수 = 절반 초과 (예: 3명 중 2명, 4명 중 3명)
+    if (state.suspects.size * 2 > state.activePool.length) {
+      state.status = 'voting';
     }
-
-    const state = getState(code);
-    if (state.status !== 'describing') return reply({ ok: false, error: 'NOT_DESCRIBING' });
-    if (!state.activePool.includes(socket.data.participantId)) {
-      return reply({ ok: false, error: 'NOT_IN_ROUND' });
-    }
-
-    state.status = 'voting';
-    reply({ ok: true });
     broadcastNow(io, code);
   });
 

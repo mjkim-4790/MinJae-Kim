@@ -1149,21 +1149,6 @@ a.button--ghost {
   letter-spacing: -0.01em;
 }
 
-.liar-word-card__controls {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-}
-
-/* 내 차례일 때만 옅은 빨간 배경으로 알려준다 */
-.liar-word-card__controls--myturn {
-  background: rgba(217, 45, 32, 0.1);
-}
-
 .liar-word-card__turn-hint {
   margin: 0;
   font-size: 14px;
@@ -1171,14 +1156,8 @@ a.button--ghost {
   color: var(--bad);
 }
 
-.liar-word-card__buttons {
-  display: flex;
-  gap: 10px;
+.liar-word-card__suspect-btn {
   width: 100%;
-}
-
-.liar-word-card__buttons .button {
-  flex: 1;
 }
 
 .liar-vote-list {

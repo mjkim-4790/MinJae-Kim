@@ -72,8 +72,8 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
         {state.status === 'ended' && (
           // 게임 중에는 참여자 화면이 게임만 보여주므로, 끝내고 점수·메시지·순위를 다시 띄우려면
           // 여기서 결과를 지워야 한다
-          <button className="button button--ghost" disabled={busy} onClick={() => run(reset)}>
-            결과 지우고 참여자 화면 복귀
+          <button className="button" disabled={busy} onClick={() => run(reset)}>
+            확인
           </button>
         )}
         <label className="field">

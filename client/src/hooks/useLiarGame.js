@@ -7,7 +7,7 @@ const IDLE_STATE = {
   category: null,
   activeParticipantIds: [],
   turnOrder: [],
-  currentTurnParticipantId: null,
+  suspectedParticipantIds: [],
   votedParticipantIds: [],
   result: null,
 };
@@ -52,12 +52,8 @@ export function useLiarGame({ eventCode, participantId = null, initialState, ini
     (payload) => new Promise((resolve) => socket.emit('liar:start', { eventCode, ...payload }, resolve)),
     [eventCode],
   );
-  const next = useCallback(
-    () => new Promise((resolve) => socket.emit('liar:next', { eventCode }, resolve)),
-    [eventCode],
-  );
-  const stop = useCallback(
-    () => new Promise((resolve) => socket.emit('liar:stop', { eventCode }, resolve)),
+  const suspect = useCallback(
+    () => new Promise((resolve) => socket.emit('liar:suspect', { eventCode }, resolve)),
     [eventCode],
   );
   const vote = useCallback(
@@ -77,5 +73,5 @@ export function useLiarGame({ eventCode, participantId = null, initialState, ini
     [eventCode],
   );
 
-  return { state, yourWord, start, next, stop, vote, lock, advance, reset };
+  return { state, yourWord, start, suspect, vote, lock, advance, reset };
 }

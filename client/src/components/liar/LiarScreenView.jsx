@@ -64,11 +64,12 @@ export default function LiarScreenView({ state, participants = [] }) {
           transition={springPop}
         >
           <p className="screen__eyebrow">{state.category?.name} · 설명 중</p>
-          <p className="screen__code" style={{ fontSize: 'clamp(32px,6vw,80px)' }}>
-            {nicknameOf(participantsById, state.currentTurnParticipantId)}
+          <p className="screen__liar-emoji">🗣️</p>
+          <p className="screen__liar-list">
+            발언 순서(참고용): {state.turnOrder.map((id) => nicknameOf(participantsById, id)).join(' → ')}
           </p>
           <p className="screen__liar-list">
-            발언 순서: {state.turnOrder.map((id) => nicknameOf(participantsById, id)).join(' → ')}
+            의심 {state.suspectedParticipantIds.length}/{state.activeParticipantIds.length}
           </p>
         </motion.div>
       )}

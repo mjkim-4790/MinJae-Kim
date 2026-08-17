@@ -58,8 +58,8 @@ export default function LiarOperatorPanel({ game, participants }) {
         {state.status === 'ended' && (
           // 게임 중에는 참여자 화면이 게임만 보여주므로, 다음 게임을 바로 시작하지 않고
           // 점수·메시지·순위를 다시 보여주려면 여기서 상태를 지워야 한다 (rps 패턴과 동일)
-          <button className="button button--ghost" disabled={busy} onClick={() => run(reset)}>
-            결과 지우고 참여자 화면 복귀
+          <button className="button" disabled={busy} onClick={() => run(reset)}>
+            확인
           </button>
         )}
 
@@ -139,15 +139,15 @@ export default function LiarOperatorPanel({ game, participants }) {
 
         {state.status === 'describing' && (
           <>
+            <p className="subtitle">
+              발언 순서(참고용): {state.turnOrder.map((id) => nicknameOf(participantsById, id)).join(' → ')}
+            </p>
             <p className="badge badge--info">
-              지금 차례: {nicknameOf(participantsById, state.currentTurnParticipantId)}
+              의심 {state.suspectedParticipantIds.length}/{state.activeParticipantIds.length}
             </p>
             <p className="subtitle">
-              발언 순서: {state.turnOrder.map((id) => nicknameOf(participantsById, id)).join(' → ')}
-            </p>
-            <p className="subtitle">
-              참여자들이 직접 '다음' · '정지' 버튼으로 진행합니다. 누군가 정지를 누르면 자동으로
-              투표 단계로 넘어가요.
+              참여자들이 현장에서 자유롭게 다음 사람에게 넘깁니다. 과반수가 '의심'을 누르면
+              자동으로 투표 단계로 넘어가요.
             </p>
           </>
         )}

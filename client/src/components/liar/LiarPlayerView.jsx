@@ -11,42 +11,34 @@ function nicknameOf(participantsById, id) {
 }
 
 // 가위바위보의 하단 고정 시트 대신, 제시어는 화면 "중간"에 카드 형태로 계속 떠 있는다
-// (§12 머티리얼 — 반투명 층). 내 차례가 되면 컨트롤 영역에 옅은 빨간 배경이 들어온다.
-function WordCard({ word, isLiar, isMyTurn, onNext, onStop, busy }) {
+// (§12 머티리얼 — 반투명 층). 발언 순서 진행은 현장에서 참여자들이 자발적으로 넘기고,
+// 앱은 "의심" 버튼과 그 집계만 담당한다. 이 카드가 투표 카드로 바뀔 때는 부모의
+// AnimatePresence 가 같은 경로로 사라지고 나타나는 전환을 맡는다(§7 공간 일관성).
+function WordCard({ word, isLiar, suspectCount, totalCount, mySuspected, onSuspect, busy }) {
   return (
     <motion.div
       className="liar-word-card"
       initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
       animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
       transition={materializeSpring}
     >
       {isLiar && <p className="liar-word-card__role">당신은 라이어입니다 🎭</p>}
       <p className="liar-word-card__label">{isLiar ? '이 단어로 시민인 척 설명하세요' : '이 단어를 설명하세요'}</p>
       <p className="liar-word-card__word">{word}</p>
 
-      <div className={`liar-word-card__controls${isMyTurn ? ' liar-word-card__controls--myturn' : ''}`}>
-        {isMyTurn && <p className="liar-word-card__turn-hint">지금 당신 차례예요 👇</p>}
-        <div className="liar-word-card__buttons">
-          <motion.button
-            className="button button--ghost"
-            onClick={onNext}
-            disabled={busy}
-            whileTap={{ scale: 0.96 }}
-            transition={springTap}
-          >
-            다음
-          </motion.button>
-          <motion.button
-            className="button button--danger"
-            onClick={onStop}
-            disabled={busy}
-            whileTap={{ scale: 0.96 }}
-            transition={springTap}
-          >
-            정지 (의심돼요)
-          </motion.button>
-        </div>
-      </div>
+      <p className="subtitle">
+        의심 {suspectCount}/{totalCount} · 과반수가 누르면 투표로 넘어가요
+      </p>
+      <motion.button
+        className="button button--danger liar-word-card__suspect-btn"
+        onClick={onSuspect}
+        disabled={busy || mySuspected}
+        whileTap={{ scale: 0.96 }}
+        transition={springTap}
+      >
+        {mySuspected ? '의심 완료' : '의심'}
+      </motion.button>
     </motion.div>
   );
 }
@@ -57,6 +49,7 @@ function VoteCard({ candidates, myVote, onVote, busy }) {
       className="liar-word-card"
       initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
       animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
       transition={materializeSpring}
     >
       <p className="liar-word-card__label">라이어라고 생각하는 사람을 지목하세요</p>
@@ -136,7 +129,7 @@ function ResultModal({ open, state, participantId, onClose }) {
 
 /** 참여자 화면의 라이어 게임 영역. status==='idle' 이면 아무것도 렌더링하지 않는다. */
 export default function LiarPlayerView({ game, participantId, participants = [] }) {
-  const { state, yourWord, next, stop, vote } = game;
+  const { state, yourWord, suspect, vote } = game;
   const [myVote, setMyVote] = useState(null);
   const [resultDismissed, setResultDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -145,6 +138,10 @@ export default function LiarPlayerView({ game, participantId, participants = [] 
     if (state.status === 'idle' || state.status === 'describing') setMyVote(null);
     if (state.status !== 'result') setResultDismissed(false);
   }, [state.status]);
+
+  // 누가 의심을 눌렀는지는 서버 상태에 그대로 들어있으니(누구를 지목했는지와 달리
+  // 비밀로 할 이유가 없다) 낙관적 로컬 상태 없이 바로 파생시킨다.
+  const mySuspected = state.suspectedParticipantIds?.includes(participantId) ?? false;
 
   if (state.status === 'idle') return null;
 
@@ -181,30 +178,36 @@ export default function LiarPlayerView({ game, participantId, participants = [] 
 
         {!inRound && <p className="rps-spectator">이번 게임은 관전 중입니다.</p>}
 
-        {inRound && state.status === 'describing' && yourWord && (
-          <WordCard
-            word={yourWord.word}
-            isLiar={yourWord.isLiar}
-            isMyTurn={state.currentTurnParticipantId === participantId}
-            onNext={() => run(next)}
-            onStop={() => run(stop)}
-            busy={busy}
-          />
-        )}
+        {/* 카드가 바뀌는 전환에도 애니메이션이 붙도록 같은 AnimatePresence 안에서 스왑한다 */}
+        <AnimatePresence mode="wait">
+          {inRound && state.status === 'describing' && yourWord && (
+            <WordCard
+              key="word"
+              word={yourWord.word}
+              isLiar={yourWord.isLiar}
+              suspectCount={state.suspectedParticipantIds.length}
+              totalCount={state.activeParticipantIds.length}
+              mySuspected={mySuspected}
+              onSuspect={() => run(suspect)}
+              busy={busy}
+            />
+          )}
 
-        {inRound && state.status === 'voting' && (
-          <VoteCard
-            candidates={state.activeParticipantIds
-              .filter((id) => id !== participantId)
-              .map((id) => participantsById.get(id) ?? { id, nickname: nicknameOf(participantsById, id) })}
-            myVote={myVote}
-            busy={busy}
-            onVote={async (accusedId) => {
-              const res = await run(vote, accusedId);
-              if (res?.ok) setMyVote(accusedId);
-            }}
-          />
-        )}
+          {inRound && state.status === 'voting' && (
+            <VoteCard
+              key="vote"
+              candidates={state.activeParticipantIds
+                .filter((id) => id !== participantId)
+                .map((id) => participantsById.get(id) ?? { id, nickname: nicknameOf(participantsById, id) })}
+              myVote={myVote}
+              busy={busy}
+              onVote={async (accusedId) => {
+                const res = await run(vote, accusedId);
+                if (res?.ok) setMyVote(accusedId);
+              }}
+            />
+          )}
+        </AnimatePresence>
       </section>
 
       <ResultModal
