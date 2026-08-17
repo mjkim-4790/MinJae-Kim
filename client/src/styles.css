@@ -656,19 +656,154 @@ a.button--ghost {
   gap: 4px;
 }
 
-.rps-your-choice {
+/* 게임 진행 중 참여자 화면 — 라운드 카드 하나만 남기고 전부 비운다 */
+.rps-stage {
+  text-align: center;
+  padding: 20px 16px;
+}
+
+.rps-round-title {
+  margin: 0;
+  /* 큰 글씨일수록 자간은 좁게 (§15) */
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.rps-stage__hint {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.rps-waiting {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 24px;
-  border-radius: 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  gap: 12px;
+  padding: 8px 0 4px;
 }
 
-.rps-your-choice .rps-choice-emoji {
-  font-size: 56px;
+.rps-waiting__text {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* 점 8개가 원을 그리며 차례로 흐려지는 대기 인디케이터 */
+.loading-dots {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 44px;
+}
+
+.loading-dots__dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--muted);
+  transform: rotate(calc(var(--i) * 45deg)) translateY(-16px);
+  animation: loading-dots-fade 1s linear infinite;
+  animation-delay: calc(var(--i) * 0.125s);
+}
+
+@keyframes loading-dots-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-dots__dot {
+    animation: none !important;
+    opacity: 0.45;
+  }
+}
+
+/* 라운드 결과 모달 — 딤으로 결과에만 집중시킨다 (§12) */
+.rps-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(33, 31, 28, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .rps-scrim {
+    background: rgba(33, 31, 28, 0.72);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.rps-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(320px, 100%);
+  padding: 28px 24px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.rps-modal__eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+.rps-verdict {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.rps-verdict--win {
+  color: var(--ok);
+}
+
+.rps-verdict--lose {
+  color: var(--bad);
+}
+
+.rps-verdict--none {
+  color: var(--muted);
+}
+
+.rps-modal__note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.rps-modal__button {
+  width: 100%;
+  margin-top: 6px;
+  border-radius: var(--radius-md);
 }
 
 .rps-spectator {
@@ -677,22 +812,6 @@ a.button--ghost {
   background: var(--line);
   color: var(--muted);
   text-align: center;
-}
-
-.rps-result-line {
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-.rps-result-line--win {
-  background: #e3f6e9;
-  color: var(--ok);
-}
-
-.rps-result-line--lose {
-  background: #fdecea;
-  color: var(--bad);
 }
 
 /* 대형 스크린 게임 연출 */

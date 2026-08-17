@@ -77,6 +77,9 @@ export default function PlayerJoin() {
     join(nickname.trim(), pin);
   };
 
+  // 게임이 돌아가는 동안은 게임 화면만 남긴다 — 참여자가 지금 뭘 해야 하는지에만 집중하도록
+  const gameRunning = rpsGame.state.status !== 'idle';
+
   if (status === 'joined' || status === 'reconnecting') {
     return (
       <main className="page">
@@ -90,37 +93,43 @@ export default function PlayerJoin() {
           </p>
         </header>
 
-        <section className="panel stack">
-          <h2 className="panel__title">내 누적 점수</h2>
-          <p className="stat-number">{myScore}</p>
-        </section>
+        {!gameRunning && (
+          <section className="panel stack">
+            <h2 className="panel__title">내 누적 점수</h2>
+            <p className="stat-number">{myScore}</p>
+          </section>
+        )}
 
         <RpsPlayerView game={rpsGame} participantId={participant?.id} />
 
-        <section className="panel stack">
-          <h2 className="panel__title">실시간 메시지</h2>
-          <ChatPanel
-            messages={chat.messages}
-            pinnedMessage={chat.pinnedMessage}
-            chatEnabled={chat.chatEnabled}
-            autoScroll={chat.autoScroll}
-            canSend={chat.chatEnabled}
-            onSend={chat.sendMessage}
-          />
-        </section>
+        {!gameRunning && (
+          <>
+            <section className="panel stack">
+              <h2 className="panel__title">실시간 메시지</h2>
+              <ChatPanel
+                messages={chat.messages}
+                pinnedMessage={chat.pinnedMessage}
+                chatEnabled={chat.chatEnabled}
+                autoScroll={chat.autoScroll}
+                canSend={chat.chatEnabled}
+                onSend={chat.sendMessage}
+              />
+            </section>
 
-        <section className="panel stack">
-          <h2 className="panel__title">순위</h2>
-          <RankingBoard
-            participants={scoreboard.participants}
-            teamScores={scoreboard.teamScores}
-            mode={event?.mode}
-          />
-        </section>
+            <section className="panel stack">
+              <h2 className="panel__title">순위</h2>
+              <RankingBoard
+                participants={scoreboard.participants}
+                teamScores={scoreboard.teamScores}
+                mode={event?.mode}
+              />
+            </section>
 
-        <p className="subtitle">
-          닉네임과 숫자를 기억하세요! 연결이 끊겨도 다시 들어올 수 있어요.
-        </p>
+            <p className="subtitle">
+              닉네임과 숫자를 기억하세요! 연결이 끊겨도 다시 들어올 수 있어요.
+            </p>
+          </>
+        )}
       </main>
     );
   }

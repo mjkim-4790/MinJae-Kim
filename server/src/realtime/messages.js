@@ -23,7 +23,8 @@ export function registerMessageHandlers(io, socket) {
     if (socket.data.role === 'operator') {
       if (!isAuthorizedOperator(socket, code)) return reply({ ok: false, error: 'FORBIDDEN' });
       authorType = 'operator';
-      authorName = socket.data.operatorName ?? 'MC';
+      // 참여자에게는 운영자 계정 이름 대신 늘 같은 역할명으로 보이게 한다
+      authorName = '진행자';
     } else if (socket.data.role === 'player' && socket.data.participantId) {
       if (socket.data.eventCode !== code) return reply({ ok: false, error: 'FORBIDDEN' });
       if (!state.chatEnabled) return reply({ ok: false, error: 'CHAT_DISABLED' });

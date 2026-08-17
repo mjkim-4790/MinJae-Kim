@@ -11,19 +11,6 @@ const LINE = {
   strokeLinejoin: 'round',
 };
 
-function RpsIcon() {
-  // 주먹 + 가위가 마주보는 형태
-  return (
-    <>
-      <rect x="8" y="30" width="34" height="26" rx="12" {...LINE} />
-      <path d="M14 30v-6M23 28v-8M32 30v-6" {...LINE} strokeWidth={5} />
-      <rect x="58" y="30" width="34" height="26" rx="12" {...LINE} />
-      <path d="M66 30 60 10M80 30 86 10" {...LINE} strokeWidth={5} />
-      <path d="M46 43h8" {...LINE} strokeWidth={5} />
-    </>
-  );
-}
-
 function Quiz4Icon() {
   // 2x2 보기 카드 + 정답 체크
   return (
@@ -115,8 +102,12 @@ function TouchIcon() {
   );
 }
 
+// 게임 화면과 같은 이모지를 그대로 쓰는 게임은 SVG 대신 이모지로 보여준다
+const EMOJI = {
+  rps: '✌️',
+};
+
 const ICONS = {
-  rps: RpsIcon,
   quiz4: Quiz4Icon,
   ox: OxIcon,
   lucky: LuckyIcon,
@@ -128,6 +119,15 @@ const ICONS = {
 };
 
 export function GameIcon({ id, size = 34 }) {
+  const emoji = EMOJI[id];
+  if (emoji) {
+    return (
+      <span style={{ fontSize: size, lineHeight: 1, display: 'inline-block' }} aria-hidden="true">
+        {emoji}
+      </span>
+    );
+  }
+
   const Shape = ICONS[id];
   if (!Shape) return null;
   return (
