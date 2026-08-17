@@ -7,6 +7,7 @@ import { getEventByCode } from '../db/events.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { clearPlayerSocket, registerPlayerHandlers } from './players.js';
 import { registerMessageHandlers } from './messages.js';
+import { getLiarSnapshot, registerLiarHandlers } from './liar.js';
 import { getRpsSnapshot, registerRpsHandlers } from './rps.js';
 import { buildScoreboard } from './scoreboard.js';
 import {
@@ -42,6 +43,7 @@ export function createRealtime(httpServer) {
     registerScreenHandlers(io, socket);
     registerMessageHandlers(io, socket);
     registerRpsHandlers(io, socket);
+    registerLiarHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -88,6 +90,7 @@ export function createRealtime(httpServer) {
         response.chat = publicChatState(state);
         response.screenMode = state.screenMode;
         response.rps = getRpsSnapshot(code);
+        response.liar = getLiarSnapshot(code);
         if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {

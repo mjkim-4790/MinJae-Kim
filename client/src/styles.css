@@ -937,6 +937,11 @@ a.button--ghost {
   color: var(--text);
 }
 
+/* 자체 둥근 타일 배경을 그려서 들고 있는 아이콘용 — 기본 배경 박스를 겹치지 않는다 */
+.game-tile__icon--bare {
+  background: transparent;
+}
+
 .game-tile__name {
   font-size: 13px;
   font-weight: 600;
@@ -972,6 +977,10 @@ a.button--ghost {
 .game-tile--soon .game-tile__icon {
   background: #f1efe9;
   color: var(--muted);
+}
+
+.game-tile--soon .game-tile__icon--bare {
+  background: transparent;
 }
 
 .game-tile--soon .game-tile__name {
@@ -1028,4 +1037,185 @@ a.button--ghost {
   border-radius: var(--radius-lg);
   font-size: 16px;
   gap: 8px;
+}
+
+/* 라이어 게임 */
+
+.liar-category-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.liar-category-tile {
+  width: 100%;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.liar-category-tile--active {
+  border-color: var(--accent);
+  background: #e4f0ff;
+}
+
+.liar-final-banner {
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.liar-final-banner--liar {
+  background: #fdf3d0;
+  color: var(--warn);
+}
+
+.liar-final-banner--citizen {
+  background: #e3f6e9;
+  color: var(--ok);
+}
+
+.liar-verdict-line {
+  margin: 0;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.liar-verdict-line--liar {
+  color: var(--warn);
+}
+
+.liar-verdict-line--citizen {
+  color: var(--ok);
+}
+
+.liar-stage {
+  text-align: center;
+}
+
+/* 가위바위보 하단 시트 대신 화면 중간에 계속 떠 있는 카드 (§12 머티리얼) */
+.liar-word-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .liar-word-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.liar-word-card__role {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+.liar-word-card__label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.liar-word-card__word {
+  margin: 0;
+  font-size: clamp(32px, 8vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.liar-word-card__controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+}
+
+/* 내 차례일 때만 옅은 빨간 배경으로 알려준다 */
+.liar-word-card__controls--myturn {
+  background: rgba(217, 45, 32, 0.1);
+}
+
+.liar-word-card__turn-hint {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bad);
+}
+
+.liar-word-card__buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.liar-word-card__buttons .button {
+  flex: 1;
+}
+
+.liar-vote-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.liar-vote-btn {
+  width: 100%;
+  padding: 14px 8px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.liar-vote-btn--active {
+  border-color: var(--bad);
+  background: #fdecea;
+}
+
+.screen__liar-emoji {
+  font-size: clamp(80px, 14vw, 180px);
+  line-height: 1;
+}
+
+.screen__liar-list {
+  font-size: clamp(16px, 2vw, 24px);
+  color: var(--muted);
+  max-width: 80vw;
+  text-align: center;
 }

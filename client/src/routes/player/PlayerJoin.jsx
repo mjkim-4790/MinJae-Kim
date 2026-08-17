@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import ChatPanel from '../../components/ChatPanel.jsx';
+import LiarPlayerView from '../../components/liar/LiarPlayerView.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
 import { useChat } from '../../hooks/useChat.js';
+import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
@@ -32,6 +34,8 @@ export default function PlayerJoin() {
     chat: initialChat,
     rps: initialRps,
     yourRpsChoice: initialYourRpsChoice,
+    liar: initialLiar,
+    yourLiarWord: initialYourLiarWord,
     scoreboard: initialScoreboard,
     error,
     join,
@@ -42,6 +46,12 @@ export default function PlayerJoin() {
     participantId: participant?.id ?? null,
     initialState: initialRps,
     initialYourChoice: initialYourRpsChoice,
+  });
+  const liarGame = useLiarGame({
+    eventCode: code,
+    participantId: participant?.id ?? null,
+    initialState: initialLiar,
+    initialYourWord: initialYourLiarWord,
   });
   const scoreboard = useScoreboard(initialScoreboard);
   const myScore = scoreboard.participants.find((p) => p.id === participant?.id)?.score ?? 0;
@@ -78,7 +88,7 @@ export default function PlayerJoin() {
   };
 
   // 게임이 돌아가는 동안은 게임 화면만 남긴다 — 참여자가 지금 뭘 해야 하는지에만 집중하도록
-  const gameRunning = rpsGame.state.status !== 'idle';
+  const gameRunning = rpsGame.state.status !== 'idle' || liarGame.state.status !== 'idle';
 
   if (status === 'joined' || status === 'reconnecting') {
     return (
@@ -101,6 +111,11 @@ export default function PlayerJoin() {
         )}
 
         <RpsPlayerView game={rpsGame} participantId={participant?.id} />
+        <LiarPlayerView
+          game={liarGame}
+          participantId={participant?.id}
+          participants={scoreboard.participants}
+        />
 
         {!gameRunning && (
           <>

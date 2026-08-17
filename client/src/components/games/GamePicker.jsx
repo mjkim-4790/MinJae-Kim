@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 
-import { GameIcon } from './GameIcons.jsx';
+import { GameIcon, SELF_CONTAINED_ICON_IDS } from './GameIcons.jsx';
 import { GAMES } from '../../lib/games.js';
 import { springTap } from '../../lib/motionPresets.js';
 
@@ -26,8 +26,12 @@ export default function GamePicker({ onSelect, runningGameId = null }) {
               whileTap={game.ready ? { scale: 0.94 } : undefined}
               transition={springTap}
             >
-              <span className="game-tile__icon">
-                <GameIcon id={game.id} />
+              <span
+                className={`game-tile__icon${
+                  SELF_CONTAINED_ICON_IDS.has(game.id) ? ' game-tile__icon--bare' : ''
+                }`}
+              >
+                <GameIcon id={game.id} muted={!game.ready} />
                 {running && <span className="game-tile__badge">진행 중</span>}
               </span>
               <span className="game-tile__name">{game.name}</span>

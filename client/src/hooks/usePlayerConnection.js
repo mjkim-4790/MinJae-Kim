@@ -17,6 +17,8 @@ export function usePlayerConnection(eventCode) {
   const [chat, setChat] = useState(null);
   const [rps, setRps] = useState(null);
   const [yourRpsChoice, setYourRpsChoice] = useState(null);
+  const [liar, setLiar] = useState(null);
+  const [yourLiarWord, setYourLiarWord] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -34,6 +36,8 @@ export function usePlayerConnection(eventCode) {
             setChat(res.chat);
             setRps(res.rps);
             setYourRpsChoice(res.yourRpsChoice ?? null);
+            setLiar(res.liar);
+            setYourLiarWord(res.yourLiarWord ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -89,5 +93,17 @@ export function usePlayerConnection(eventCode) {
     };
   }, [performJoin]);
 
-  return { status, participant, event, chat, rps, yourRpsChoice, scoreboard, error, join };
+  return {
+    status,
+    participant,
+    event,
+    chat,
+    rps,
+    yourRpsChoice,
+    liar,
+    yourLiarWord,
+    scoreboard,
+    error,
+    join,
+  };
 }

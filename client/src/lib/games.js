@@ -11,6 +11,7 @@ export const GAMES = [
   { id: 'vote', name: '투표', ready: false },
   { id: 'survey', name: '설문', ready: false },
   { id: 'touch', name: '터치', ready: false },
+  { id: 'liar', name: '라이어 게임', ready: true },
 ];
 
 export function gameById(id) {

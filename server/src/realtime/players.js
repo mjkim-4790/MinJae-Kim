@@ -6,6 +6,7 @@ import {
   touchLastSeen,
 } from '../db/participants.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
+import { getLiarSnapshot, getYourLiarWord } from './liar.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 import { getRpsSnapshot, getYourChoice } from './rps.js';
 import { buildScoreboard } from './scoreboard.js';
@@ -87,6 +88,8 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       chat: publicChatState(state),
       rps: getRpsSnapshot(code),
       yourRpsChoice: getYourChoice(code, participant.id),
+      liar: getLiarSnapshot(code),
+      yourLiarWord: getYourLiarWord(code, participant.id),
       scoreboard: buildScoreboard(event.id),
     });
     await broadcastPresence(io, code);

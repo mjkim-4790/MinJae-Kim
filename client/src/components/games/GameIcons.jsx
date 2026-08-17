@@ -1,6 +1,8 @@
 // 게임 선택 그리드용 라인아트 아이콘 (오리지널 디자인).
 // HandIcons.jsx 와 같은 톤: 흰 바탕 + 굵은 검정 선, 둥근 끝처리.
 
+import LiarGameIcon from './LiarGameIcon.jsx';
+
 const STROKE = 'currentColor';
 
 const LINE = {
@@ -118,7 +120,14 @@ const ICONS = {
   touch: TouchIcon,
 };
 
-export function GameIcon({ id, size = 34 }) {
+// 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란
+// 배경 박스(.game-tile__icon)를 겹쳐 씌우지 않고 그대로 내보낸다.
+export const SELF_CONTAINED_ICON_IDS = new Set(['liar']);
+
+export function GameIcon({ id, size = 34, muted = false }) {
+  // 가위바위보 이모지처럼 '준비중'이어도 무채색으로 죽이지 않고 원래 색을 그대로 보여준다
+  if (id === 'liar') return <LiarGameIcon size={48} />;
+
   const emoji = EMOJI[id];
   if (emoji) {
     return (
