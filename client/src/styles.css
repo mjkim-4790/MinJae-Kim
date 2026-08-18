@@ -1,5 +1,16 @@
 /* Phase 5 — /apple-design: 즉각적 반응, 스프링 모션, 머티리얼, 크기별 타이포그래피 */
 
+/* 참여자 화면의 닉네임 제목 전용 서체 (IM_Hyemin, 사용자 제공 — 원본 OTF 는 5.5MB로
+   너무 무거워서 WOFF2 로 다시 압축해 515KB 로 줄였다. 원본 폰트의 fsType 값이 4
+   (Preview & Print Embedding) — 편집 목적 재배포가 아닌 화면 표시 용도로만 쓴다). */
+@font-face {
+  font-family: 'IM Hyemin';
+  src: url('./assets/fonts/IM_Hyemin-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #fcfaf5;
   --surface: #ffffff;
@@ -85,6 +96,12 @@ body {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
+}
+
+/* 참여자 화면의 닉네임 제목만 손글씨체로 — .title 의 크기/자간은 그대로 두고 서체만 바꾼다 */
+.player-nickname {
+  font-family: 'IM Hyemin', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+    system-ui, sans-serif;
 }
 
 .subtitle {

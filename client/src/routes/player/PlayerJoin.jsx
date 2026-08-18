@@ -108,7 +108,7 @@ export default function PlayerJoin() {
           <p className="badge badge--info">연결이 끊겨 다시 연결하는 중…</p>
         )}
         <header className="stack">
-          <h1 className="title">{participant?.nickname}</h1>
+          <h1 className="title player-nickname">{participant?.nickname}</h1>
           <p className="subtitle">
             {event?.name} · {MODE_LABEL[event?.mode] ?? event?.mode}
           </p>
