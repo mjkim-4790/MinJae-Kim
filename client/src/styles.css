@@ -59,6 +59,7 @@ body {
 }
 
 .page {
+  position: relative;
   min-height: 100%;
   padding: 24px;
   padding-bottom: max(24px, env(safe-area-inset-bottom));
@@ -1255,11 +1256,13 @@ a.button--ghost {
 }
 
 /* 참여자 화면(입장 폼 + 입장 후) 오른쪽 상단 로고 — 두 화면 모두 같은 클래스를 써서
-   같은 고정 위치에 뜨므로, 폼 제출 후 화면이 바뀌어도 로고는 움직이지 않는다.
+   같은 위치에 뜨므로, 폼 제출 후 화면이 바뀌어도 로고는 움직이지 않는다.
+   position: absolute (부모 .page 기준) 라서 화면을 고정으로 떠 있지 않고 스크롤에
+   맞춰 페이지 콘텐츠와 함께 올라가고 내려간다.
    원본 로고 비율(약 3.55:1)이 요청한 3cm×2cm 박스와 달라 늘리면 찌그러지므로
    object-fit: contain 으로 비율을 지키며 박스 안에 맞춘다. */
 .player-corner-logo {
-  position: fixed;
+  position: absolute;
   top: max(16px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
   z-index: 30;
