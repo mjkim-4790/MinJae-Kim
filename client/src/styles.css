@@ -1231,7 +1231,8 @@ a.button--ghost {
 }
 
 .operator-login__submit {
-  padding: 0 20px;
+  /* 요청대로 버튼을 상하 0.35cm씩, 총 0.7cm 더 키운다 */
+  padding: 0.35cm 20px;
   white-space: nowrap;
 }
 
