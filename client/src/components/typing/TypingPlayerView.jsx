@@ -61,11 +61,22 @@ function InputSheet({ open, onSubmit, busy, error }) {
               onSubmit(text);
             }}
           >
-            <input
-              className="input"
+            {/* 한 줄 입력창은 문장이 길면 옆으로 스크롤돼 앞부분이 화면 밖으로 밀려난다
+                (커서를 되돌리려면 iOS 스페이스바 트랙패드 같은 트릭이 필요했다). 여러 줄로
+                줄바꿈되는 textarea 를 쓰면 적은 문장이 화면 안에 그대로 보여서 손가락으로
+                바로 짚어 확인할 수 있다. */}
+            <textarea
+              className="input typing-input-row__textarea"
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+                e.preventDefault();
+                if (!text.trim() || busy) return;
+                onSubmit(text);
+              }}
               placeholder="문장 입력"
+              rows={3}
               autoComplete="off"
               disabled={busy}
             />
