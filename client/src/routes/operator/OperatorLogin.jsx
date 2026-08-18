@@ -51,16 +51,16 @@ export default function OperatorLogin() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <div className="operator-login__pw-row">
-          <input
-            className="input"
-            type="password"
-            placeholder="비밀번호"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <input
+          className="input"
+          type="password"
+          placeholder="비밀번호"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <div className="operator-login__actions">
           <button className="button operator-login__submit" type="submit" disabled={submitting}>
             {submitting ? '확인 중…' : '다음'}
           </button>
