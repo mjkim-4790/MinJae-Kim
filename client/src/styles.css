@@ -1198,3 +1198,67 @@ a.button--ghost {
   max-width: 80vw;
   text-align: center;
 }
+
+/* 화면에는 안 보이지만 스크린리더에는 읽히는 제목용 (§ 접근성) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 운영자 로그인 — 로고가 제목을 대신하는 레이아웃. .stack 은 기본 stretch 라 각
+   자식이 폭 100% 를 차지한다 — pw-row 안의 input 이 flex:1 로 늘어나려면 이게
+   필요하므로 여기서 align-items 를 따로 건드리지 않는다. 로고/보조 링크는
+   각자 margin:auto / justify-content:center 로 스스로 가운데 정렬한다. */
+.operator-login__logo {
+  width: 168px;
+  height: auto;
+  display: block;
+  margin: 0 auto 4px;
+}
+
+.operator-login__subtitle {
+  text-align: center;
+}
+
+.operator-login__pw-row {
+  display: flex;
+  gap: 8px;
+}
+
+.operator-login__pw-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.operator-login__submit {
+  flex-shrink: 0;
+  padding: 0 20px;
+  white-space: nowrap;
+}
+
+.operator-login__aux {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.operator-login__aux-link {
+  color: var(--muted);
+}
+
+.operator-login__sep {
+  width: 1px;
+  height: 11px;
+  background: var(--line);
+}
