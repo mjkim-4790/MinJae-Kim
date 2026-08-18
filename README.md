@@ -4,7 +4,8 @@
 
 현재 진행 상태: **Phase 6 — 배포 완료, 실전 시험 대기**
 
-배포 주소: https://recreation-web.onrender.com (Render 무료 티어 · 15분 무사용 시 슬립)
+배포 주소: https://recreation-web.onrender.com (Render 무료 티어 · 15분 무사용 시 슬립 · 기존 백업용)
+Railway 배포는 아래 "배포 — Railway (유료, 기존 계정에 추가)" 참고.
 
 ---
 
@@ -102,6 +103,46 @@ npm run build && npm start
   예정해둔 PostgreSQL 전환으로 넘어간다.
 - 같은 서버가 클라이언트까지 서빙하므로(§ 위 "운영 빌드" 참고) 배포 환경에서는 별도
   `CORS_ORIGINS` 설정이 필요 없다 (동일 출처).
+
+### 배포 — Railway (유료, 기존 계정에 추가)
+
+이미 Railway 유료 계정으로 다른 사이트를 운영 중이라면, 같은 계정에 새 프로젝트로
+추가하는 쪽이 별도 계정보다 저렴하다 — Railway 유료 플랜은 프로젝트당 고정비가 아니라
+실제 사용량(컴퓨팅/메모리) 기준으로 과금되기 때문이다. 저장소 루트의
+[`railway.json`](railway.json) 이 빌드/시작 명령과 헬스체크를 미리 정의해둔다.
+
+1. [Railway 대시보드](https://railway.com/dashboard) 로그인 → **New Project** →
+   **Deploy from GitHub repo** → 이 저장소 선택. `railway.json` 을 자동으로 인식한다.
+2. **Variables** 탭에서 환경변수를 설정한다:
+   ```
+   NODE_ENV=production
+   SESSION_SECRET=(충분히 긴 무작위 문자열 — Railway 의 "Generate" 버튼 사용 가능)
+   BOOTSTRAP_OPERATOR_EMAIL=mc@example.com
+   BOOTSTRAP_OPERATOR_PASSWORD=원하는 비밀번호
+   BOOTSTRAP_OPERATOR_NAME=홍길동
+   ```
+   `CORS_ORIGINS` 는 비워둔다 (동일 출처로 서빙되므로 불필요). 운영자를 여러 명
+   두려면 Render 와 동일하게 `_2`, `_3` 접미사를 이어 붙인다.
+3. **볼륨을 붙여 데이터를 영구 보존한다** (Render 무료 티어와 달리 Railway 유료
+   플랜은 이게 가능하다 — 이번 이전의 실질적인 이유):
+   - 서비스에서 커맨드 팔레트(`⌘K`) 또는 캔버스 우클릭 → **Create Volume** → 이
+     서비스에 연결 → 마운트 경로를 `/data` 로 지정.
+   - Variables 에 아래 두 개를 추가한다:
+     ```
+     DB_PATH=/data/recreation.sqlite
+     UPLOADS_DIR=/data/uploads
+     ```
+   - 볼륨은 소스 코드가 아니라 별도의 빈 경로(`/data`)에 붙여야 한다 — 소스 코드
+     디렉터리 위에 그대로 마운트하면 빌드 결과물이 가려져 앱이 깨진다.
+4. 첫 배포가 끝나면 발급된 `https://*.up.railway.app` 주소(또는 연결한 커스텀
+   도메인)로 `/api/health` 가 `{"ok":true,...}` 를 반환하는지 확인한다.
+5. 볼륨을 붙였다면 재배포해도 이벤트/참여자/업로드 로고가 그대로 남는다 — Render
+   무료 티어의 "재배포마다 초기화" 문제가 여기서는 없다. `BOOTSTRAP_OPERATOR_*` 는
+   그대로 켜둬도 무방하다 (이미 있는 이메일은 건너뛴다).
+
+Render 무료 티어 사이트는 백업/비교용으로 그대로 켜둬도 되고, Railway 가 안정적으로
+돌아가는 게 확인되면 그때 지워도 된다 — 두 배포는 서로 독립적이라 어느 쪽을 손대도
+다른 쪽에 영향이 없다.
 
 ### 부하 테스트
 

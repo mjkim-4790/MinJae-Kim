@@ -52,8 +52,11 @@ export const config = {
       ? ['http://localhost:5173', 'http://127.0.0.1:5173']
       : ['http://localhost:5173', 'http://127.0.0.1:5173', ...lanDevOrigins()],
 
-  // 테스트 등에서 별도 DB 파일을 쓰고 싶을 때만 지정. 기본은 server/data/recreation.sqlite
+  // 테스트 등에서 별도 DB 파일을 쓰고 싶을 때만 지정. 기본은 server/data/recreation.sqlite.
+  // 영구 디스크(볼륨)를 붙인 배포에서는 그 마운트 경로 아래를 가리키도록 지정한다
+  // (예: Railway 볼륨을 /data 에 붙였다면 DB_PATH=/data/recreation.sqlite).
   dbPath: process.env.DB_PATH || undefined,
+  uploadsDir: process.env.UPLOADS_DIR || undefined,
 
   maxLogoSizeBytes: 5 * 1024 * 1024, // 5MB
 

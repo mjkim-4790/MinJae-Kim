@@ -8,7 +8,9 @@ import multer from 'multer';
 import { config } from './config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const uploadsDir = path.resolve(__dirname, '../uploads');
+// DB_PATH 와 같은 이유 — 영구 디스크(볼륨)를 붙인 배포 환경에서는 소스 코드 바깥의
+// 경로를 가리키도록 오버라이드할 수 있어야 재배포해도 업로드한 로고가 살아남는다.
+export const uploadsDir = config.uploadsDir || path.resolve(__dirname, '../uploads');
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 
