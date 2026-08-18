@@ -1217,14 +1217,12 @@ a.button--ghost {
    필요하므로 여기서 align-items 를 따로 건드리지 않는다. 로고/보조 링크는
    각자 margin:auto / justify-content:center 로 스스로 가운데 정렬한다. */
 .operator-login__logo {
-  width: 168px;
+  /* 입력창과 같은 폭으로 맞춘다 (비율 유지) — 로고/부제 사이 여백이 없어진 만큼
+     아래쪽 여백을 stack 기본 gap(12px)보다 넉넉히 둬서 이메일 칸과 구분한다. */
+  width: 100%;
   height: auto;
   display: block;
-  margin: 0 auto 4px;
-}
-
-.operator-login__subtitle {
-  text-align: center;
+  margin: 0 auto 24px;
 }
 
 .operator-login__pw-row {

@@ -41,9 +41,6 @@ export default function OperatorLogin() {
         <img src={friendsLogo} alt="Friends" className="operator-login__logo" />
         {/* 로고가 제목을 대신하지만, 스크린리더에는 여전히 페이지 제목이 들려야 한다 */}
         <h1 className="sr-only">운영자 로그인</h1>
-        <p className="subtitle operator-login__subtitle">
-          계정은 개발자가 생성해 전달합니다. 계정이 없다면 담당자에게 문의하세요.
-        </p>
 
         <input
           className="input"
@@ -65,7 +62,7 @@ export default function OperatorLogin() {
             required
           />
           <button className="button operator-login__submit" type="submit" disabled={submitting}>
-            {submitting ? '로그인 중…' : '로그인'}
+            {submitting ? '확인 중…' : '다음'}
           </button>
         </div>
 
