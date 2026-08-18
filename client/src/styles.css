@@ -1334,6 +1334,8 @@ a.button--ghost {
   align-items: center;
   justify-content: space-between;
   padding: 4px 4px 12px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--text);
 }
 
 .appmenu__title {
