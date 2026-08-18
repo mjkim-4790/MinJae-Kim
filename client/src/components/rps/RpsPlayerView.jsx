@@ -137,7 +137,7 @@ function ResultModal({ open, state, participantId, yourChoice, onClose }) {
 
 /** 참여자 화면의 가위바위보 게임 영역. status==='idle' 이면 아무것도 렌더링하지 않는다. */
 export default function RpsPlayerView({ game, participantId }) {
-  const { state, yourChoice, choose } = game;
+  const { state, yourChoice, dismissed, choose, dismiss } = game;
   const [resultDismissed, setResultDismissed] = useState(false);
 
   // 결과 단계를 벗어나면 다음 라운드 결과를 다시 볼 수 있도록 초기화
@@ -148,6 +148,10 @@ export default function RpsPlayerView({ game, participantId }) {
   if (state.status === 'idle') return null;
 
   if (state.status === 'ended') {
+    // 운영자가 리셋하기 전이라도 각자 "확인"을 누르면 원래 화면(점수/채팅/순위)으로
+    // 돌아갈 수 있다 — 서버 상태는 그대로 두고 이 참여자 화면에서만 숨긴다.
+    if (dismissed) return null;
+
     const isFinalWinner = state.finalWinners?.some((w) => w.id === participantId);
     return (
       <section className="panel stack rps-stage">
@@ -166,6 +170,9 @@ export default function RpsPlayerView({ game, participantId }) {
             게임이 종료됐습니다. 최종 승자: {state.finalWinners?.map((w) => w.nickname).join(', ')}
           </p>
         )}
+        <motion.button className="button" onClick={dismiss} whileTap={{ scale: 0.96 }} transition={springTap}>
+          확인
+        </motion.button>
       </section>
     );
   }

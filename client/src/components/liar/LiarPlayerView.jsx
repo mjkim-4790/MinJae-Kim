@@ -129,7 +129,7 @@ function ResultModal({ open, state, participantId, onClose }) {
 
 /** 참여자 화면의 라이어 게임 영역. status==='idle' 이면 아무것도 렌더링하지 않는다. */
 export default function LiarPlayerView({ game, participantId, participants = [] }) {
-  const { state, yourWord, suspect, vote } = game;
+  const { state, yourWord, dismissed, suspect, vote, dismiss } = game;
   const [myVote, setMyVote] = useState(null);
   const [resultDismissed, setResultDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -156,6 +156,10 @@ export default function LiarPlayerView({ game, participantId, participants = [] 
   };
 
   if (state.status === 'ended') {
+    // 운영자가 리셋하기 전이라도 각자 "확인"을 누르면 원래 화면(점수/채팅/순위)으로
+    // 돌아갈 수 있다 — 서버 상태는 그대로 두고 이 참여자 화면에서만 숨긴다.
+    if (dismissed) return null;
+
     const won = state.result && (state.result.winner === 'liar') === (state.result.liar?.id === participantId);
     return (
       <section className="panel stack">
@@ -167,6 +171,9 @@ export default function LiarPlayerView({ game, participantId, participants = [] 
           {won ? '당신이 이겼습니다! 🎉' : '아쉽게 졌습니다.'} 실제 라이어는{' '}
           {state.result?.liar?.nickname}였습니다.
         </p>
+        <motion.button className="button" onClick={dismiss} whileTap={{ scale: 0.96 }} transition={springTap}>
+          확인
+        </motion.button>
       </section>
     );
   }

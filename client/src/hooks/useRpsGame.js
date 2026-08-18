@@ -26,6 +26,9 @@ const IDLE_STATE = {
 export function useRpsGame({ eventCode, participantId = null, initialState, initialYourChoice }) {
   const [state, setState] = useState(initialState ?? IDLE_STATE);
   const [yourChoice, setYourChoiceState] = useState(initialYourChoice ?? null);
+  // 참여자가 스스로 "확인"을 눌러 종료 화면을 닫고 원래 화면(점수/채팅/순위)으로
+  // 돌아가기 위한 로컬 상태 — 운영자가 리셋하기 전에도 각자 넘어갈 수 있게 한다.
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (initialState) setState(initialState);
@@ -50,6 +53,10 @@ export function useRpsGame({ eventCode, participantId = null, initialState, init
     socket.on('game:state', onGameState);
     return () => socket.off('game:state', onGameState);
   }, [participantId]);
+
+  useEffect(() => {
+    if (state.status !== 'ended') setDismissed(false);
+  }, [state.status]);
 
   const choose = useCallback(
     (choice) => {
@@ -94,6 +101,20 @@ export function useRpsGame({ eventCode, participantId = null, initialState, init
     () => new Promise((resolve) => socket.emit('rps:reset', { eventCode }, resolve)),
     [eventCode],
   );
+  const dismiss = useCallback(() => setDismissed(true), []);
 
-  return { state, yourChoice, choose, start, startTimer, lock, confirm, advance, restartRound, reset };
+  return {
+    state,
+    yourChoice,
+    dismissed,
+    choose,
+    start,
+    startTimer,
+    lock,
+    confirm,
+    advance,
+    restartRound,
+    reset,
+    dismiss,
+  };
 }

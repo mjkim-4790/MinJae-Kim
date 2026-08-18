@@ -23,6 +23,9 @@ const IDLE_STATE = {
 export function useLiarGame({ eventCode, participantId = null, initialState, initialYourWord }) {
   const [state, setState] = useState(initialState ?? IDLE_STATE);
   const [yourWord, setYourWord] = useState(initialYourWord ?? null);
+  // 참여자가 스스로 "확인"을 눌러 종료 화면을 닫고 원래 화면(점수/채팅/순위)으로
+  // 돌아가기 위한 로컬 상태 — 운영자가 리셋하기 전에도 각자 넘어갈 수 있게 한다.
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (initialState) setState(initialState);
@@ -48,6 +51,10 @@ export function useLiarGame({ eventCode, participantId = null, initialState, ini
     };
   }, [participantId]);
 
+  useEffect(() => {
+    if (state.status !== 'ended') setDismissed(false);
+  }, [state.status]);
+
   const start = useCallback(
     (payload) => new Promise((resolve) => socket.emit('liar:start', { eventCode, ...payload }, resolve)),
     [eventCode],
@@ -72,6 +79,7 @@ export function useLiarGame({ eventCode, participantId = null, initialState, ini
     () => new Promise((resolve) => socket.emit('liar:reset', { eventCode }, resolve)),
     [eventCode],
   );
+  const dismiss = useCallback(() => setDismissed(true), []);
 
-  return { state, yourWord, start, suspect, vote, lock, advance, reset };
+  return { state, yourWord, dismissed, start, suspect, vote, lock, advance, reset, dismiss };
 }

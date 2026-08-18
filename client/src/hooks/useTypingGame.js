@@ -23,6 +23,11 @@ const IDLE_STATE = {
  */
 export function useTypingGame({ eventCode, initialState }) {
   const [state, setState] = useState(initialState ?? IDLE_STATE);
+  // 참여자가 스스로 "확인"을 눌러 종료 화면을 닫고 원래 화면(점수/채팅/순위)으로
+  // 돌아가기 위한 로컬 상태 — 서버 상태(status)와 별개로, 운영자가 리셋하기 전에도
+  // 각자 알아서 넘어갈 수 있게 한다. 새 라운드가 시작되면(= status 가 ended 를
+  // 벗어나면) 다음 종료 화면을 다시 볼 수 있도록 초기화한다.
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (initialState) setState(initialState);
@@ -33,6 +38,10 @@ export function useTypingGame({ eventCode, initialState }) {
     socket.on('typing:state', onState);
     return () => socket.off('typing:state', onState);
   }, []);
+
+  useEffect(() => {
+    if (state.status !== 'ended') setDismissed(false);
+  }, [state.status]);
 
   const start = useCallback(
     (payload) => new Promise((resolve) => socket.emit('typing:start', { eventCode, ...payload }, resolve)),
@@ -58,6 +67,7 @@ export function useTypingGame({ eventCode, initialState }) {
     () => new Promise((resolve) => socket.emit('typing:reset', { eventCode }, resolve)),
     [eventCode],
   );
+  const dismiss = useCallback(() => setDismissed(true), []);
 
-  return { state, start, submit, lock, reveal, advance, reset };
+  return { state, dismissed, start, submit, lock, reveal, advance, reset, dismiss };
 }

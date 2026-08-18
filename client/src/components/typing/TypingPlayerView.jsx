@@ -142,7 +142,7 @@ function ResultModal({ open, state, participantId, onClose }) {
 
 /** 참여자 화면의 '메시지 빨리 보내기' 영역. status==='idle' 이면 아무것도 렌더링하지 않는다. */
 export default function TypingPlayerView({ game, participantId }) {
-  const { state, submit } = game;
+  const { state, dismissed, submit, dismiss } = game;
   const [resultDismissed, setResultDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -158,6 +158,10 @@ export default function TypingPlayerView({ game, participantId }) {
   if (state.status === 'idle') return null;
 
   if (state.status === 'ended') {
+    // 운영자가 리셋하기 전이라도 각자 "확인"을 누르면 원래 화면(점수/채팅/순위)으로
+    // 돌아갈 수 있다 — 서버 상태는 그대로 두고 이 참여자 화면에서만 숨긴다.
+    if (dismissed) return null;
+
     const winner = state.ranking?.[0] ?? null;
     const isWinner = winner?.id === participantId;
     return (
@@ -189,6 +193,14 @@ export default function TypingPlayerView({ game, participantId }) {
             ))}
           </ol>
         )}
+        <motion.button
+          className="button"
+          onClick={dismiss}
+          whileTap={{ scale: 0.96 }}
+          transition={springTap}
+        >
+          확인
+        </motion.button>
       </section>
     );
   }

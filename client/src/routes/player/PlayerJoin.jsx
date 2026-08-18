@@ -92,9 +92,13 @@ export default function PlayerJoin() {
     join(nickname.trim(), pin);
   };
 
-  // 게임이 돌아가는 동안은 게임 화면만 남긴다 — 참여자가 지금 뭘 해야 하는지에만 집중하도록
+  // 게임이 돌아가는 동안은 게임 화면만 남긴다 — 참여자가 지금 뭘 해야 하는지에만 집중하도록.
+  // 종료 후 참여자가 "확인"을 누르면(dismissed) 운영자가 리셋하기 전이라도 각자
+  // 원래 화면(점수/채팅/순위)으로 돌아갈 수 있다 (세 게임 모두 동일).
   const gameRunning =
-    rpsGame.state.status !== 'idle' || liarGame.state.status !== 'idle' || typingGame.state.status !== 'idle';
+    (rpsGame.state.status !== 'idle' && !rpsGame.dismissed) ||
+    (liarGame.state.status !== 'idle' && !liarGame.dismissed) ||
+    (typingGame.state.status !== 'idle' && !typingGame.dismissed);
 
   if (status === 'joined' || status === 'reconnecting') {
     return (
