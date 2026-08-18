@@ -121,6 +121,19 @@ body {
   text-indent: 0.4em;
 }
 
+.textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .button {
   padding: 14px 18px;
   border: 0;
@@ -867,6 +880,14 @@ a.button--ghost {
   color: var(--accent);
 }
 
+/* 메시지 빨리 보내기 결과 — 점수 대신 경과시간을 보여주는 자리. 숫자가 나열되므로
+   자릿수가 흔들리지 않게 tabular-nums 를 쓴다 (§15) */
+.ranking-time {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
 .ranking-list--large {
   gap: 16px;
   width: min(700px, 90vw);
@@ -887,6 +908,10 @@ a.button--ghost {
 }
 
 .ranking-list--large .ranking-score {
+  font-size: clamp(18px, 2.6vw, 28px);
+}
+
+.ranking-list--large .ranking-time {
   font-size: clamp(18px, 2.6vw, 28px);
 }
 
@@ -1198,6 +1223,125 @@ a.button--ghost {
   color: var(--muted);
   max-width: 80vw;
   text-align: center;
+}
+
+/* 메시지 빨리 보내기 */
+
+.typing-final-banner {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fdf3d0;
+  color: var(--warn);
+  font-weight: 700;
+  font-size: 17px;
+  text-align: center;
+}
+
+/* 운영자 난이도 선택 — 라이어 카테고리 그리드와 같은 톤이지만, 게임마다 클래스를
+   따로 두는 이 프로젝트 관례를 따라 별도로 둔다 */
+.typing-difficulty-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.typing-difficulty-tile {
+  width: 100%;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.typing-difficulty-tile--active {
+  border-color: var(--accent);
+  background: #e4f0ff;
+}
+
+.typing-sentence-preview {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 참여자 화면에 계속 떠 있는 제시 문장 카드 (liar-word-card 와 같은 자리·같은 톤,
+   게임마다 클래스를 따로 두는 관례를 따른다) */
+.typing-sentence-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .typing-sentence-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.typing-sentence-card__label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.typing-sentence-card__text {
+  margin: 0;
+  font-size: clamp(18px, 3.4vw, 26px);
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+/* 가위바위보 하단 시트(.rps-choice-sheet)를 그대로 재사용하고, 그 안의 선택 버튼
+   자리에 텍스트 입력 + 전송 버튼을 놓는다 (사용자 요청) */
+.typing-input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.typing-input-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.typing-input-row .button {
+  flex-shrink: 0;
+}
+
+/* 대형 스크린에 노출되는 제시 문장 — 화면코드(.screen__code)보다는 작지만 눈에 띄게 */
+.screen__typing-sentence {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 56px);
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  max-width: 90vw;
+  letter-spacing: -0.01em;
 }
 
 /* 화면에는 안 보이지만 스크린리더에는 읽히는 제목용 (§ 접근성) */

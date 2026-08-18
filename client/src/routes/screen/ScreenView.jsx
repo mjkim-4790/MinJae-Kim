@@ -7,10 +7,12 @@ import QrCode from '../../components/QrCode.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsScreenView from '../../components/rps/RpsScreenView.jsx';
 import StatusBar from '../../components/StatusBar.jsx';
+import TypingScreenView from '../../components/typing/TypingScreenView.jsx';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
+import { useTypingGame } from '../../hooks/useTypingGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -25,6 +27,7 @@ export default function ScreenView() {
   const { status, session, presence, init } = useRealtimeSession('screen', code);
   const rpsGame = useRpsGame({ eventCode: code, initialState: init?.rps });
   const liarGame = useLiarGame({ eventCode: code, initialState: init?.liar });
+  const typingGame = useTypingGame({ eventCode: code, initialState: init?.typing });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -41,7 +44,8 @@ export default function ScreenView() {
   const event = init?.event;
   const rpsActive = rpsGame.state.status !== 'idle';
   const liarActive = liarGame.state.status !== 'idle';
-  const gameActive = rpsActive || liarActive;
+  const typingActive = typingGame.state.status !== 'idle';
+  const gameActive = rpsActive || liarActive || typingActive;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
@@ -49,6 +53,8 @@ export default function ScreenView() {
     content = <RpsScreenView state={rpsGame.state} />;
   } else if (liarActive) {
     content = <LiarScreenView state={liarGame.state} participants={scoreboard.participants} />;
+  } else if (typingActive) {
+    content = <TypingScreenView state={typingGame.state} />;
   } else if (mode === 'logo') {
     content = (
       <div className="screen__center">

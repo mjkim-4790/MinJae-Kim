@@ -7,12 +7,14 @@ import LiarOperatorPanel from '../../components/liar/LiarOperatorPanel.jsx';
 import QrCode from '../../components/QrCode.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
+import TypingOperatorPanel from '../../components/typing/TypingOperatorPanel.jsx';
 import { gameById } from '../../lib/games.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
+import { useTypingGame } from '../../hooks/useTypingGame.js';
 import { socket } from '../../lib/socket.js';
 import { api } from '../../lib/api.js';
 import { isLocalOnlyOrigin, joinUrlFor, publicOrigin } from '../../lib/joinUrl.js';
@@ -51,6 +53,7 @@ export default function OperatorEventDetail() {
   const chat = useChat(event?.code, init?.chat, true);
   const rpsGame = useRpsGame({ eventCode: event?.code, initialState: init?.rps });
   const liarGame = useLiarGame({ eventCode: event?.code, initialState: init?.liar });
+  const typingGame = useTypingGame({ eventCode: event?.code, initialState: init?.typing });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -73,7 +76,13 @@ export default function OperatorEventDetail() {
   const [selectedGameId, setSelectedGameId] = useState(null);
   // 현재 서버에서 실제로 돌아가고 있는 게임
   const runningGameId =
-    rpsGame.state.status !== 'idle' ? 'rps' : liarGame.state.status !== 'idle' ? 'liar' : null;
+    rpsGame.state.status !== 'idle'
+      ? 'rps'
+      : liarGame.state.status !== 'idle'
+        ? 'liar'
+        : typingGame.state.status !== 'idle'
+          ? 'typing'
+          : null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
     if (runningGameId) setSelectedGameId((cur) => cur ?? runningGameId);
@@ -247,6 +256,7 @@ export default function OperatorEventDetail() {
               />
             )}
             {selectedGameId === 'liar' && <LiarOperatorPanel game={liarGame} participants={participants} />}
+            {selectedGameId === 'typing' && <TypingOperatorPanel game={typingGame} participants={participants} />}
           </>
         ) : (
           <>

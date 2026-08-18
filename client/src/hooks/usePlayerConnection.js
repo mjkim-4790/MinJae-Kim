@@ -19,6 +19,7 @@ export function usePlayerConnection(eventCode) {
   const [yourRpsChoice, setYourRpsChoice] = useState(null);
   const [liar, setLiar] = useState(null);
   const [yourLiarWord, setYourLiarWord] = useState(null);
+  const [typingGame, setTypingGame] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -38,6 +39,7 @@ export function usePlayerConnection(eventCode) {
             setYourRpsChoice(res.yourRpsChoice ?? null);
             setLiar(res.liar);
             setYourLiarWord(res.yourLiarWord ?? null);
+            setTypingGame(res.typing);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -102,6 +104,7 @@ export function usePlayerConnection(eventCode) {
     yourRpsChoice,
     liar,
     yourLiarWord,
+    typingGame,
     scoreboard,
     error,
     join,

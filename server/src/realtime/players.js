@@ -9,6 +9,7 @@ import { getOrCreateState, publicChatState } from './eventState.js';
 import { getLiarSnapshot, getYourLiarWord } from './liar.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 import { getRpsSnapshot, getYourChoice } from './rps.js';
+import { getTypingSnapshot } from './typing.js';
 import { buildScoreboard } from './scoreboard.js';
 
 // 참여자 소켓 재접속/중복접속 처리 (설계문서 §4.3, §7-2)
@@ -90,6 +91,7 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       yourRpsChoice: getYourChoice(code, participant.id),
       liar: getLiarSnapshot(code),
       yourLiarWord: getYourLiarWord(code, participant.id),
+      typing: getTypingSnapshot(code),
       scoreboard: buildScoreboard(event.id),
     });
     await broadcastPresence(io, code);

@@ -6,11 +6,13 @@ import ChatPanel from '../../components/ChatPanel.jsx';
 import LiarPlayerView from '../../components/liar/LiarPlayerView.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
+import TypingPlayerView from '../../components/typing/TypingPlayerView.jsx';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
+import { useTypingGame } from '../../hooks/useTypingGame.js';
 
 const ERROR_MESSAGE = {
   EVENT_NOT_FOUND: '존재하지 않거나 종료된 코드입니다',
@@ -37,6 +39,7 @@ export default function PlayerJoin() {
     yourRpsChoice: initialYourRpsChoice,
     liar: initialLiar,
     yourLiarWord: initialYourLiarWord,
+    typingGame: initialTypingGame,
     scoreboard: initialScoreboard,
     error,
     join,
@@ -54,6 +57,7 @@ export default function PlayerJoin() {
     initialState: initialLiar,
     initialYourWord: initialYourLiarWord,
   });
+  const typingGame = useTypingGame({ eventCode: code, initialState: initialTypingGame });
   const scoreboard = useScoreboard(initialScoreboard);
   const myScore = scoreboard.participants.find((p) => p.id === participant?.id)?.score ?? 0;
 
@@ -89,7 +93,8 @@ export default function PlayerJoin() {
   };
 
   // 게임이 돌아가는 동안은 게임 화면만 남긴다 — 참여자가 지금 뭘 해야 하는지에만 집중하도록
-  const gameRunning = rpsGame.state.status !== 'idle' || liarGame.state.status !== 'idle';
+  const gameRunning =
+    rpsGame.state.status !== 'idle' || liarGame.state.status !== 'idle' || typingGame.state.status !== 'idle';
 
   if (status === 'joined' || status === 'reconnecting') {
     return (
@@ -118,6 +123,7 @@ export default function PlayerJoin() {
           participantId={participant?.id}
           participants={scoreboard.participants}
         />
+        <TypingPlayerView game={typingGame} participantId={participant?.id} />
 
         {!gameRunning && (
           <>

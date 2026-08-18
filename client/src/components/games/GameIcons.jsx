@@ -93,6 +93,17 @@ function SurveyIcon() {
   );
 }
 
+function TypingIcon() {
+  // 말풍선 안에 채팅 줄 + 오른쪽 아래로 튀어나가는 화살표(전송/빠르기)
+  return (
+    <>
+      <path d="M14 22h60a8 8 0 0 1 8 8v34a8 8 0 0 1-8 8H46l-20 16V72h-4a8 8 0 0 1-8-8V30a8 8 0 0 1 8-8z" {...LINE} />
+      <path d="M26 38h36M26 50h24" {...LINE} strokeWidth={6} />
+      <path d="M62 78l20 10M82 88l-2-10M82 88l-10 3" {...LINE} strokeWidth={6} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -118,6 +129,7 @@ const ICONS = {
   vote: VoteIcon,
   survey: SurveyIcon,
   touch: TouchIcon,
+  typing: TypingIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란
