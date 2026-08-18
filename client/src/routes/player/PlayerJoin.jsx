@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import friendsLogo from '../../assets/friends-logo.png';
 import ChatPanel from '../../components/ChatPanel.jsx';
 import LiarPlayerView from '../../components/liar/LiarPlayerView.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
@@ -93,6 +94,7 @@ export default function PlayerJoin() {
   if (status === 'joined' || status === 'reconnecting') {
     return (
       <main className="page">
+        <img src={friendsLogo} alt="Friends" className="player-corner-logo" />
         {status === 'reconnecting' && (
           <p className="badge badge--info">연결이 끊겨 다시 연결하는 중…</p>
         )}
@@ -164,6 +166,7 @@ export default function PlayerJoin() {
 
   return (
     <main className="page page--center">
+      <img src={friendsLogo} alt="Friends" className="player-corner-logo" />
       <form className="stack" style={{ width: 'min(360px, 100%)' }} onSubmit={submit}>
         <h1 className="title">참여자 입장</h1>
         <p className="subtitle">
@@ -173,7 +176,7 @@ export default function PlayerJoin() {
 
         <input
           className="input"
-          placeholder="닉네임"
+          placeholder="이름 또는 닉네임"
           maxLength={12}
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}

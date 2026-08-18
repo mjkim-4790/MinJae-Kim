@@ -1254,6 +1254,21 @@ a.button--ghost {
   text-align: center;
 }
 
+/* 참여자 화면(입장 폼 + 입장 후) 오른쪽 상단 로고 — 두 화면 모두 같은 클래스를 써서
+   같은 고정 위치에 뜨므로, 폼 제출 후 화면이 바뀌어도 로고는 움직이지 않는다.
+   원본 로고 비율(약 3.55:1)이 요청한 3cm×2cm 박스와 달라 늘리면 찌그러지므로
+   object-fit: contain 으로 비율을 지키며 박스 안에 맞춘다. */
+.player-corner-logo {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 30;
+  width: 3cm;
+  height: 2cm;
+  object-fit: contain;
+  object-position: right center;
+}
+
 /* 오른쪽 상단 햄버거 버튼 — 스크롤과 무관하게 늘 같은 자리 */
 .appmenu__trigger {
   position: fixed;
