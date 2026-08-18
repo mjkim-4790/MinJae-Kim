@@ -1216,13 +1216,171 @@ a.button--ghost {
    자식이 폭 100% 를 차지한다 — pw-row 안의 input 이 flex:1 로 늘어나려면 이게
    필요하므로 여기서 align-items 를 따로 건드리지 않는다. 로고/보조 링크는
    각자 margin:auto / justify-content:center 로 스스로 가운데 정렬한다. */
-.operator-login__logo {
-  /* 입력창과 같은 폭으로 맞춘다 (비율 유지) — 로고와 이메일 칸 사이를 요청대로
-     2cm 만큼 추가로 띄운다. */
+/* 참여 코드 입력(홈) 과 운영자 로그인이 공유하는 "로고 먼저" 레이아웃.
+   두 화면을 오갈 때 로고가 제자리에 붙어 있어야 하므로(요청) 세로 가운데 정렬이
+   아니라 위에서 같은 거리에 고정한다 — 가운데 정렬은 아래 내용 높이가 다르면
+   로고가 따라 움직이고, 로그인 화면에 오류 문구가 뜰 때도 흔들린다. */
+.page--entry {
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: clamp(24px, 25vh, 220px);
+}
+
+.entry {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entry__logo {
+  /* 입력창과 같은 폭 (비율 유지) */
   width: 100%;
   height: auto;
   display: block;
-  margin: 0 auto calc(24px + 2cm);
+}
+
+/* 아래 여백에서 12px 을 빼는 건 .entry 의 flex gap 이 이미 그만큼 벌려주기 때문이다.
+   화면에 실제로 보이는 간격이 요청한 값(로그인 2cm+24px, 홈 2.5cm)이 되도록 맞춘다. */
+.entry__logo--login {
+  margin-bottom: calc(2cm + 24px);
+}
+
+.entry__logo--home {
+  margin-bottom: calc(2.5cm - 12px);
+}
+
+.entry__hint {
+  text-align: center;
+}
+
+/* 오른쪽 상단 햄버거 버튼 — 스크롤과 무관하게 늘 같은 자리 */
+.appmenu__trigger {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.appmenu__bar {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text);
+}
+
+/* 서랍이 열리면 뒤를 딤 처리해 지금 할 일에만 집중시킨다 (§12) */
+.appmenu__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(33, 31, 28, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 0;
+}
+
+.appmenu__panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  width: min(300px, 82vw);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: max(16px, env(safe-area-inset-top)) 16px
+    max(16px, env(safe-area-inset-bottom));
+  /* 큰 면일수록 두껍게 (§12 머티리얼 무게) */
+  background: var(--surface-translucent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+}
+
+.appmenu__panel:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .appmenu__scrim {
+    background: rgba(33, 31, 28, 0.72);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .appmenu__panel {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.appmenu__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 12px;
+}
+
+.appmenu__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.appmenu__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.appmenu__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appmenu__item {
+  padding: 13px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.appmenu__item:active {
+  background: rgba(33, 31, 28, 0.06);
+}
+
+@media (hover: hover) {
+  .appmenu__item:hover {
+    background: rgba(33, 31, 28, 0.05);
+  }
 }
 
 .operator-login__actions {

@@ -36,9 +36,9 @@ export default function OperatorLogin() {
   };
 
   return (
-    <main className="page page--center">
-      <form className="stack operator-login" style={{ width: 'min(360px, 100%)' }} onSubmit={submit}>
-        <img src={friendsLogo} alt="Friends" className="operator-login__logo" />
+    <main className="page page--entry">
+      <form className="entry" onSubmit={submit}>
+        <img src={friendsLogo} alt="Friends" className="entry__logo entry__logo--login" />
         {/* 로고가 제목을 대신하지만, 스크린리더에는 여전히 페이지 제목이 들려야 한다 */}
         <h1 className="sr-only">운영자 로그인</h1>
 
