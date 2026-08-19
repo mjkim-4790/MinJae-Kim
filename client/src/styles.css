@@ -306,7 +306,7 @@ body {
   padding-bottom: 10px;
   font-family: 'Gaegu', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
     system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   /* 손글씨체라 이미 자간이 넓게 느껴져서, 트래킹은 시스템 폰트일 때보다 좁혀준다 */
   letter-spacing: 0.04em;
