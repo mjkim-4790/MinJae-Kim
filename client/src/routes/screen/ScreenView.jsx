@@ -3,12 +3,14 @@ import { useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 
 import friendsLogo from '../../assets/friends-logo.png';
+import AcrosticScreenView from '../../components/acrostic/AcrosticScreenView.jsx';
 import LiarScreenView from '../../components/liar/LiarScreenView.jsx';
 import QrCode from '../../components/QrCode.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsScreenView from '../../components/rps/RpsScreenView.jsx';
 import StatusBar from '../../components/StatusBar.jsx';
 import TypingScreenView from '../../components/typing/TypingScreenView.jsx';
+import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
 import { useRpsGame } from '../../hooks/useRpsGame.js';
@@ -38,6 +40,7 @@ export default function ScreenView() {
   const rpsGame = useRpsGame({ eventCode: code, initialState: init?.rps });
   const liarGame = useLiarGame({ eventCode: code, initialState: init?.liar });
   const typingGame = useTypingGame({ eventCode: code, initialState: init?.typing });
+  const acrosticGame = useAcrosticGame({ eventCode: code, initialState: init?.acrostic });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -55,7 +58,8 @@ export default function ScreenView() {
   const rpsActive = rpsGame.state.status !== 'idle';
   const liarActive = liarGame.state.status !== 'idle';
   const typingActive = typingGame.state.status !== 'idle';
-  const gameActive = rpsActive || liarActive || typingActive;
+  const acrosticActive = acrosticGame.state.status !== 'idle';
+  const gameActive = rpsActive || liarActive || typingActive || acrosticActive;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
@@ -65,6 +69,8 @@ export default function ScreenView() {
     content = <LiarScreenView state={liarGame.state} participants={scoreboard.participants} />;
   } else if (typingActive) {
     content = <TypingScreenView state={typingGame.state} />;
+  } else if (acrosticActive) {
+    content = <AcrosticScreenView state={acrosticGame.state} />;
   } else if (mode === 'logo') {
     content = (
       <div className="screen__frame">

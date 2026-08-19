@@ -104,6 +104,20 @@ function TypingIcon() {
   );
 }
 
+function AcrosticIcon() {
+  // 숫자 3 + 오른쪽에 세 줄의 글 — "세 글자로 세 줄을 짓는다"를 그대로 그린다
+  return (
+    <>
+      <path
+        d="M20 28 Q24 18 34 20 Q46 23 44 34 Q42 45 31 46 Q44 47 45 59 Q46 72 33 74 Q22 76 18 66"
+        {...LINE}
+        strokeWidth={7}
+      />
+      <path d="M58 30h30M58 50h26M58 70h32" {...LINE} strokeWidth={6} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -130,6 +144,7 @@ const ICONS = {
   survey: SurveyIcon,
   touch: TouchIcon,
   typing: TypingIcon,
+  acrostic: AcrosticIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

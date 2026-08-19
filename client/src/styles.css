@@ -1684,6 +1684,329 @@ a.button--ghost {
   letter-spacing: -0.01em;
 }
 
+/* 삼행시 */
+
+.acrostic-stage {
+  padding-top: 14px;
+  border-top: 3px solid var(--rainbow-orange);
+}
+
+/* 제시어 — 세 화면 공통으로 "지금 이 단어로 짓는다"를 크게 못박아 준다 */
+.acrostic-prompt-banner {
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: #fdece6;
+  color: var(--rainbow-orange);
+  font-size: clamp(24px, 6vw, 34px);
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.16em;
+  /* 마지막 글자 뒤 자간까지 들어가서 오른쪽으로 밀려 보이는 걸 되돌린다 */
+  text-indent: 0.16em;
+}
+
+.acrostic-prompt-input {
+  letter-spacing: 0.1em;
+}
+
+/* 운영자가 제시어를 치는 동안 글자가 어떻게 쪼개지는지 즉시 보여준다 */
+.acrostic-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.acrostic-preview__chip {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+/* 작품 한 편 — 앞글자를 왼쪽에 세로로 세우고 뒷부분을 오른쪽에 붙인다 */
+.acrostic-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.acrostic-lines__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  text-align: left;
+}
+
+.acrostic-lines__head {
+  flex-shrink: 0;
+  min-width: 1.2em;
+  font-weight: 800;
+  color: var(--rainbow-orange);
+}
+
+.acrostic-lines__tail {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+/* 참여자 작성 카드 (liar-word-card 와 같은 자리·같은 톤) */
+.acrostic-write-card,
+.acrostic-vote-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .acrostic-write-card,
+  .acrostic-vote-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.acrostic-write-card__label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.acrostic-write-card__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 앞글자는 고정, 뒷부분만 입력 (운영 결정: 글자별 칸 분리) */
+.acrostic-write-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.acrostic-write-row__head {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: #fdece6;
+  color: var(--rainbow-orange);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.acrostic-write-row__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.acrostic-write-card__submit {
+  width: 100%;
+}
+
+.acrostic-write-card__hint {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* 작품 목록 — 운영자/참여자 화면 공통 */
+.acrostic-entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.acrostic-entry-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.acrostic-entry-card--winner {
+  border-color: var(--rainbow-orange);
+  background: #fdece6;
+}
+
+.acrostic-entry-card__no {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.acrostic-entry-card__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.acrostic-entry-card__rank {
+  font-weight: 800;
+  color: var(--rainbow-orange);
+  font-variant-numeric: tabular-nums;
+}
+
+.acrostic-entry-card__author {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.acrostic-entry-card__votes {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 익명 투표 버튼 — 카드를 통째로 눌러서 고른다 (사용자 요청: 체크/터치) */
+.acrostic-vote-btn {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 40px 14px 14px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.acrostic-vote-btn--active {
+  border-color: var(--rainbow-orange);
+  background: #fdece6;
+}
+
+/* 본인 작품 — 고를 수 없다는 걸 눌러보기 전에 보이게 죽여 둔다 */
+.acrostic-vote-btn--mine {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.acrostic-vote-btn__check {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--rainbow-orange);
+}
+
+/* 대형 스크린 — 작품이 여러 편이라 세로로 쌓지 않고 격자로 편다 */
+.screen__acrostic-prompt {
+  margin: 0;
+  font-size: clamp(48px, 12vw, 140px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  text-align: center;
+}
+
+.acrostic-screen-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: clamp(10px, 1.4vw, 18px);
+  width: min(92vw, 1400px);
+  /* 작품이 아주 많으면 스크린 안에서만 스크롤되게 (페이지 전체가 밀리지 않도록) */
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+.acrostic-screen-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: clamp(12px, 1.4vw, 20px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-align: left;
+}
+
+.acrostic-screen-card--winner {
+  border: 3px solid var(--rainbow-orange);
+  background: #fdece6;
+}
+
+.acrostic-screen-card__no {
+  font-size: clamp(13px, 1.2vw, 18px);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.acrostic-screen-card__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: clamp(14px, 1.4vw, 22px);
+}
+
+.acrostic-screen-card__rank {
+  font-weight: 800;
+  color: var(--rainbow-orange);
+  font-variant-numeric: tabular-nums;
+}
+
+.acrostic-screen-card__author {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.acrostic-screen-card__votes {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.acrostic-lines--screen {
+  font-size: clamp(16px, 1.8vw, 28px);
+}
+
 /* 화면에는 안 보이지만 스크린리더에는 읽히는 제목용 (§ 접근성) */
 .sr-only {
   position: absolute;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import AcrosticOperatorPanel from '../../components/acrostic/AcrosticOperatorPanel.jsx';
 import ChatPanel from '../../components/ChatPanel.jsx';
 import GamePicker from '../../components/games/GamePicker.jsx';
 import LiarOperatorPanel from '../../components/liar/LiarOperatorPanel.jsx';
@@ -9,6 +10,7 @@ import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
 import TypingOperatorPanel from '../../components/typing/TypingOperatorPanel.jsx';
 import { gameById } from '../../lib/games.js';
+import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -54,6 +56,7 @@ export default function OperatorEventDetail() {
   const rpsGame = useRpsGame({ eventCode: event?.code, initialState: init?.rps });
   const liarGame = useLiarGame({ eventCode: event?.code, initialState: init?.liar });
   const typingGame = useTypingGame({ eventCode: event?.code, initialState: init?.typing });
+  const acrosticGame = useAcrosticGame({ eventCode: event?.code, initialState: init?.acrostic });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -74,15 +77,14 @@ export default function OperatorEventDetail() {
 
   // 어떤 게임을 펼쳐볼지. null 이면 게임 선택 그리드를 보여준다.
   const [selectedGameId, setSelectedGameId] = useState(null);
-  // 현재 서버에서 실제로 돌아가고 있는 게임
+  // 현재 서버에서 실제로 돌아가고 있는 게임 (동시에 하나만 돌아간다는 전제)
   const runningGameId =
-    rpsGame.state.status !== 'idle'
-      ? 'rps'
-      : liarGame.state.status !== 'idle'
-        ? 'liar'
-        : typingGame.state.status !== 'idle'
-          ? 'typing'
-          : null;
+    [
+      ['rps', rpsGame],
+      ['liar', liarGame],
+      ['typing', typingGame],
+      ['acrostic', acrosticGame],
+    ].find(([, g]) => g.state.status !== 'idle')?.[0] ?? null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
     if (runningGameId) setSelectedGameId((cur) => cur ?? runningGameId);
@@ -259,6 +261,9 @@ export default function OperatorEventDetail() {
             )}
             {selectedGameId === 'liar' && <LiarOperatorPanel game={liarGame} participants={participants} />}
             {selectedGameId === 'typing' && <TypingOperatorPanel game={typingGame} participants={participants} />}
+            {selectedGameId === 'acrostic' && (
+              <AcrosticOperatorPanel game={acrosticGame} participants={participants} />
+            )}
           </>
         ) : (
           <>

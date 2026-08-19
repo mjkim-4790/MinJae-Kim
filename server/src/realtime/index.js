@@ -7,6 +7,7 @@ import { getEventByCode } from '../db/events.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { clearPlayerSocket, registerPlayerHandlers } from './players.js';
 import { registerMessageHandlers } from './messages.js';
+import { getAcrosticSnapshot, registerAcrosticHandlers } from './acrostic.js';
 import { getLiarSnapshot, registerLiarHandlers } from './liar.js';
 import { getRpsSnapshot, registerRpsHandlers } from './rps.js';
 import { getTypingSnapshot, registerTypingHandlers } from './typing.js';
@@ -46,6 +47,7 @@ export function createRealtime(httpServer) {
     registerRpsHandlers(io, socket);
     registerLiarHandlers(io, socket);
     registerTypingHandlers(io, socket);
+    registerAcrosticHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -94,6 +96,7 @@ export function createRealtime(httpServer) {
         response.rps = getRpsSnapshot(code);
         response.liar = getLiarSnapshot(code);
         response.typing = getTypingSnapshot(code);
+        response.acrostic = getAcrosticSnapshot(code);
         if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {

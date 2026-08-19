@@ -20,6 +20,8 @@ export function usePlayerConnection(eventCode) {
   const [liar, setLiar] = useState(null);
   const [yourLiarWord, setYourLiarWord] = useState(null);
   const [typingGame, setTypingGame] = useState(null);
+  const [acrostic, setAcrostic] = useState(null);
+  const [yourAcrosticEntry, setYourAcrosticEntry] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -40,6 +42,8 @@ export function usePlayerConnection(eventCode) {
             setLiar(res.liar);
             setYourLiarWord(res.yourLiarWord ?? null);
             setTypingGame(res.typing);
+            setAcrostic(res.acrostic);
+            setYourAcrosticEntry(res.yourAcrosticEntry ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -105,6 +109,8 @@ export function usePlayerConnection(eventCode) {
     liar,
     yourLiarWord,
     typingGame,
+    acrostic,
+    yourAcrosticEntry,
     scoreboard,
     error,
     join,

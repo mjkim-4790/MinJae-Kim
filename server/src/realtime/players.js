@@ -5,6 +5,7 @@ import {
   findParticipant,
   touchLastSeen,
 } from '../db/participants.js';
+import { getAcrosticSnapshot, getYourAcrosticEntry } from './acrostic.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { getLiarSnapshot, getYourLiarWord } from './liar.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
@@ -92,6 +93,8 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       liar: getLiarSnapshot(code),
       yourLiarWord: getYourLiarWord(code, participant.id),
       typing: getTypingSnapshot(code),
+      acrostic: getAcrosticSnapshot(code),
+      yourAcrosticEntry: getYourAcrosticEntry(code, participant.id),
       scoreboard: buildScoreboard(event.id),
     });
     await broadcastPresence(io, code);

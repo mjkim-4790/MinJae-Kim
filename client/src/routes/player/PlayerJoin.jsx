@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import friendsLogo from '../../assets/friends-logo.png';
+import AcrosticPlayerView from '../../components/acrostic/AcrosticPlayerView.jsx';
 import ChatPanel from '../../components/ChatPanel.jsx';
 import LiarPlayerView from '../../components/liar/LiarPlayerView.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
 import TypingPlayerView from '../../components/typing/TypingPlayerView.jsx';
+import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
@@ -40,6 +42,8 @@ export default function PlayerJoin() {
     liar: initialLiar,
     yourLiarWord: initialYourLiarWord,
     typingGame: initialTypingGame,
+    acrostic: initialAcrostic,
+    yourAcrosticEntry: initialYourAcrosticEntry,
     scoreboard: initialScoreboard,
     error,
     join,
@@ -58,6 +62,11 @@ export default function PlayerJoin() {
     initialYourWord: initialYourLiarWord,
   });
   const typingGame = useTypingGame({ eventCode: code, initialState: initialTypingGame });
+  const acrosticGame = useAcrosticGame({
+    eventCode: code,
+    initialState: initialAcrostic,
+    initialYourEntry: initialYourAcrosticEntry,
+  });
   const scoreboard = useScoreboard(initialScoreboard);
   // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
   const myRankIndex = scoreboard.participants.findIndex((p) => p.id === participant?.id);
@@ -97,10 +106,9 @@ export default function PlayerJoin() {
   // 게임이 돌아가는 동안은 게임 화면만 남긴다 — 참여자가 지금 뭘 해야 하는지에만 집중하도록.
   // 종료 후 참여자가 "확인"을 누르면(dismissed) 운영자가 리셋하기 전이라도 각자
   // 원래 화면(점수/채팅/순위)으로 돌아갈 수 있다 (세 게임 모두 동일).
-  const gameRunning =
-    (rpsGame.state.status !== 'idle' && !rpsGame.dismissed) ||
-    (liarGame.state.status !== 'idle' && !liarGame.dismissed) ||
-    (typingGame.state.status !== 'idle' && !typingGame.dismissed);
+  const gameRunning = [rpsGame, liarGame, typingGame, acrosticGame].some(
+    (g) => g.state.status !== 'idle' && !g.dismissed,
+  );
 
   if (status === 'joined' || status === 'reconnecting') {
     return (
@@ -137,6 +145,7 @@ export default function PlayerJoin() {
           participants={scoreboard.participants}
         />
         <TypingPlayerView game={typingGame} participantId={participant?.id} />
+        <AcrosticPlayerView game={acrosticGame} participantId={participant?.id} />
 
         {!gameRunning && (
           <>
