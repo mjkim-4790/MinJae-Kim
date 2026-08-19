@@ -24,7 +24,9 @@ import { broadcastScoreboard } from './scoreboard.js';
 // 작품에 투표하지 못하게 클라이언트에서 막기 위함이고, 서버도 따로 한 번 더 막는다.
 
 const WIN_POINTS = 100; // 1등에게만 부여 (다른 게임과 동일한 관례)
-const MIN_PARTICIPANTS = 2; // 서로 투표하려면 최소 2명
+// 투표가 의미 있으려면 2명 이상이지만, 1명일 때도 시작은 되게 둔다 — 운영자가 혼자
+// 리허설해볼 수 있어야 한다 (client/src/lib/acrostic.js 의 MIN_PARTICIPANTS 와 맞출 것).
+const MIN_PARTICIPANTS = 1;
 
 const games = new Map(); // eventCode -> AcrosticGameState
 const THROTTLE_MS = 200; // 제출/투표 폭주 대비 (rps.js 와 동일한 이유)

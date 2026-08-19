@@ -125,6 +125,10 @@ function VoteCard({ syllables, entries, yourEntryId, myVote, onVote, busy }) {
         })}
       </ul>
 
+      {/* 참여자가 나 혼자였던 라운드 — 고를 수 있는 작품이 없으니 막힌 게 아니라고 알려준다 */}
+      {entries.every((e) => e.entryId === yourEntryId) && (
+        <p className="acrostic-write-card__hint">투표할 다른 작품이 없어요. 결과 발표를 기다려주세요.</p>
+      )}
       {myVote != null && <p className="acrostic-write-card__hint">투표 완료! 다른 사람들을 기다려주세요.</p>}
     </motion.div>
   );
@@ -134,8 +138,12 @@ function VoteCard({ syllables, entries, yourEntryId, myVote, onVote, busy }) {
 function ResultModal({ open, state, participantId, onClose }) {
   const mine = state.ranking?.find((e) => e.id === participantId) ?? null;
   const won = mine?.rank === 1 && mine.votes > 0;
-  const modifier = !mine ? 'rps-verdict--none' : won ? 'rps-verdict--win' : 'rps-verdict--lose';
-  const label = !mine ? '미참여' : won ? '1등!' : `${mine.rank}등`;
+  // 아무도 투표하지 않은 라운드에선 전원이 0표 공동 1등이 된다 — 그대로 두면 "1등"이라고
+  // 써놓고 패배 색으로 칠해지므로, 승패를 가리지 않고 무득표로 보여준다.
+  const nobodyVoted = (state.ranking ?? []).every((e) => e.votes === 0);
+  const modifier =
+    !mine || nobodyVoted ? 'rps-verdict--none' : won ? 'rps-verdict--win' : 'rps-verdict--lose';
+  const label = !mine ? '미참여' : nobodyVoted ? '무득표' : won ? '1등!' : `${mine.rank}등`;
 
   return (
     <AnimatePresence>

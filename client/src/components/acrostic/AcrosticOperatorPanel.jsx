@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 
-import { composeEntry, MAX_SYLLABLES, MIN_SYLLABLES, splitPrompt } from '../../lib/acrostic.js';
+import {
+  composeEntry,
+  MAX_SYLLABLES,
+  MIN_PARTICIPANTS,
+  MIN_SYLLABLES,
+  splitPrompt,
+} from '../../lib/acrostic.js';
 import { springPop } from '../../lib/motionPresets.js';
 
 const ERROR_MESSAGE = {
-  NOT_ENOUGH_PARTICIPANTS: '참여자가 2명 이상이어야 시작할 수 있습니다',
+  NOT_ENOUGH_PARTICIPANTS: '참여자가 입장해야 시작할 수 있습니다',
   INVALID_PROMPT: `제시어는 ${MIN_SYLLABLES}~${MAX_SYLLABLES}글자로 입력하세요`,
   GAME_IN_PROGRESS: '이미 게임이 진행 중입니다. 먼저 리셋하세요',
   NOT_WRITING: '지금은 작성 단계가 아닙니다',
@@ -49,6 +55,15 @@ export default function AcrosticOperatorPanel({ game, participants }) {
   if (state.status === 'idle' || state.status === 'ended') {
     const syllables = splitPrompt(prompt);
     const promptValid = syllables.length >= MIN_SYLLABLES && syllables.length <= MAX_SYLLABLES;
+    // 버튼이 왜 꺼져 있는지 항상 말해준다 — 이유 없이 비활성인 버튼은 고장으로 보인다
+    const blockedReason =
+      activeCount < MIN_PARTICIPANTS
+        ? '참여자가 아직 없습니다. 참여자가 입장하면 시작할 수 있어요'
+        : prompt.trim().length === 0
+          ? null // 아직 아무것도 안 적은 상태에서까지 잔소리하지 않는다
+          : !promptValid
+            ? `제시어는 ${MIN_SYLLABLES}~${MAX_SYLLABLES}글자여야 합니다 (지금 ${syllables.length}글자)`
+            : null;
 
     return (
       <div className="stack">
@@ -101,10 +116,11 @@ export default function AcrosticOperatorPanel({ game, participants }) {
         )}
 
         {error && <p className="error-text">{error}</p>}
+        {!error && blockedReason && <p className="subtitle">{blockedReason}</p>}
 
         <button
           className="button"
-          disabled={busy || !promptValid || activeCount < 2}
+          disabled={busy || !promptValid || activeCount < MIN_PARTICIPANTS}
           onClick={() => run(start, prompt)}
         >
           확인 (게임 시작)
