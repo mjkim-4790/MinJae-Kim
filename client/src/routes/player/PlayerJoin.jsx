@@ -59,7 +59,9 @@ export default function PlayerJoin() {
   });
   const typingGame = useTypingGame({ eventCode: code, initialState: initialTypingGame });
   const scoreboard = useScoreboard(initialScoreboard);
-  const myScore = scoreboard.participants.find((p) => p.id === participant?.id)?.score ?? 0;
+  // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
+  const myRankIndex = scoreboard.participants.findIndex((p) => p.id === participant?.id);
+  const myScore = myRankIndex >= 0 ? scoreboard.participants[myRankIndex].score : 0;
 
   const [nickname, setNickname] = useState('');
   const [pin, setPin] = useState('');
@@ -117,7 +119,14 @@ export default function PlayerJoin() {
         {!gameRunning && (
           <section className="panel stack">
             <h2 className="panel__title">내 누적 점수</h2>
-            <p className="stat-number">{myScore}</p>
+            <div className="stat-number-row">
+              <p className="stat-number">{myScore}</p>
+              {myRankIndex >= 0 && (
+                <span className="stat-position">
+                  {myRankIndex + 1}위 / {scoreboard.participants.length}명
+                </span>
+              )}
+            </div>
           </section>
         )}
 

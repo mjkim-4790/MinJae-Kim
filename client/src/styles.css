@@ -23,6 +23,15 @@
   --warn: #b4780a;
   --bad: #d92d20;
 
+  /* Friends 로고 PNG 픽셀에서 직접 뽑은 값 (2026-08-19 리디자인). 넓은 면을 칠하는
+     용도가 아니라, 순위 숫자·게임별 고유색·상태 표시 같은 작은 "기능색"으로만 쓴다. */
+  --rainbow-red: #d84848;
+  --rainbow-orange: #d86048;
+  --rainbow-green: #48a848;
+  --rainbow-blue: #1878c0;
+  --rainbow-purple: #783090;
+  --rainbow-pink: #d84890;
+
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 20px;
@@ -111,14 +120,28 @@ body {
   line-height: 1.5;
 }
 
-/* 크기가 커질수록 트래킹은 좁히고 리딩은 촘촘하게 (§15) */
+/* 크기가 커질수록 트래킹은 좁히고 리딩은 촘촘하게 (§15). 카드가 없어진 만큼
+   숫자 자체가 압도적으로 커야 이 구획이 중요하다는 걸 안다 */
 .stat-number {
   margin: 0;
-  font-size: 44px;
+  font-size: 62px;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
   font-variant-numeric: tabular-nums;
+}
+
+.stat-number-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.stat-position {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rainbow-blue);
+  letter-spacing: 0.04em;
 }
 
 .input {
@@ -249,18 +272,42 @@ body {
   background: var(--bad);
 }
 
+/* 종이·문구점 리디자인 (2026-08-19) — 흰 카드를 걷어내고 종이 위에 직접 놓는다.
+   .panel 은 더 이상 카드가 아니라 그저 하나의 "구획"이다. 구획 사이 간격은 부모의
+   .stack/.page 가 이미 gap 으로 맡고 있어서 패딩이 없어도 된다. 실제 "물건"(제시
+   문장 카드, 채팅 말풍선, 결과 모달)만 자기만의 표면(배경·테두리·그림자)을 갖는다. */
 .panel {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 
+/* 라벨 → 헤어라인 → 내용 리듬의 "라벨" 부분. 작게, 넓게 트래킹해서 대문자 라벨처럼 */
 .panel__title {
+  display: block;
   margin: 0 0 10px;
-  font-size: 15px;
-  font-weight: 600;
+  padding-bottom: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+
+/* 라벨 옆에 액션 버튼이 나란히 오는 헤더 행(예: "참여 QR/코드" + 숨기기)에서는
+   헤어라인을 라벨 혼자가 아니라 행 전체 폭에 준다 — 그래야 버튼까지 선 위에 놓인다 */
+.operator-topbar:has(.panel__title) {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.operator-topbar .panel__title {
+  margin: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .checklist {
@@ -275,6 +322,17 @@ body {
 .page--screen {
   justify-content: center;
   text-align: center;
+}
+
+/* AnimatePresence 가 감싸는 motion.div 자체를 .page 의 실제 flex:1 아이템으로 만든다
+   — 이게 없으면 안쪽 .screen__center/.screen__frame 의 flex:1 은 아무 효과가 없다
+   (flex-grow 는 자신의 부모가 flex 컨테이너일 때만 의미가 있는데, motion.div 는
+   기본이 block 이었다). 발견: 화면 리디자인 중 실제 뷰포트 대비 콘텐츠가 쪼그라드는
+   버그로 확인됨. */
+.screen__motion-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
 }
 
 .screen__center {
@@ -311,6 +369,106 @@ body {
   margin: 0;
   color: var(--muted);
   font-size: clamp(14px, 1.5vw, 20px);
+}
+
+/* 대형 스크린 대기 화면(로고/QR/순위) 공통 틀 — 상단 브랜드 바 + 하단 무지개 리본으로
+   화면 전체를 감싼다. 게임 진행 중 화면(RpsScreenView 등)은 각자 알아서 그리므로
+   이 틀을 쓰지 않는다. .screen__center 와 동일하게 flex:1 로 .page 의 남는 세로
+   공간을 채운다 — absolute 로 깔면 위쪽 StatusBar(개발용 연결 상태 표시)와 겹친다. */
+.screen__frame {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(4px, 1.5vw, 20px) clamp(8px, 2vw, 24px);
+}
+
+.screen__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.screen__brand {
+  height: clamp(26px, 3.2vw, 40px);
+  width: auto;
+  display: block;
+}
+
+.screen__presence {
+  margin: 0;
+  font-size: clamp(12px, 1.3vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.screen__presence b {
+  color: var(--text);
+  font-size: 1.35em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.screen__mid {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen__ribbon {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.screen__ribbon i {
+  flex: 1;
+}
+
+.screen__ribbon i:nth-child(1) {
+  background: var(--rainbow-red);
+}
+
+.screen__ribbon i:nth-child(2) {
+  background: var(--rainbow-orange);
+}
+
+.screen__ribbon i:nth-child(3) {
+  background: var(--rainbow-green);
+}
+
+.screen__ribbon i:nth-child(4) {
+  background: var(--rainbow-blue);
+}
+
+.screen__ribbon i:nth-child(5) {
+  background: var(--rainbow-purple);
+}
+
+.screen__ribbon i:nth-child(6) {
+  background: var(--rainbow-pink);
+}
+
+/* QR/코드 대기화면 — 코드가 압도적으로 크고, QR은 옆에 보조로 */
+.screen__code-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 5vw, 72px);
+  text-align: left;
+}
+
+.screen__code-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Phase 1 — 운영자/참여자 공용 UI */
@@ -368,6 +526,98 @@ a.button--ghost {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* 운영자 화면 상단 고정 상태 바 — 스크롤해도 지금 진행 중인 이벤트와 접속 현황이
+   항상 보인다. .page 의 padding 밖으로 배경을 꽉 채우고 (음수 마진 트릭) 안쪽에
+   같은 폭만큼 다시 패딩을 준다. */
+.op-statusbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: -24px -24px 0;
+  padding: 14px 24px 12px;
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .op-statusbar {
+    background: var(--bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.op-statusbar__row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.op-statusbar__name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+}
+
+.op-statusbar__code {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.op-statusbar__live {
+  display: flex;
+  gap: 16px;
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.op-statusbar__live b {
+  color: var(--text);
+  font-size: 1.3em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 하단 고정 액션 바 — 자주 쓰는 동작(화면공유·종료)을 스크롤 없이 항상 누를 수 있게 */
+.op-actionbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  margin: 0 -24px calc(-1 * max(24px, env(safe-area-inset-bottom)));
+  padding: 12px 24px max(12px, env(safe-area-inset-bottom));
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--line);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .op-actionbar {
+    background: var(--bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.op-actionbar .button,
+.op-actionbar .button--ghost {
+  flex: 1;
+  text-align: center;
 }
 
 .badge {
@@ -688,9 +938,11 @@ a.button--ghost {
 }
 
 /* 게임 진행 중 참여자 화면 — 라운드 카드 하나만 남기고 전부 비운다 */
+/* 상단 색 띠로 지금 어떤 게임인지 알려준다 — 로고 무지개에서 뽑은 색, 게임마다 고정 (§9 결정) */
 .rps-stage {
   text-align: center;
-  padding: 20px 16px;
+  padding: 14px 16px 20px;
+  border-top: 3px solid var(--rainbow-blue);
 }
 
 .rps-round-title {
@@ -872,19 +1124,35 @@ a.button--ghost {
 
 .ranking-item {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ranking-item:last-child {
+  border-bottom: 0;
 }
 
 .ranking-rank {
-  width: 24px;
-  font-weight: 700;
+  width: 20px;
+  font-weight: 800;
   color: var(--muted);
   text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 1~3위에는 로고에서 뽑은 색을 준다 — 넓은 면이 아니라 숫자 하나에만 (§9 결정) */
+.ranking-item:nth-child(1) .ranking-rank {
+  color: var(--rainbow-pink);
+}
+
+.ranking-item:nth-child(2) .ranking-rank {
+  color: var(--rainbow-orange);
+}
+
+.ranking-item:nth-child(3) .ranking-rank {
+  color: var(--rainbow-green);
 }
 
 .ranking-name {
@@ -906,22 +1174,24 @@ a.button--ghost {
 }
 
 .ranking-list--large {
-  gap: 16px;
+  gap: 4px;
   width: min(700px, 90vw);
 }
 
 .ranking-list--large .ranking-item {
-  padding: 18px 24px;
-  border-radius: 16px;
+  padding: 14px 0;
 }
 
 .ranking-list--large .ranking-rank {
-  width: 44px;
-  font-size: clamp(20px, 3vw, 32px);
+  width: 52px;
+  font-size: clamp(22px, 3.4vw, 34px);
 }
 
+/* 대형 스크린에서는 이름도 손글씨 — 사람 이름이라 정체성, 숫자·라벨과는 다르게 다룬다 */
 .ranking-list--large .ranking-name {
-  font-size: clamp(18px, 2.6vw, 28px);
+  font-family: 'IM Hyemin', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+    system-ui, sans-serif;
+  font-size: clamp(22px, 3vw, 32px);
 }
 
 .ranking-list--large .ranking-score {
@@ -932,9 +1202,18 @@ a.button--ghost {
   font-size: clamp(18px, 2.6vw, 28px);
 }
 
-.ranking-list--large .ranking-item:first-child {
-  border-color: var(--warn);
-  background: #fdf3d0;
+/* 1위는 굵기·크기로 압도하게 — 색 배경 대신 크기 자체로 (§9 결정 카드 없는 원칙과 일관) */
+.ranking-list--large .ranking-item:first-child .ranking-rank {
+  font-size: clamp(30px, 4.4vw, 46px);
+}
+
+.ranking-list--large .ranking-item:first-child .ranking-name {
+  font-size: clamp(30px, 4.2vw, 44px);
+}
+
+.ranking-list--large .ranking-item:first-child .ranking-score,
+.ranking-list--large .ranking-item:first-child .ranking-time {
+  font-size: clamp(24px, 3.4vw, 36px);
 }
 
 /* 운영자 게임 선택 그리드 — 아이콘 + 이름, 좁은 화면에서 자동 줄바꿈 */
@@ -1146,6 +1425,13 @@ a.button--ghost {
 
 .liar-stage {
   text-align: center;
+  padding-top: 14px;
+  border-top: 3px solid var(--rainbow-purple);
+}
+
+.typing-stage {
+  padding-top: 14px;
+  border-top: 3px solid var(--rainbow-green);
 }
 
 /* 가위바위보 하단 시트 대신 화면 중간에 계속 떠 있는 카드 (§12 머티리얼) */

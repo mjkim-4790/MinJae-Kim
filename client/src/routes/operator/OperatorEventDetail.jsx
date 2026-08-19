@@ -133,17 +133,43 @@ export default function OperatorEventDetail() {
         ← 이벤트 목록
       </Link>
 
-      <header className="stack">
-        <span className={`badge badge--${event.status}`}>{STATUS_LABEL[event.status]}</span>
-        <h1 className="title">{event.name}</h1>
-        <p className="subtitle">
-          {MODE_LABEL[event.mode]} · 최대 {event.maxParticipants}명
-          {event.scheduledAt ? ` · ${new Date(event.scheduledAt).toLocaleString('ko-KR')}` : ''}
-        </p>
-      </header>
+      {/* 스크롤해도 지금 진행 중인 이벤트·접속 현황이 항상 보인다 */}
+      <div className="op-statusbar">
+        <div className="op-statusbar__row">
+          <span className={`badge badge--${event.status}`}>{STATUS_LABEL[event.status]}</span>
+          <h1 className="op-statusbar__name">{event.name}</h1>
+          <span className="op-statusbar__code">코드 {event.code}</span>
+        </div>
+        <div className="op-statusbar__live">
+          <span>
+            <b>{presence?.players ?? 0}</b> 참여자
+          </span>
+          <span>
+            <b>{presence?.screens ?? 0}</b> 스크린
+          </span>
+          <span>
+            <b>{presence?.operators ?? 0}</b> 운영자
+          </span>
+        </div>
+      </div>
+
+      <p className="subtitle" style={{ margin: 0 }}>
+        {MODE_LABEL[event.mode]} · 최대 {event.maxParticipants}명
+        {event.scheduledAt ? ` · ${new Date(event.scheduledAt).toLocaleString('ko-KR')}` : ''}
+      </p>
 
       {event.logoUrl && (
         <img src={event.logoUrl} alt="이벤트 로고" className="event-logo-preview" />
+      )}
+
+      {event.status === 'scheduled' && (
+        <section className="panel stack">
+          <h2 className="panel__title">진행 제어</h2>
+          <button className="button" disabled={busy} onClick={() => runAction('start')}>
+            진행 시작
+          </button>
+          {error && <p className="error-text">{error}</p>}
+        </section>
       )}
 
       <section className="panel stack">
@@ -171,31 +197,7 @@ export default function OperatorEventDetail() {
       </section>
 
       <section className="panel stack">
-        <h2 className="panel__title">진행 제어</h2>
-        <p className="subtitle">
-          실시간 접속 — 운영자 {presence?.operators ?? 0} · 참여자 {presence?.players ?? 0} ·
-          스크린 {presence?.screens ?? 0}
-        </p>
-        <div className="operator-topbar__actions">
-          {event.status === 'scheduled' && (
-            <button className="button" disabled={busy} onClick={() => runAction('start')}>
-              진행 시작
-            </button>
-          )}
-          {event.status !== 'ended' && (
-            <button className="button button--danger" disabled={busy} onClick={() => runAction('end')}>
-              이벤트 종료
-            </button>
-          )}
-          <Link className="button button--ghost" to={`/screen/${event.code}`} target="_blank">
-            화면공유
-          </Link>
-        </div>
-        {error && <p className="error-text">{error}</p>}
-      </section>
-
-      <section className="panel stack">
-        <h2 className="panel__title">화면공유</h2>
+        <h2 className="panel__title">스크린에 띄울 화면</h2>
         <p className="subtitle">현재: {SCREEN_MODE_LABEL[screenMode] ?? '불러오는 중…'}</p>
         <div className="operator-topbar__actions">
           <button
@@ -339,6 +341,19 @@ export default function OperatorEventDetail() {
           </table>
         )}
       </section>
+
+      {/* 자주 쓰는 동작을 스크롤 없이 항상 누를 수 있게 화면 하단에 고정 */}
+      <div className="op-actionbar">
+        {error && <p className="error-text" style={{ flexBasis: '100%' }}>{error}</p>}
+        <Link className="button button--ghost" to={`/screen/${event.code}`} target="_blank">
+          화면공유 열기
+        </Link>
+        {event.status !== 'ended' && (
+          <button className="button button--danger" disabled={busy} onClick={() => runAction('end')}>
+            이벤트 종료
+          </button>
+        )}
+      </div>
     </main>
   );
 }
