@@ -1,11 +1,20 @@
 /* Phase 5 — /apple-design: 즉각적 반응, 스프링 모션, 머티리얼, 크기별 타이포그래피 */
 
-/* 참여자 화면의 닉네임 제목 전용 서체 (IM_Hyemin, 사용자 제공 — 원본 OTF 는 5.5MB로
-   너무 무거워서 WOFF2 로 다시 압축해 515KB 로 줄였다. 원본 폰트의 fsType 값이 4
-   (Preview & Print Embedding) — 편집 목적 재배포가 아닌 화면 표시 용도로만 쓴다). */
+/* 닉네임 전용 손글씨체 (Hi Melody, Google Fonts, OFL 라이선스 — 임베딩 제한 없음).
+   볼드 컷이 없어 굵기는 항상 400 하나만 쓴다(가짜 볼드로 획이 뭉개지는 것을 피함). */
 @font-face {
-  font-family: 'IM Hyemin';
-  src: url('./assets/fonts/IM_Hyemin-Bold.woff2') format('woff2');
+  font-family: 'Hi Melody';
+  src: url('./assets/fonts/himelody-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 섹션 라벨(작은 대문자 트래킹 라벨) 전용 손글씨체 (Gaegu, Google Fonts, OFL 라이선스).
+   라벨은 항상 굵게(700)만 쓰므로 Bold 컷 하나만 넣는다 — Regular 는 번들에 안 넣는다. */
+@font-face {
+  font-family: 'Gaegu';
+  src: url('./assets/fonts/gaegu-bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -107,10 +116,16 @@ body {
   line-height: 1.15;
 }
 
-/* 참여자 화면의 닉네임 제목만 손글씨체로 — .title 의 크기/자간은 그대로 두고 서체만 바꾼다 */
+/* 참여자 화면의 닉네임 제목만 손글씨체로 — .title 의 자간은 그대로 두고 서체만 바꾼다.
+   Hi Melody 는 볼드 컷이 없어 항상 400 으로 고정(가짜 볼드 방지, 사용자 결정).
+   같은 px 값이어도 Hi Melody 의 실제 글자 높이가 IM Hyemin 보다 작게 나와서(캔버스
+   actualBoundingBox 로 측정한 비율 28px 기준 25.3px vs 19.7px ≈ 1.29배) 그만큼
+   키워서 이전과 같은 시각적 크기로 맞춘다 (사용자 요청). */
 .player-nickname {
-  font-family: 'IM Hyemin', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+  font-family: 'Hi Melody', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
     system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 36px;
 }
 
 .subtitle {
@@ -289,9 +304,12 @@ body {
   display: block;
   margin: 0 0 10px;
   padding-bottom: 10px;
-  font-size: 12.5px;
+  font-family: 'Gaegu', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+    system-ui, sans-serif;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.13em;
+  /* 손글씨체라 이미 자간이 넓게 느껴져서, 트래킹은 시스템 폰트일 때보다 좁혀준다 */
+  letter-spacing: 0.04em;
   color: var(--muted);
   border-bottom: 1px solid var(--line);
 }
@@ -1187,11 +1205,14 @@ a.button--ghost {
   font-size: clamp(22px, 3.4vw, 34px);
 }
 
-/* 대형 스크린에서는 이름도 손글씨 — 사람 이름이라 정체성, 숫자·라벨과는 다르게 다룬다 */
+/* 대형 스크린에서는 이름도 손글씨 — 사람 이름이라 정체성, 숫자·라벨과는 다르게 다룬다.
+   Hi Melody 는 볼드 컷이 없어 400 으로 고정(가짜 볼드 방지, 사용자 결정). 크기는
+   player-nickname 과 같은 1.29배 비율로 올려서 이전 IM Hyemin 크기와 시각적으로 맞춘다. */
 .ranking-list--large .ranking-name {
-  font-family: 'IM Hyemin', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+  font-family: 'Hi Melody', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
     system-ui, sans-serif;
-  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400;
+  font-size: clamp(28px, 3.9vw, 41px);
 }
 
 .ranking-list--large .ranking-score {
@@ -1208,7 +1229,8 @@ a.button--ghost {
 }
 
 .ranking-list--large .ranking-item:first-child .ranking-name {
-  font-size: clamp(30px, 4.2vw, 44px);
+  /* 마찬가지로 1.29배 — 위 .ranking-name 크기 조정과 같은 이유 */
+  font-size: clamp(39px, 5.4vw, 57px);
 }
 
 .ranking-list--large .ranking-item:first-child .ranking-score,
