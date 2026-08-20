@@ -10,6 +10,7 @@ import OperatorNewEvent from './routes/operator/OperatorNewEvent.jsx';
 import DiaryHome from './routes/personal/DiaryHome.jsx';
 import EducationHome from './routes/personal/EducationHome.jsx';
 import GameHome from './routes/personal/GameHome.jsx';
+import HobbyCategory from './routes/personal/HobbyCategory.jsx';
 import HobbyHome from './routes/personal/HobbyHome.jsx';
 import PersonalHome from './routes/personal/PersonalHome.jsx';
 import PlayerJoin from './routes/player/PlayerJoin.jsx';
@@ -44,6 +45,7 @@ export default function App() {
           <Route index element={<PersonalHome />} />
           <Route path="diary" element={<DiaryHome />} />
           <Route path="hobby" element={<HobbyHome />} />
+          <Route path="hobby/:category" element={<HobbyCategory />} />
           <Route path="education" element={<EducationHome />} />
           <Route path="game" element={<GameHome />} />
         </Route>

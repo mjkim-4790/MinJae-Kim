@@ -70,3 +70,23 @@ CREATE TABLE IF NOT EXISTS diary_entries (
 );
 
 CREATE INDEX IF NOT EXISTS idx_diary_entries_operator_date ON diary_entries(operator_id, entry_date);
+
+-- 취미 카테고리(카페/식당/여행장소/책/음악/영화) 공용 테이블. location/hours 는
+-- 카페·식당·여행장소만 쓴다(책/음악/영화는 NULL). visited/visited_color 는
+-- 여행장소 전용 — 지도에 노란(위시) vs 분홍·파랑(방문) 크레파스로 칠하는 데 쓴다.
+CREATE TABLE IF NOT EXISTS hobby_items (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  operator_id    INTEGER NOT NULL REFERENCES operators(id),
+  category       TEXT NOT NULL CHECK (category IN ('cafe', 'restaurant', 'travel', 'book', 'music', 'movie')),
+  name           TEXT NOT NULL,
+  location       TEXT,
+  hours          TEXT,
+  rating         INTEGER NOT NULL DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
+  review         TEXT NOT NULL DEFAULT '',
+  visited        INTEGER NOT NULL DEFAULT 0 CHECK (visited IN (0, 1)),
+  visited_color  TEXT CHECK (visited_color IN ('pink', 'blue')),
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_hobby_items_operator_category ON hobby_items(operator_id, category);

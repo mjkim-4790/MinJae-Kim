@@ -10,6 +10,7 @@ import { config } from './config.js';
 import { authRouter } from './routes/auth.js';
 import { diaryRouter } from './routes/diary.js';
 import { eventsRouter } from './routes/events.js';
+import { hobbyRouter } from './routes/hobby.js';
 import { uploadsDir } from './uploads.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -36,6 +37,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/events', eventsRouter);
   app.use('/api/diary', diaryRouter);
+  app.use('/api/hobby', hobbyRouter);
   app.use('/uploads', express.static(uploadsDir));
 
   // 운영 빌드가 존재하면 클라이언트를 같은 서버에서 서빙 (무료 티어 단일 서비스 배포)

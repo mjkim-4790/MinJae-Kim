@@ -48,4 +48,11 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ weather, moodWeather, body }),
     }),
+
+  listHobbyItems: (category) => request(`/hobby?category=${category}`),
+  createHobbyItem: (category, payload) =>
+    request('/hobby', { method: 'POST', body: JSON.stringify({ category, ...payload }) }),
+  updateHobbyItem: (id, payload) =>
+    request(`/hobby/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteHobbyItem: (id) => request(`/hobby/${id}`, { method: 'DELETE' }),
 };
