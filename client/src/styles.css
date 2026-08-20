@@ -32,6 +32,10 @@
   --ok: #1f9e4d;
   --warn: #b4780a;
   --bad: #d92d20;
+  /* 버튼 배경 전용 — 본문 텍스트(--text)·에러 표시(--bad)와 같은 값을 쓰다가
+     버튼만 다른 색으로 바꾸고 싶어져서 분리했다 */
+  --button-bg: #3d2317; /* 고동색 */
+  --button-danger-bg: #a6421f; /* 레드오커 */
 
   /* Friends 로고 PNG 픽셀에서 직접 뽑은 값 (2026-08-19 리디자인). 넓은 면을 칠하는
      용도가 아니라, 순위 숫자·게임별 고유색·상태 표시 같은 작은 "기능색"으로만 쓴다. */
@@ -194,7 +198,7 @@ body {
   padding: 14px 18px;
   border: 0;
   border-radius: var(--radius-sm);
-  background: var(--text);
+  background: var(--button-bg);
   color: #fff;
   font-size: 17px;
   font-weight: 600;
@@ -507,7 +511,7 @@ body {
 }
 
 .button--danger {
-  background: var(--bad);
+  background: var(--button-danger-bg);
 }
 
 a.button,
