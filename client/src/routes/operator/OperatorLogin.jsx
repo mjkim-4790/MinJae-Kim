@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import friendsLogo from '../../assets/friends-logo.png';
 import { useAuth } from '../../hooks/useAuth.jsx';
@@ -19,15 +19,19 @@ export default function OperatorLogin() {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const from = location.state?.from ?? '/operator';
+  const from = location.state?.from;
 
   const submit = async (event) => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      const operator = await login(email, password);
+      // 특정 화면에 들어가려다 로그인이 필요해 여기로 왔으면 그 화면으로, 아니면 계정
+      // 유형에 맞는 기본 홈으로 (MC → 이벤트 목록, 일반인 → 새 홈).
+      navigate(from ?? (operator.accountType === 'personal' ? '/home' : '/operator'), {
+        replace: true,
+      });
     } catch (err) {
       setError(ERROR_MESSAGE[err.code] ?? '로그인에 실패했습니다');
     } finally {
@@ -68,10 +72,11 @@ export default function OperatorLogin() {
 
         {error && <p className="error-text">{error}</p>}
 
-        {/* 회원가입 / 비밀번호 찾기 기능은 아직 없어서 자리만 잡아둔다 (§9 결정과 별개 —
-            추후 회원가입 기능을 만들면 여기를 실제 링크로 바꾼다) */}
+        {/* 비밀번호 찾기는 아직 없어서 자리만 잡아둔다 */}
         <div className="operator-login__aux">
-          <span className="operator-login__aux-link">회원가입</span>
+          <Link className="operator-login__aux-link" to="/signup" state={{ from }}>
+            회원가입
+          </Link>
           <span className="operator-login__sep" aria-hidden="true" />
           <span className="operator-login__aux-link">이메일 · 비밀번호 찾기</span>
         </div>

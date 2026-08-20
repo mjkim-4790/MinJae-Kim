@@ -1,10 +1,42 @@
 import { Router } from 'express';
 
-import { verifyPassword } from '../auth/password.js';
+import { hashPassword, verifyPassword } from '../auth/password.js';
 import { requireOperator } from '../auth/middleware.js';
-import { findByEmail, toPublic } from '../db/operators.js';
+import { createOperator, findByEmail, toPublic } from '../db/operators.js';
 
 export const authRouter = Router();
+
+const ACCOUNT_TYPES = new Set(['mc', 'personal']);
+const PASSWORD_MIN_LEN = 8;
+
+authRouter.post('/signup', async (req, res) => {
+  const email = String(req.body?.email ?? '').trim().toLowerCase();
+  const password = String(req.body?.password ?? '');
+  const name = String(req.body?.name ?? '').trim();
+  const accountType = String(req.body?.accountType ?? '');
+
+  if (!email || !password || !name) {
+    return res.status(400).json({ ok: false, error: 'FIELDS_REQUIRED' });
+  }
+  if (password.length < PASSWORD_MIN_LEN) {
+    return res.status(400).json({ ok: false, error: 'PASSWORD_TOO_SHORT' });
+  }
+  if (!ACCOUNT_TYPES.has(accountType)) {
+    return res.status(400).json({ ok: false, error: 'INVALID_ACCOUNT_TYPE' });
+  }
+  if (findByEmail(email)) {
+    return res.status(409).json({ ok: false, error: 'EMAIL_TAKEN' });
+  }
+
+  const passwordHash = await hashPassword(password);
+  const operator = createOperator({ email, passwordHash, name, accountType });
+
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ ok: false, error: 'SESSION_ERROR' });
+    req.session.operatorId = operator.id;
+    res.json({ ok: true, operator: toPublic(operator) });
+  });
+});
 
 authRouter.post('/login', async (req, res) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();

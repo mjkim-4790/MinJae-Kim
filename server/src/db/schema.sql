@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS operators (
   email         TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   name          TEXT NOT NULL,
+  account_type  TEXT NOT NULL DEFAULT 'mc' CHECK (account_type IN ('mc', 'personal')),
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

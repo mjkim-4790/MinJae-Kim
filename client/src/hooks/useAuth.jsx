@@ -37,6 +37,14 @@ export function AuthProvider({ children }) {
     return res.operator;
   }, []);
 
+  const signup = useCallback(async ({ email, password, name, accountType }) => {
+    const res = await api.signup({ email, password, name, accountType });
+    settledRef.current = true;
+    setOperator(res.operator);
+    setStatus('signedIn');
+    return res.operator;
+  }, []);
+
   const logout = useCallback(async () => {
     await api.logout();
     settledRef.current = true;
@@ -45,7 +53,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ operator, status, login, logout }}>
+    <AuthContext.Provider value={{ operator, status, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

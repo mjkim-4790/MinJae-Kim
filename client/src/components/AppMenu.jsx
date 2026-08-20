@@ -98,8 +98,11 @@ export default function AppMenu() {
               </div>
 
               <nav className="appmenu__nav">
+                <Link className="appmenu__item" to="/home" onClick={() => setOpen(false)}>
+                  일반인 전용
+                </Link>
                 <Link className="appmenu__item" to="/operator" onClick={() => setOpen(false)}>
-                  운영자 전용
+                  MC 전용
                 </Link>
               </nav>
             </motion.div>

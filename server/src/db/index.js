@@ -20,4 +20,15 @@ db.pragma('foreign_keys = ON');
 
 db.exec(fs.readFileSync(schemaPath, 'utf8'));
 
+// CREATE TABLE IF NOT EXISTS 는 이미 배포된 DB의 기존 테이블에 새 컬럼을 소급 적용하지
+// 못한다 — 이 프로젝트엔 별도 마이그레이션 도구가 없어서, 없는 컬럼만 골라 직접 추가한다.
+// 새로 추가되는 계정 유형 컬럼: 기존 행은 전부 DEFAULT 'mc' 로 채워져 자동으로 MC 전용
+// 계정이 된다(운영 결정 — 지금까지 만든 계정은 전부 행사 진행용이었으므로).
+const operatorColumns = db.prepare("PRAGMA table_info(operators)").all().map((c) => c.name);
+if (!operatorColumns.includes('account_type')) {
+  db.exec(
+    "ALTER TABLE operators ADD COLUMN account_type TEXT NOT NULL DEFAULT 'mc' CHECK (account_type IN ('mc', 'personal'))",
+  );
+}
+
 export default db;

@@ -1,14 +1,15 @@
 import db from './index.js';
 
 const insertStmt = db.prepare(
-  `INSERT INTO operators (email, password_hash, name) VALUES (@email, @passwordHash, @name)`,
+  `INSERT INTO operators (email, password_hash, name, account_type)
+   VALUES (@email, @passwordHash, @name, @accountType)`,
 );
 const byEmailStmt = db.prepare(`SELECT * FROM operators WHERE email = ?`);
 const byIdStmt = db.prepare(`SELECT * FROM operators WHERE id = ?`);
-const allStmt = db.prepare(`SELECT id, email, name, created_at FROM operators ORDER BY id`);
+const allStmt = db.prepare(`SELECT id, email, name, account_type, created_at FROM operators ORDER BY id`);
 
-export function createOperator({ email, passwordHash, name }) {
-  const info = insertStmt.run({ email, passwordHash, name });
+export function createOperator({ email, passwordHash, name, accountType = 'mc' }) {
+  const info = insertStmt.run({ email, passwordHash, name, accountType });
   return byId(info.lastInsertRowid);
 }
 
@@ -26,5 +27,10 @@ export function listOperators() {
 
 export function toPublic(operator) {
   if (!operator) return null;
-  return { id: operator.id, email: operator.email, name: operator.name };
+  return {
+    id: operator.id,
+    email: operator.email,
+    name: operator.name,
+    accountType: operator.account_type,
+  };
 }

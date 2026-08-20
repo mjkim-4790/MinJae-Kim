@@ -12,6 +12,7 @@ import TypingOperatorPanel from '../../components/typing/TypingOperatorPanel.jsx
 import ValuesOperatorPanel from '../../components/values/ValuesOperatorPanel.jsx';
 import { gameById } from '../../lib/games.js';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
+import { useAuth } from '../../hooks/useAuth.jsx';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
@@ -34,6 +35,10 @@ const TEAM_ERROR_MESSAGE = {
 
 export default function OperatorEventDetail() {
   const { id } = useParams();
+  const { operator } = useAuth();
+  // 일반인 전용 계정은 "게임" 탭(/home/game)에서 들어오므로 뒤로가기도 거기로,
+  // MC 전용은 기존 그대로 /operator 이벤트 목록으로 (§7 공간 일관성).
+  const backTo = operator?.accountType === 'personal' ? '/home/game' : '/operator';
   const [event, setEvent] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [error, setError] = useState(null);
@@ -135,7 +140,7 @@ export default function OperatorEventDetail() {
 
   return (
     <main className="page">
-      <Link to="/operator" className="back-link">
+      <Link to={backTo} className="back-link">
         ← 이벤트 목록
       </Link>
 
@@ -163,6 +168,24 @@ export default function OperatorEventDetail() {
         {MODE_LABEL[event.mode]} · 최대 {event.maxParticipants}명
         {event.scheduledAt ? ` · ${new Date(event.scheduledAt).toLocaleString('ko-KR')}` : ''}
       </p>
+
+      {/* 일반인 전용 계정만 보인다 — 이 게임은 진행자 1명이 맡아야 하므로, 직접 만든
+          이벤트는 기본이 운영자 화면이고 참여자로 들어가려면 이렇게 전환한다
+          (MC 전용은 진행에 전념하므로 이 전환이 필요 없다). */}
+      {operator?.accountType === 'personal' && (
+        <section className="panel stack role-switch-panel">
+          <div className="role-switch">
+            <span className="role-opt role-opt--active">운영자로 보기</span>
+            <Link to={`/join/${event.code}`} className="role-opt">
+              참여자로 입장하기
+            </Link>
+          </div>
+          <p className="subtitle" style={{ margin: 0 }}>
+            직접 만든 게임에 참여자로도 들어갈 수 있어요. QR/코드로 초대한 사람은 계정 없이도
+            그대로 참여자 화면으로 들어옵니다.
+          </p>
+        </section>
+      )}
 
       {event.logoUrl && (
         <img src={event.logoUrl} alt="이벤트 로고" className="event-logo-preview" />

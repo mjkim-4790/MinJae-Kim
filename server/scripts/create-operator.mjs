@@ -37,6 +37,7 @@ async function main() {
   const email = String(args.email ?? '').trim().toLowerCase();
   const name = String(args.name ?? '').trim();
   const password = typeof args.password === 'string' ? args.password : generatePassword();
+  const accountType = args.type === 'personal' ? 'personal' : 'mc';
 
   if (!email || !name) {
     console.error('사용법: node server/scripts/create-operator.mjs --email <이메일> --name <이름> [--password <비밀번호>]');
@@ -49,12 +50,13 @@ async function main() {
   }
 
   const passwordHash = await hashPassword(password);
-  const operator = createOperator({ email, passwordHash, name });
+  const operator = createOperator({ email, passwordHash, name, accountType });
 
   console.log('운영자 계정이 생성되었습니다.');
   console.log(`  id       : ${operator.id}`);
   console.log(`  email    : ${operator.email}`);
   console.log(`  name     : ${operator.name}`);
+  console.log(`  type     : ${operator.account_type}`);
   console.log(`  password : ${password}`);
   console.log('※ 비밀번호는 다시 조회할 수 없으니 지금 전달하세요.');
 }
