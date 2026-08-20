@@ -8,6 +8,7 @@ import express from 'express';
 import { sessionMiddleware } from './auth/session.js';
 import { config } from './config.js';
 import { authRouter } from './routes/auth.js';
+import { diaryRouter } from './routes/diary.js';
 import { eventsRouter } from './routes/events.js';
 import { uploadsDir } from './uploads.js';
 
@@ -34,6 +35,7 @@ export function createApp() {
 
   app.use('/api/auth', authRouter);
   app.use('/api/events', eventsRouter);
+  app.use('/api/diary', diaryRouter);
   app.use('/uploads', express.static(uploadsDir));
 
   // 운영 빌드가 존재하면 클라이언트를 같은 서버에서 서빙 (무료 티어 단일 서비스 배포)

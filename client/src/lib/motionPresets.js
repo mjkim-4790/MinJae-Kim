@@ -12,3 +12,7 @@ export const springReorder = { type: 'spring', bounce: 0.15, duration: 0.5 };
 // "Move / reposition" 값(damping 1.0, response 0.4) 그대로. 오버슈트 없이 그 자리로
 // 딱 이동한다 (예: '나의 가치여정'에서 마지막 남은 단어가 화면 중앙으로 이동).
 export const springMove = { type: 'spring', bounce: 0, duration: 0.4 };
+
+// 아래에서 올라오는 서랍/시트 전용 — Apple 이 "Drawer / sheet" 에 쓰는 값
+// (damping 0.8, response 0.3). 손으로 민 것처럼 살짝의 바운스를 남긴다.
+export const springDrawer = { type: 'spring', bounce: 0.2, duration: 0.3 };

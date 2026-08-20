@@ -54,3 +54,19 @@ CREATE TABLE IF NOT EXISTS game_records (
 );
 
 CREATE INDEX IF NOT EXISTS idx_game_records_event ON game_records(event_id);
+
+-- 일반인 전용 계정의 개인 일기. 하루에 한 편만 쓸 수 있어 (operator_id, entry_date) 로
+-- 유일해야 한다 — upsert 로 같은 날짜에 다시 쓰면 덮어쓴다.
+CREATE TABLE IF NOT EXISTS diary_entries (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  operator_id   INTEGER NOT NULL REFERENCES operators(id),
+  entry_date    TEXT NOT NULL, -- 'YYYY-MM-DD'
+  weather       TEXT NOT NULL,
+  mood_weather  TEXT NOT NULL,
+  body          TEXT NOT NULL,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (operator_id, entry_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_diary_entries_operator_date ON diary_entries(operator_id, entry_date);

@@ -2,11 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
-import { springTap } from '../lib/motionPresets.js';
+import { springDrawer, springTap } from '../lib/motionPresets.js';
 
-// Apple 이 "Drawer / sheet" 에 쓰는 값(damping 0.8, response 0.3). 서랍은 손으로 민 것처럼
-// 살짝의 바운스를 남긴다. 스크림은 움직임이 아니라 밝기 변화라 스프링 대신 짧은 이징.
-const drawerSpring = { type: 'spring', bounce: 0.2, duration: 0.3 };
+// 스크림은 움직임이 아니라 밝기 변화라 스프링 대신 짧은 이징.
 const scrimFade = { duration: 0.2, ease: 'easeOut' };
 
 /**
@@ -81,7 +79,7 @@ export default function AppMenu() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={drawerSpring}
+              transition={springDrawer}
             >
               <div className="appmenu__head">
                 <span className="appmenu__title">메뉴</span>

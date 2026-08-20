@@ -40,4 +40,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ teamCount }),
     }),
+
+  listDiaryMonth: (year, month) => request(`/diary?year=${year}&month=${month}`),
+  getDiaryEntry: (date) => request(`/diary/${date}`),
+  saveDiaryEntry: (date, { weather, moodWeather, body }) =>
+    request(`/diary/${date}`, {
+      method: 'PUT',
+      body: JSON.stringify({ weather, moodWeather, body }),
+    }),
 };

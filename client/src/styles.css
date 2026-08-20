@@ -2435,12 +2435,16 @@ a.button--ghost {
   background: var(--bg);
   border-color: var(--line);
   opacity: 0.72;
+  /* CrayonCrossMark 는 currentColor 를 따라 그려진다 (나의 가치여정은 --bad) */
+  color: var(--bad);
 }
 
-/* 빨간 크레파스 X — feTurbulence 로 선을 살짝 울퉁불퉁하게 왜곡하고(JS 쪽 filter),
-   대각선마다 굵고 흐린 "아래 겹" + 얇고 진한 "위 겹"을 포개 밀랍 크레용의 층진
-   질감을 낸다 (Friends 로고 크레파스 텍스처와 같은 방향). */
-.values-cross-mark {
+/* 크레파스 X 공용 스타일 — CrayonCrossMark.jsx 가 그리는 SVG. feTurbulence 로 선을
+   살짝 울퉁불퉁하게 왜곡하고(컴포넌트 쪽 filter), 대각선마다 굵고 흐린 "아래 겹" +
+   얇고 진한 "위 겹"을 포개 밀랍 크레용의 층진 질감을 낸다 (Friends 로고 크레파스
+   텍스처와 같은 방향). 색은 감싸는 요소의 color 를 따르므로(currentColor) 쓰는
+   곳마다 새로 정의하지 않는다 — 나의 가치여정(--bad)과 일기 달력(레드오커)이 함께 쓴다. */
+.crayon-cross-mark {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -2449,19 +2453,19 @@ a.button--ghost {
   overflow: visible;
 }
 
-.values-cross-mark__stroke {
+.crayon-cross-mark__stroke {
   fill: none;
-  stroke: var(--bad);
+  stroke: currentColor;
   stroke-linecap: round;
   mix-blend-mode: multiply;
 }
 
-.values-cross-mark__stroke--under {
+.crayon-cross-mark__stroke--under {
   stroke-width: 9;
   opacity: 0.4;
 }
 
-.values-cross-mark__stroke--core {
+.crayon-cross-mark__stroke--core {
   stroke-width: 4.5;
   opacity: 0.85;
 }
@@ -2719,6 +2723,17 @@ a.button--ghost {
   justify-content: center;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+  /* 오늘 칸은 <button> 으로 렌더링된다 — 버튼 기본 스타일을 지워 <span> 이던 때와
+     똑같이 보이게 한다 */
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  color: inherit;
+}
+
+button.cal-cell:not(:disabled) {
+  cursor: pointer;
 }
 
 .cal-cell__num {
@@ -2728,6 +2743,13 @@ a.button--ghost {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  position: relative;
+}
+
+/* 완료한 날 — 숫자 색은 그대로 두고 크레파스 X 만 레드오커로 (CrayonCrossMark 는
+   currentColor 를 따르므로 SVG 자신에게 직접 색을 준다) */
+.cal-cell--done .cal-cell__num .crayon-cross-mark {
+  color: var(--button-danger-bg);
 }
 
 .cal-cell--today .cal-cell__num {
@@ -2780,4 +2802,120 @@ a.button--ghost {
 
 a.role-opt {
   cursor: pointer;
+}
+
+/* 일기 — 달력 + 아래에서 올라오는 작성 시트 */
+
+.diary-home {
+  position: relative;
+}
+
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 8, 0.28);
+  z-index: 30;
+}
+
+.write-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 31;
+  background: var(--surface);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -12px 32px rgba(30, 20, 10, 0.18);
+  padding: 14px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.write-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.write-sheet__date {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: 24px;
+  text-align: center;
+}
+
+.write-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.write-field__label {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.emoji-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.emoji-pick {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.emoji-pick--active {
+  border-color: var(--button-danger-bg);
+  background: #fdece6;
+}
+
+/* 본문은 손글씨체가 아니라 쓰기 편한 기본 서체 그대로 (사용자 결정 — 날짜·날씨·
+   마음 날씨만 교보 손글씨 2019) */
+.write-textarea {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  font-family: inherit;
+  min-height: 120px;
+  background: var(--bg);
+  resize: vertical;
+}
+
+.write-sheet__submit {
+  flex-shrink: 0;
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--button-bg);
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.write-sheet__submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
