@@ -10,12 +10,13 @@
   font-display: swap;
 }
 
-/* 섹션 라벨(작은 대문자 트래킹 라벨) 전용 손글씨체 (Gaegu, Google Fonts, OFL 라이선스).
-   라벨은 항상 굵게(700)만 쓰므로 Bold 컷 하나만 넣는다 — Regular 는 번들에 안 넣는다. */
+/* 섹션 라벨(작은 대문자 트래킹 라벨) 전용 손글씨체 (교보 손글씨 2019 — 교보문고 배포,
+   상업적 사용·웹폰트 설치 명시적 허용, OS/2 fsType 0). 볼드 컷이 없어 굵기는 항상
+   400 하나만 쓴다 (Hi Melody 와 같은 이유 — 가짜 볼드로 획이 뭉개지는 것을 피함). */
 @font-face {
-  font-family: 'Gaegu';
-  src: url('./assets/fonts/gaegu-bold.woff2') format('woff2');
-  font-weight: 700;
+  font-family: 'Kyobo Handwriting 2019';
+  src: url('./assets/fonts/kyobo-handwriting-2019.woff2') format('woff2');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -304,10 +305,12 @@ body {
   display: block;
   margin: 0 0 10px;
   padding-bottom: 10px;
-  font-family: 'Gaegu', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
-    system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  /* 17.2px = 이전 Gaegu Bold 18px 와 캔버스 실측 글자 높이(actualBoundingBox)를 맞춘 값 —
+     굵기가 700→400 으로 내려가는 대신 크기를 살짝 올려 시각적 무게를 비슷하게 유지한다 */
+  font-size: 17.2px;
+  font-weight: 400;
   /* 손글씨체라 이미 자간이 넓게 느껴져서, 트래킹은 시스템 폰트일 때보다 좁혀준다 */
   letter-spacing: 0.04em;
   color: var(--muted);
