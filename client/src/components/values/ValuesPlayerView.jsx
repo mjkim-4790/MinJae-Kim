@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { MAX_WORDS, MIN_WORDS } from '../../lib/values.js';
@@ -7,23 +7,44 @@ import { springMove, springPop, springTap } from '../../lib/motionPresets.js';
 // 카드가 "짜잔" 하고 실체를 갖고 나타나는 느낌 (다른 게임 카드와 동일한 톤).
 const materializeSpring = { type: 'spring', bounce: 0.25, duration: 0.4 };
 
-/** 빨간 색연필로 취소선을 그은 질감 — 겹친 두 스트로크를 그려지는 애니메이션과 함께 얹는다. */
+/**
+ * 빨간 크레파스로 X 를 그은 질감 — 대각선 2개(X)를 각각 굵고 흐린 "아래 겹" +
+ * 얇고 진한 "위 겹"으로 겹쳐서 밀랍 크레용 특유의 층진 느낌을 낸다. feTurbulence
+ * 로 선 자체를 살짝 울퉁불퉁하게 왜곡해 손으로 눌러 그은 듯한 불규칙함을 더한다
+ * (Friends 로고의 크레파스 텍스처와 같은 방향의 질감).
+ */
 function PencilCrossMark() {
+  const filterId = useId();
+
   return (
-    <svg className="values-cross-mark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
-      <motion.path
-        d="M4 8 C 30 22, 55 4, 70 18 S 96 10, 96 22"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      />
-      <motion.path
-        className="values-cross-mark__under"
-        d="M6 21 C 34 7, 58 25, 94 13"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.3, delay: 0.06, ease: 'easeOut' }}
-      />
+    <svg className="values-cross-mark" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <filter id={filterId} x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.06 0.6" numOctaves="2" seed="4" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+      <g filter={`url(#${filterId})`}>
+        {[
+          { d: 'M14 12 L86 88', delay: 0 },
+          { d: 'M88 10 L10 84', delay: 0.14 },
+        ].map(({ d, delay }) => (
+          <g key={d}>
+            <motion.path
+              className="values-cross-mark__stroke values-cross-mark__stroke--under"
+              d={d}
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.22, delay, ease: 'easeOut' }}
+            />
+            <motion.path
+              className="values-cross-mark__stroke values-cross-mark__stroke--core"
+              d={d}
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.22, delay: delay + 0.02, ease: 'easeOut' }}
+            />
+          </g>
+        ))}
+      </g>
     </svg>
   );
 }

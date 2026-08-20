@@ -2392,7 +2392,9 @@ a.button--ghost {
   opacity: 0.72;
 }
 
-/* 빨간 색연필 취소선 — 손으로 그은 듯 살짝 어긋난 두 겹 스트로크를 겹쳐 질감을 낸다 */
+/* 빨간 크레파스 X — feTurbulence 로 선을 살짝 울퉁불퉁하게 왜곡하고(JS 쪽 filter),
+   대각선마다 굵고 흐린 "아래 겹" + 얇고 진한 "위 겹"을 포개 밀랍 크레용의 층진
+   질감을 낸다 (Friends 로고 크레파스 텍스처와 같은 방향). */
 .values-cross-mark {
   position: absolute;
   inset: 0;
@@ -2402,18 +2404,21 @@ a.button--ghost {
   overflow: visible;
 }
 
-.values-cross-mark path {
+.values-cross-mark__stroke {
   fill: none;
   stroke: var(--bad);
-  stroke-width: 3.2;
   stroke-linecap: round;
   mix-blend-mode: multiply;
-  opacity: 0.8;
 }
 
-.values-cross-mark__under {
-  stroke-width: 2.2;
-  opacity: 0.5;
+.values-cross-mark__stroke--under {
+  stroke-width: 9;
+  opacity: 0.4;
+}
+
+.values-cross-mark__stroke--core {
+  stroke-width: 4.5;
+  opacity: 0.85;
 }
 
 /* 마지막 1개 — 그리드의 작은 박스와 같은 layoutId 를 공유해 화면 중앙으로
