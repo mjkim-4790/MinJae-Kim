@@ -90,3 +90,48 @@ CREATE TABLE IF NOT EXISTS hobby_items (
 );
 
 CREATE INDEX IF NOT EXISTS idx_hobby_items_operator_category ON hobby_items(operator_id, category);
+
+-- 교육 — 초/중/고/대학생 학년·학기·시험별 과목 점수(대학생은 학점). 과목은 고정
+-- 목록이 아니라 이용자가 직접 추가한다(학교/학기마다 과목이 다르므로).
+CREATE TABLE IF NOT EXISTS education_scores (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  operator_id   INTEGER NOT NULL REFERENCES operators(id),
+  level         TEXT NOT NULL CHECK (level IN ('elementary', 'middle', 'high', 'university')),
+  grade         INTEGER NOT NULL,
+  semester      INTEGER NOT NULL CHECK (semester IN (1, 2)),
+  exam_type     TEXT NOT NULL CHECK (exam_type IN ('midterm', 'final')),
+  subject       TEXT NOT NULL,
+  score         REAL NOT NULL,
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (operator_id, level, grade, semester, exam_type, subject)
+);
+
+CREATE INDEX IF NOT EXISTS idx_education_scores_lookup
+  ON education_scores(operator_id, level, grade, semester, exam_type);
+
+-- 시험 하나(학년+학기+중간/기말)당 목표는 과목 평균 기준으로 하나만 둔다
+-- (사용자 결정 — 과목별이 아니라 시험마다 개별 목표).
+CREATE TABLE IF NOT EXISTS education_exam_targets (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  operator_id   INTEGER NOT NULL REFERENCES operators(id),
+  level         TEXT NOT NULL CHECK (level IN ('elementary', 'middle', 'high', 'university')),
+  grade         INTEGER NOT NULL,
+  semester      INTEGER NOT NULL CHECK (semester IN (1, 2)),
+  exam_type     TEXT NOT NULL CHECK (exam_type IN ('midterm', 'final')),
+  target        REAL NOT NULL,
+  UNIQUE (operator_id, level, grade, semester, exam_type)
+);
+
+-- 자격증 — 취미 리스트업과 같은 결의 자유 기록. 세부내용은 자유 텍스트 한 칸
+-- (사용자 결정), 취득 완료 표시하면 골드 색으로 바뀐다(클라이언트 표시).
+CREATE TABLE IF NOT EXISTS certificates (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  operator_id   INTEGER NOT NULL REFERENCES operators(id),
+  name          TEXT NOT NULL,
+  detail        TEXT NOT NULL DEFAULT '',
+  achieved      INTEGER NOT NULL DEFAULT 0 CHECK (achieved IN (0, 1)),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_certificates_operator ON certificates(operator_id);

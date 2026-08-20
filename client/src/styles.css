@@ -39,6 +39,8 @@
   --wish-yellow: #e8b923;
   --visit-pink: #d8608f;
   --visit-blue: #3a7fc1;
+  /* 교육 — 목표 달성 하이라이트 */
+  --goal-gold: #c9971f;
   --button-danger-bg: #a6421f; /* 레드오커 */
 
   /* Friends 로고 PNG 픽셀에서 직접 뽑은 값 (2026-08-19 리디자인). 넓은 면을 칠하는
@@ -3291,4 +3293,294 @@ a.role-opt {
 
 .visited-color-pick__dot--active {
   border-color: var(--text);
+}
+
+/* 교육 — 초/중/고/대학생 학년 아코디언 + 자격증 */
+
+.education-level {
+  padding-bottom: 8px;
+}
+
+.year-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.year-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.year-card__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.year-card__title {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.year-card__avg {
+  flex: 1;
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.year-card__chevron {
+  color: var(--muted);
+  font-size: 13px;
+  width: 14px;
+  text-align: center;
+}
+
+.semester-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 14px 14px;
+}
+
+.semester-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.semester-block__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.exam-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.exam-cell {
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  padding: 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.exam-cell--goal-hit {
+  border-color: var(--goal-gold);
+  background: #fdf3d8;
+}
+
+.exam-cell__label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.exam-subject-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exam-subject-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exam-subject-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exam-subject-row__score {
+  width: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: 12px;
+  text-align: right;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.exam-subject-row__remove {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  width: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.exam-subject-add {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.exam-subject-add__name {
+  flex: 1;
+  min-width: 0;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 3px 5px;
+  font-size: 11.5px;
+  background: transparent;
+}
+
+.exam-subject-add__score {
+  width: 40px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 3px 4px;
+  font-size: 11.5px;
+  background: transparent;
+}
+
+.exam-subject-add__btn {
+  width: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.exam-cell__score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.exam-cell__score {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: 20px;
+}
+
+.exam-cell--goal-hit .exam-cell__score {
+  color: var(--goal-gold);
+}
+
+.exam-cell__unit {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.exam-cell__target-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.exam-cell__target-input {
+  width: 48px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 5px;
+  font-size: 11px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.exam-cell__goal {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.exam-cell__badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--goal-gold);
+}
+
+/* 자격증 */
+.cert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cert-card {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cert-card--done {
+  border-color: var(--goal-gold);
+  background: #fdf3d8;
+}
+
+.cert-card__name {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: 17px;
+  color: var(--text);
+}
+
+.cert-card--done .cert-card__name {
+  color: var(--goal-gold);
+}
+
+.cert-card__detail {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cert-card__status {
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.cert-card__status--done {
+  color: var(--goal-gold);
+}
+
+.cert-card__status--pending {
+  color: var(--muted);
 }

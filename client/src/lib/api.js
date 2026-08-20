@@ -55,4 +55,19 @@ export const api = {
   updateHobbyItem: (id, payload) =>
     request(`/hobby/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteHobbyItem: (id) => request(`/hobby/${id}`, { method: 'DELETE' }),
+
+  getEducationScores: (level) => request(`/education/scores?level=${level}`),
+  saveEducationScore: (payload) =>
+    request('/education/scores', { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteEducationScore: (payload) =>
+    request('/education/scores', { method: 'DELETE', body: JSON.stringify(payload) }),
+  saveEducationTarget: (payload) =>
+    request('/education/target', { method: 'PUT', body: JSON.stringify(payload) }),
+
+  listCertificates: () => request('/education/certificates'),
+  createCertificate: (payload) =>
+    request('/education/certificates', { method: 'POST', body: JSON.stringify(payload) }),
+  updateCertificate: (id, payload) =>
+    request(`/education/certificates/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteCertificate: (id) => request(`/education/certificates/${id}`, { method: 'DELETE' }),
 };

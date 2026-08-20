@@ -7,8 +7,10 @@ import OperatorEventDetail from './routes/operator/OperatorEventDetail.jsx';
 import OperatorEvents from './routes/operator/OperatorEvents.jsx';
 import OperatorLogin from './routes/operator/OperatorLogin.jsx';
 import OperatorNewEvent from './routes/operator/OperatorNewEvent.jsx';
+import CertificatesHome from './routes/personal/CertificatesHome.jsx';
 import DiaryHome from './routes/personal/DiaryHome.jsx';
 import EducationHome from './routes/personal/EducationHome.jsx';
+import EducationLevel from './routes/personal/EducationLevel.jsx';
 import GameHome from './routes/personal/GameHome.jsx';
 import HobbyCategory from './routes/personal/HobbyCategory.jsx';
 import HobbyHome from './routes/personal/HobbyHome.jsx';
@@ -47,6 +49,8 @@ export default function App() {
           <Route path="hobby" element={<HobbyHome />} />
           <Route path="hobby/:category" element={<HobbyCategory />} />
           <Route path="education" element={<EducationHome />} />
+          <Route path="education/certificates" element={<CertificatesHome />} />
+          <Route path="education/:level" element={<EducationLevel />} />
           <Route path="game" element={<GameHome />} />
         </Route>
 
