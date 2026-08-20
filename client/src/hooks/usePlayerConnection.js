@@ -22,6 +22,8 @@ export function usePlayerConnection(eventCode) {
   const [typingGame, setTypingGame] = useState(null);
   const [acrostic, setAcrostic] = useState(null);
   const [yourAcrosticEntry, setYourAcrosticEntry] = useState(null);
+  const [values, setValues] = useState(null);
+  const [yourValuesState, setYourValuesState] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -44,6 +46,8 @@ export function usePlayerConnection(eventCode) {
             setTypingGame(res.typing);
             setAcrostic(res.acrostic);
             setYourAcrosticEntry(res.yourAcrosticEntry ?? null);
+            setValues(res.values);
+            setYourValuesState(res.yourValuesState ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -111,6 +115,8 @@ export function usePlayerConnection(eventCode) {
     typingGame,
     acrostic,
     yourAcrosticEntry,
+    values,
+    yourValuesState,
     scoreboard,
     error,
     join,

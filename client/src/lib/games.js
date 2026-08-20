@@ -14,6 +14,7 @@ export const GAMES = [
   { id: 'liar', name: '라이어 게임', ready: true },
   { id: 'typing', name: '메시지 빨리 보내기', ready: true },
   { id: 'acrostic', name: '삼행시', ready: true },
+  { id: 'values', name: '나의 가치여정', ready: true },
 ];
 
 export function gameById(id) {

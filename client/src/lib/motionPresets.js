@@ -7,3 +7,8 @@ export const springTap = { type: 'spring', bounce: 0, duration: 0.15 };
 
 // 리스트 재정렬(순위 변동) 전용 — 너무 통통 튀지 않게 낮은 bounce
 export const springReorder = { type: 'spring', bounce: 0.15, duration: 0.5 };
+
+// 화면 안에서 한 요소가 다른 자리로 옮겨가는(재배치) 전용 — /apple-design §4 표의
+// "Move / reposition" 값(damping 1.0, response 0.4) 그대로. 오버슈트 없이 그 자리로
+// 딱 이동한다 (예: '나의 가치여정'에서 마지막 남은 단어가 화면 중앙으로 이동).
+export const springMove = { type: 'spring', bounce: 0, duration: 0.4 };

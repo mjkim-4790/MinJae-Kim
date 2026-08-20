@@ -9,8 +9,10 @@ import QrCode from '../../components/QrCode.jsx';
 import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
 import TypingOperatorPanel from '../../components/typing/TypingOperatorPanel.jsx';
+import ValuesOperatorPanel from '../../components/values/ValuesOperatorPanel.jsx';
 import { gameById } from '../../lib/games.js';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
+import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -57,6 +59,7 @@ export default function OperatorEventDetail() {
   const liarGame = useLiarGame({ eventCode: event?.code, initialState: init?.liar });
   const typingGame = useTypingGame({ eventCode: event?.code, initialState: init?.typing });
   const acrosticGame = useAcrosticGame({ eventCode: event?.code, initialState: init?.acrostic });
+  const valuesGame = useValuesGame({ eventCode: event?.code, initialState: init?.values });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -84,6 +87,7 @@ export default function OperatorEventDetail() {
       ['liar', liarGame],
       ['typing', typingGame],
       ['acrostic', acrosticGame],
+      ['values', valuesGame],
     ].find(([, g]) => g.state.status !== 'idle')?.[0] ?? null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
@@ -263,6 +267,9 @@ export default function OperatorEventDetail() {
             {selectedGameId === 'typing' && <TypingOperatorPanel game={typingGame} participants={participants} />}
             {selectedGameId === 'acrostic' && (
               <AcrosticOperatorPanel game={acrosticGame} participants={participants} />
+            )}
+            {selectedGameId === 'values' && (
+              <ValuesOperatorPanel game={valuesGame} participants={participants} />
             )}
           </>
         ) : (

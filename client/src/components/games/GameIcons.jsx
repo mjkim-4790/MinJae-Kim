@@ -118,6 +118,22 @@ function AcrosticIcon() {
   );
 }
 
+function ValuesIcon() {
+  // 여러 단어(작은 사각형들) 중 두 개는 취소선으로 지워지고, 하나만 굵은 테두리로
+  // 남아 "여럿 중 끝까지 안 버린 것 하나"를 표현한다
+  return (
+    <>
+      <rect x="10" y="14" width="24" height="20" rx="5" {...LINE} strokeWidth={5} opacity="0.45" />
+      <path d="M13 24h18" stroke={STROKE} strokeWidth={5} strokeLinecap="round" opacity="0.45" />
+      <rect x="38" y="14" width="24" height="20" rx="5" {...LINE} strokeWidth={5} opacity="0.45" />
+      <path d="M41 24h18" stroke={STROKE} strokeWidth={5} strokeLinecap="round" opacity="0.45" />
+      <rect x="66" y="14" width="24" height="20" rx="5" {...LINE} strokeWidth={5} opacity="0.45" />
+      <path d="M69 24h18" stroke={STROKE} strokeWidth={5} strokeLinecap="round" opacity="0.45" />
+      <rect x="30" y="56" width="40" height="30" rx="7" {...LINE} strokeWidth={7} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -145,6 +161,7 @@ const ICONS = {
   touch: TouchIcon,
   typing: TypingIcon,
   acrostic: AcrosticIcon,
+  values: ValuesIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

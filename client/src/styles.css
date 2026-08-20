@@ -2256,3 +2256,267 @@ a.button--ghost {
   height: 11px;
   background: var(--line);
 }
+
+/* 나의 가치여정 — 공유 제시어·투표 없이 참여자 각자 개인적으로 진행하는 게임이라
+   다른 게임들의 rainbow-* 강조색 관례 대신 차분한 회색 톤(--muted/--line)을 쓴다. */
+
+.values-panel {
+  border-top: 3px solid var(--rainbow-purple);
+  padding-top: 14px;
+}
+
+/* 참여자 입력 폼 — liar-word-card/typing-sentence-card 와 같은 자리·같은 톤(반투명 카드) */
+.values-write-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-translucent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .values-write-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.values-write-card__label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.values-input-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  /* 15칸까지 늘어날 수 있어 화면 안에서 스크롤되게 (페이지 전체가 밀리지 않도록) */
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.values-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.values-input-row__no {
+  flex-shrink: 0;
+  width: 22px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.values-input-row__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.values-input-row__remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.values-input-row__remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.values-input-add {
+  width: 100%;
+}
+
+/* 지우기 단계 무대 — 그리드와 "화면 중앙 오버레이"가 겹쳐 놓일 수 있게 relative */
+.values-stage {
+  position: relative;
+  min-height: 40vh;
+}
+
+.values-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.values-word {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.values-word__text {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: 18px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.values-word--crossed {
+  cursor: default;
+  background: var(--bg);
+  border-color: var(--line);
+  opacity: 0.72;
+}
+
+/* 빨간 색연필 취소선 — 손으로 그은 듯 살짝 어긋난 두 겹 스트로크를 겹쳐 질감을 낸다 */
+.values-cross-mark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.values-cross-mark path {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+}
+
+.values-cross-mark__under {
+  stroke-width: 2.2;
+  opacity: 0.5;
+}
+
+/* 마지막 1개 — 그리드의 작은 박스와 같은 layoutId 를 공유해 화면 중앙으로
+   "이동"한다(/apple-design §4 Move/reposition, springMove). 사라지는 게 아니라
+   자리를 옮기는 연출이라 다른(취소선 그어진) 단어들은 그리드에 그대로 남는다. */
+.values-final {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.values-final__eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.values-word--final {
+  padding: 28px 32px;
+  border-color: var(--rainbow-purple);
+  border-width: 2px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  cursor: default;
+}
+
+.values-word--final .values-word__text {
+  font-size: clamp(28px, 7vw, 44px);
+  white-space: normal;
+  text-align: center;
+}
+
+/* 운영자 화면의 완료자 명단 */
+.values-finisher-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.values-finisher-list__item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.values-finisher-list__name {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.values-finisher-list__word {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  color: var(--rainbow-purple);
+  font-size: 16px;
+}
+
+/* 대형 스크린 — 완료자가 도착하는 대로 카드가 쌓인다 */
+.values-screen-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(10px, 1.4vw, 18px);
+  justify-content: center;
+  width: min(92vw, 1400px);
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+.values-screen-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: clamp(14px, 1.8vw, 24px) clamp(18px, 2.2vw, 30px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.values-screen-card__word {
+  font-family: 'Kyobo Handwriting 2019', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Pretendard', system-ui, sans-serif;
+  font-size: clamp(20px, 2.4vw, 32px);
+  color: var(--rainbow-purple);
+}
+
+.values-screen-card__name {
+  font-size: clamp(12px, 1.1vw, 16px);
+  color: var(--muted);
+}
