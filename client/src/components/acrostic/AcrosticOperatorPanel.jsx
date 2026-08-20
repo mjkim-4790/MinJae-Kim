@@ -140,7 +140,7 @@ export default function AcrosticOperatorPanel({ game, participants }) {
 
         {error && <p className="error-text">{error}</p>}
 
-        <div className="operator-topbar__actions">
+        <div className="operator-topbar__actions operator-topbar__actions--split">
           <button
             className="button"
             disabled={busy || state.submittedParticipantIds.length === 0}
@@ -178,7 +178,7 @@ export default function AcrosticOperatorPanel({ game, participants }) {
 
         {error && <p className="error-text">{error}</p>}
 
-        <div className="operator-topbar__actions">
+        <div className="operator-topbar__actions operator-topbar__actions--split">
           <button className="button" disabled={busy} onClick={() => run(reveal)}>
             투표 결과 확인
           </button>
@@ -220,7 +220,7 @@ export default function AcrosticOperatorPanel({ game, participants }) {
 
       {error && <p className="error-text">{error}</p>}
 
-      <div className="operator-topbar__actions">
+      <div className="operator-topbar__actions operator-topbar__actions--split">
         <button className="button button--ghost" disabled={busy} onClick={() => run(reset)}>
           게임 강제 리셋
         </button>

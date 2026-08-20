@@ -132,7 +132,7 @@ export default function TypingOperatorPanel({ game, participants }) {
         {state.status === 'locked' && <p className="badge badge--info">참여자 입력 잠김</p>}
         {error && <p className="error-text">{error}</p>}
 
-        <div className="operator-topbar__actions">
+        <div className="operator-topbar__actions operator-topbar__actions--split">
           {state.status === 'writing' && (
             <button className="button" disabled={busy} onClick={() => run(lock)}>
               마감

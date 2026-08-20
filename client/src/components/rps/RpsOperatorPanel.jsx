@@ -224,7 +224,7 @@ export default function RpsOperatorPanel({ game, participants, activeParticipant
             <p className="chat__message--operator" style={{ padding: 8, borderRadius: 8 }}>
               탈락: {state.roundResult.nonWinners.map((w) => w.nickname).join(', ') || '없음'}
             </p>
-            <div className="operator-topbar__actions">
+            <div className="operator-topbar__actions operator-topbar__actions--split">
               <button className="button button--ghost" disabled={busy} onClick={() => run(restartRound)}>
                 다시 시작
               </button>
