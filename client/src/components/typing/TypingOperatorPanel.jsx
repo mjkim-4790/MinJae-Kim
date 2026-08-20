@@ -125,30 +125,28 @@ export default function TypingOperatorPanel({ game, participants }) {
         <p className="typing-sentence-preview">"{state.sentence}"</p>
 
         {state.status === 'writing' && (
-          <>
-            <p className="badge badge--info">
-              제출 완료 {state.submittedParticipantIds.length}/{state.activeParticipantIds.length}
-            </p>
-            {error && <p className="error-text">{error}</p>}
+          <p className="badge badge--info">
+            제출 완료 {state.submittedParticipantIds.length}/{state.activeParticipantIds.length}
+          </p>
+        )}
+        {state.status === 'locked' && <p className="badge badge--info">참여자 입력 잠김</p>}
+        {error && <p className="error-text">{error}</p>}
+
+        <div className="operator-topbar__actions">
+          {state.status === 'writing' && (
             <button className="button" disabled={busy} onClick={() => run(lock)}>
               마감
             </button>
-          </>
-        )}
-
-        {state.status === 'locked' && (
-          <>
-            <p className="badge badge--info">참여자 입력 잠김</p>
-            {error && <p className="error-text">{error}</p>}
+          )}
+          {state.status === 'locked' && (
             <button className="button" disabled={busy} onClick={() => run(reveal)}>
               결과확인
             </button>
-          </>
-        )}
-
-        <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
-          게임 강제 리셋
-        </button>
+          )}
+          <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
+            게임 강제 리셋
+          </button>
+        </div>
       </div>
     );
   }

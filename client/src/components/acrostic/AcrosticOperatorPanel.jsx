@@ -140,16 +140,18 @@ export default function AcrosticOperatorPanel({ game, participants }) {
 
         {error && <p className="error-text">{error}</p>}
 
-        <button
-          className="button"
-          disabled={busy || state.submittedParticipantIds.length === 0}
-          onClick={() => run(lock)}
-        >
-          마감 (투표 시작)
-        </button>
-        <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
-          게임 강제 리셋
-        </button>
+        <div className="operator-topbar__actions">
+          <button
+            className="button"
+            disabled={busy || state.submittedParticipantIds.length === 0}
+            onClick={() => run(lock)}
+          >
+            마감 (투표 시작)
+          </button>
+          <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
+            게임 강제 리셋
+          </button>
+        </div>
       </div>
     );
   }
@@ -176,12 +178,14 @@ export default function AcrosticOperatorPanel({ game, participants }) {
 
         {error && <p className="error-text">{error}</p>}
 
-        <button className="button" disabled={busy} onClick={() => run(reveal)}>
-          투표 결과 확인
-        </button>
-        <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
-          게임 강제 리셋
-        </button>
+        <div className="operator-topbar__actions">
+          <button className="button" disabled={busy} onClick={() => run(reveal)}>
+            투표 결과 확인
+          </button>
+          <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
+            게임 강제 리셋
+          </button>
+        </div>
       </div>
     );
   }

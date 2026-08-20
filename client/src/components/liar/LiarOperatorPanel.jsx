@@ -153,20 +153,22 @@ export default function LiarOperatorPanel({ game, participants }) {
         )}
 
         {state.status === 'voting' && (
-          <>
-            <p>
-              지목 완료 {state.votedParticipantIds.length}/{state.activeParticipantIds.length}
-            </p>
-            {error && <p className="error-text">{error}</p>}
+          <p>
+            지목 완료 {state.votedParticipantIds.length}/{state.activeParticipantIds.length}
+          </p>
+        )}
+        {error && <p className="error-text">{error}</p>}
+
+        <div className="operator-topbar__actions">
+          {state.status === 'voting' && (
             <button className="button" disabled={busy} onClick={() => run(lock)}>
               투표 마감
             </button>
-          </>
-        )}
-
-        <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
-          게임 강제 리셋
-        </button>
+          )}
+          <button className="button button--danger" disabled={busy} onClick={() => run(reset)}>
+            게임 강제 리셋
+          </button>
+        </div>
       </div>
     );
   }
