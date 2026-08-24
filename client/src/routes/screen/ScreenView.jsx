@@ -11,6 +11,7 @@ import RpsScreenView from '../../components/rps/RpsScreenView.jsx';
 import StatusBar from '../../components/StatusBar.jsx';
 import TypingScreenView from '../../components/typing/TypingScreenView.jsx';
 import ValuesScreenView from '../../components/values/ValuesScreenView.jsx';
+import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -18,6 +19,7 @@ import { useRpsGame } from '../../hooks/useRpsGame.js';
 import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { useTypingGame } from '../../hooks/useTypingGame.js';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
+import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -44,6 +46,7 @@ export default function ScreenView() {
   const typingGame = useTypingGame({ eventCode: code, initialState: init?.typing });
   const acrosticGame = useAcrosticGame({ eventCode: code, initialState: init?.acrostic });
   const valuesGame = useValuesGame({ eventCode: code, initialState: init?.values });
+  const yabawiGame = useYabawiGame({ eventCode: code, initialState: init?.yabawi });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -63,7 +66,9 @@ export default function ScreenView() {
   const typingActive = typingGame.state.status !== 'idle';
   const acrosticActive = acrosticGame.state.status !== 'idle';
   const valuesActive = valuesGame.state.status !== 'idle';
-  const gameActive = rpsActive || liarActive || typingActive || acrosticActive || valuesActive;
+  const yabawiActive = yabawiGame.state.status !== 'idle';
+  const gameActive =
+    rpsActive || liarActive || typingActive || acrosticActive || valuesActive || yabawiActive;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
@@ -77,6 +82,8 @@ export default function ScreenView() {
     content = <AcrosticScreenView state={acrosticGame.state} />;
   } else if (valuesActive) {
     content = <ValuesScreenView state={valuesGame.state} />;
+  } else if (yabawiActive) {
+    content = <YabawiScreenView state={yabawiGame.state} />;
   } else if (mode === 'logo') {
     content = (
       <div className="screen__frame">

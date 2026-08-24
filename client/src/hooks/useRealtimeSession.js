@@ -14,7 +14,7 @@ export function useRealtimeSession(role, eventCode) {
   const [status, setStatus] = useState(socket.connected ? 'connected' : 'connecting');
   const [session, setSession] = useState(null);
   const [presence, setPresence] = useState(null);
-  const [init, setInit] = useState(null); // { chat, screenMode, rps, liar, typing, acrostic, values, scoreboard, event? }
+  const [init, setInit] = useState(null); // { chat, screenMode, rps, liar, typing, acrostic, values, yabawi, scoreboard, event? }
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -31,6 +31,7 @@ export function useRealtimeSession(role, eventCode) {
             typing: res.typing,
             acrostic: res.acrostic,
             values: res.values,
+            yabawi: res.yabawi,
             scoreboard: res.scoreboard,
             event: res.event,
           });

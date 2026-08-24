@@ -24,6 +24,8 @@ export function usePlayerConnection(eventCode) {
   const [yourAcrosticEntry, setYourAcrosticEntry] = useState(null);
   const [values, setValues] = useState(null);
   const [yourValuesState, setYourValuesState] = useState(null);
+  const [yabawi, setYabawi] = useState(null);
+  const [yourYabawiPick, setYourYabawiPick] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -48,6 +50,8 @@ export function usePlayerConnection(eventCode) {
             setYourAcrosticEntry(res.yourAcrosticEntry ?? null);
             setValues(res.values);
             setYourValuesState(res.yourValuesState ?? null);
+            setYabawi(res.yabawi);
+            setYourYabawiPick(res.yourYabawiPick ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -117,6 +121,8 @@ export function usePlayerConnection(eventCode) {
     yourAcrosticEntry,
     values,
     yourValuesState,
+    yabawi,
+    yourYabawiPick,
     scoreboard,
     error,
     join,

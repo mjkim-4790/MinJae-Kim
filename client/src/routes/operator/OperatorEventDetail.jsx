@@ -10,10 +10,12 @@ import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
 import TypingOperatorPanel from '../../components/typing/TypingOperatorPanel.jsx';
 import ValuesOperatorPanel from '../../components/values/ValuesOperatorPanel.jsx';
+import YabawiOperatorPanel from '../../components/yabawi/YabawiOperatorPanel.jsx';
 import { gameById } from '../../lib/games.js';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
+import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -65,6 +67,7 @@ export default function OperatorEventDetail() {
   const typingGame = useTypingGame({ eventCode: event?.code, initialState: init?.typing });
   const acrosticGame = useAcrosticGame({ eventCode: event?.code, initialState: init?.acrostic });
   const valuesGame = useValuesGame({ eventCode: event?.code, initialState: init?.values });
+  const yabawiGame = useYabawiGame({ eventCode: event?.code, initialState: init?.yabawi });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -93,6 +96,7 @@ export default function OperatorEventDetail() {
       ['typing', typingGame],
       ['acrostic', acrosticGame],
       ['values', valuesGame],
+      ['yabawi', yabawiGame],
     ].find(([, g]) => g.state.status !== 'idle')?.[0] ?? null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
@@ -293,6 +297,9 @@ export default function OperatorEventDetail() {
             )}
             {selectedGameId === 'values' && (
               <ValuesOperatorPanel game={valuesGame} participants={participants} />
+            )}
+            {selectedGameId === 'yabawi' && (
+              <YabawiOperatorPanel game={yabawiGame} participants={participants} />
             )}
           </>
         ) : (

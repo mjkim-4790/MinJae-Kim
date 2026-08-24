@@ -134,6 +134,17 @@ function ValuesIcon() {
   );
 }
 
+function YabawiIcon() {
+  // 컵 3개 중 가운데가 살짝 들려 공이 보이는 순간 — 야바위의 핵심 장면
+  return (
+    <>
+      <path d="M22 34 Q34 30 46 34 L52 72 Q34 77 16 72 Z" {...LINE} strokeWidth={5} />
+      <path d="M56 22 Q68 18 80 22 L86 60 Q68 65 50 60 Z" {...LINE} strokeWidth={5} />
+      <circle cx="68" cy="76" r="7" {...LINE} strokeWidth={5} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -162,6 +173,7 @@ const ICONS = {
   typing: TypingIcon,
   acrostic: AcrosticIcon,
   values: ValuesIcon,
+  yabawi: YabawiIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란
