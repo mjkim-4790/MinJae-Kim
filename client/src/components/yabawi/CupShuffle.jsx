@@ -240,6 +240,9 @@ export default function CupShuffle({ plan, status, answerSlot, myPick, onPick, i
 
   const revealing = (status === 'result' || status === 'ended') && answerSlot != null;
   const ballSlot = revealing ? answerSlot : plan.initialBallIndex;
+  // 고르는 단계에서는 컵이 이미 멈춰 있으므로, 컵 번호를 지금 그 컵이 서 있는 자리로
+  // 바꿔서 "컵을 누르면 그 자리를 고른다"가 되게 한다 (숫자 배지를 누르는 것과 동일 동작).
+  const slotOfCup = status !== 'shuffling' ? resolveFinalPositions(plan).slotOfCup : null;
 
   return (
     <div className="yabawi-board-wrap" ref={wrapRef}>
@@ -259,18 +262,36 @@ export default function CupShuffle({ plan, status, answerSlot, myPick, onPick, i
           aria-hidden="true"
         />
 
-        {Array.from({ length: cups }, (_, cup) => (
-          <div
-            key={cup}
-            ref={(el) => {
-              cupRefs.current[cup] = el;
-            }}
-            className="yabawi-cup"
-            style={{ transform: `translate3d(${slotX(cup)}px, 0, 0)` }}
-          >
-            <Cup index={cup} />
-          </div>
-        ))}
+        {Array.from({ length: cups }, (_, cup) => {
+          const cupSlot = slotOfCup ? slotOfCup[cup] : cup;
+          const canClickCup = interactive && slotOfCup != null;
+          return (
+            <div
+              key={cup}
+              ref={(el) => {
+                cupRefs.current[cup] = el;
+              }}
+              className={`yabawi-cup${canClickCup ? ' yabawi-cup--pickable' : ''}`}
+              style={{ transform: `translate3d(${slotX(cup)}px, 0, 0)` }}
+              onClick={canClickCup ? () => onPick?.(cupSlot) : undefined}
+              role={canClickCup ? 'button' : undefined}
+              tabIndex={canClickCup ? 0 : undefined}
+              onKeyDown={
+                canClickCup
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onPick?.(cupSlot);
+                      }
+                    }
+                  : undefined
+              }
+              aria-label={canClickCup ? `${cupSlot + 1}번 자리` : undefined}
+            >
+              <Cup index={cup} />
+            </div>
+          );
+        })}
 
         {/* 고르는 자리 — 컵이 아니라 "자리"를 누르는 것이라 섞기와 무관하게 고정이다 */}
         {Array.from({ length: cups }, (_, slot) => {
