@@ -34,6 +34,7 @@ export function useRealtimeSession(role, eventCode) {
             yabawi: res.yabawi,
             wordcloud: res.wordcloud,
             maze: res.maze,
+            chairs: res.chairs,
             scoreboard: res.scoreboard,
             event: res.event,
           });

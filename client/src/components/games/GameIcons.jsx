@@ -173,6 +173,21 @@ function MazeIcon() {
   );
 }
 
+function ChairsIcon() {
+  // 의자 하나와 그 둘레를 도는 화살표 — "돌다가 앉는다"를 그대로
+  return (
+    <>
+      <path d="M32 40V26a4 4 0 0 1 8 0v14" {...LINE} strokeWidth={5} />
+      <path d="M30 40h30" {...LINE} strokeWidth={6} />
+      <path d="M34 40v22M56 40v22" {...LINE} strokeWidth={5} />
+      <path d="M60 26v14" {...LINE} strokeWidth={5} />
+      <path d="M18 70a34 34 0 0 1 12-46" {...LINE} strokeWidth={5} />
+      <path d="M18 70l9-3M18 70l2-9" {...LINE} strokeWidth={5} />
+      <path d="M78 30a34 34 0 0 1-10 46" {...LINE} strokeWidth={5} opacity="0.5" />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -204,6 +219,7 @@ const ICONS = {
   yabawi: YabawiIcon,
   wordcloud: WordcloudIcon,
   maze: MazeIcon,
+  chairs: ChairsIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

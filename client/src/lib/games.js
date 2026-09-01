@@ -18,6 +18,7 @@ export const GAMES = [
   { id: 'yabawi', name: '야바위 게임', ready: true },
   { id: 'wordcloud', name: '단어 구름', ready: true },
   { id: 'maze', name: '미로 찾기', ready: true },
+  { id: 'chairs', name: '의자 빨리 뺏기', ready: true },
 ];
 
 export function gameById(id) {

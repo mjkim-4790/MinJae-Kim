@@ -9,6 +9,7 @@ import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
 import TypingPlayerView from '../../components/typing/TypingPlayerView.jsx';
 import ValuesPlayerView from '../../components/values/ValuesPlayerView.jsx';
+import ChairsPlayerView from '../../components/chairs/ChairsPlayerView.jsx';
 import MazePlayerView from '../../components/maze/MazePlayerView.jsx';
 import WordcloudPlayerView from '../../components/wordcloud/WordcloudPlayerView.jsx';
 import YabawiPlayerView from '../../components/yabawi/YabawiPlayerView.jsx';
@@ -17,6 +18,7 @@ import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
 import { useMazeGame } from '../../hooks/useMazeGame.js';
+import { useChairsGame } from '../../hooks/useChairsGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
@@ -60,6 +62,8 @@ export default function PlayerJoin() {
     yourWordcloudWords: initialYourWordcloudWords,
     maze: initialMaze,
     yourMazeFinish: initialYourMazeFinish,
+    chairs: initialChairs,
+    yourChairsSeat: initialYourChairsSeat,
     scoreboard: initialScoreboard,
     error,
     join,
@@ -102,6 +106,11 @@ export default function PlayerJoin() {
     eventCode: code,
     initialState: initialMaze,
     initialYourFinish: initialYourMazeFinish,
+  });
+  const chairsGame = useChairsGame({
+    eventCode: code,
+    initialState: initialChairs,
+    initialYourSeat: initialYourChairsSeat,
   });
   const scoreboard = useScoreboard(initialScoreboard);
   // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
@@ -151,6 +160,7 @@ export default function PlayerJoin() {
     yabawiGame,
     wordcloudGame,
     mazeGame,
+    chairsGame,
   ].some(
     (g) => g.state.status !== 'idle' && !g.dismissed,
   );
@@ -195,6 +205,7 @@ export default function PlayerJoin() {
         <YabawiPlayerView game={yabawiGame} participantId={participant?.id} />
         <WordcloudPlayerView game={wordcloudGame} />
         <MazePlayerView game={mazeGame} participantId={participant?.id} />
+        <ChairsPlayerView game={chairsGame} participantId={participant?.id} />
 
         {!gameRunning && (
           <>

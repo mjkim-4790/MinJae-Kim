@@ -30,6 +30,8 @@ export function usePlayerConnection(eventCode) {
   const [yourWordcloudWords, setYourWordcloudWords] = useState(null);
   const [maze, setMaze] = useState(null);
   const [yourMazeFinish, setYourMazeFinish] = useState(null);
+  const [chairs, setChairs] = useState(null);
+  const [yourChairsSeat, setYourChairsSeat] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -60,6 +62,8 @@ export function usePlayerConnection(eventCode) {
             setYourWordcloudWords(res.yourWordcloudWords ?? null);
             setMaze(res.maze);
             setYourMazeFinish(res.yourMazeFinish ?? null);
+            setChairs(res.chairs);
+            setYourChairsSeat(res.yourChairsSeat ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -135,6 +139,8 @@ export function usePlayerConnection(eventCode) {
     yourWordcloudWords,
     maze,
     yourMazeFinish,
+    chairs,
+    yourChairsSeat,
     scoreboard,
     error,
     join,
