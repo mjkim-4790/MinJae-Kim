@@ -3,6 +3,11 @@ import { motion } from 'motion/react';
 
 import { springPop } from '../../lib/motionPresets.js';
 
+const DIFFICULTIES = [
+  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다' },
+  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로 · 점수 1.5배' },
+];
+
 const CONTROLS = [
   { id: 'tilt', name: '기울기', desc: '폰을 기울여 굴린다' },
   { id: 'buttons', name: '버튼', desc: '화면 방향 버튼으로 굴린다' },
@@ -12,6 +17,7 @@ const LIMITS = [60, 90, 120];
 const ERROR_MESSAGE = {
   NOT_ENOUGH_PARTICIPANTS: '참여자가 입장해야 시작할 수 있습니다',
   RACE_IN_PROGRESS: '지금 경기가 진행 중입니다',
+  INVALID_DIFFICULTY: '난이도를 선택하세요',
   INVALID_CONTROL: '조작 방식을 선택하세요',
   INVALID_LIMIT: '제한시간을 선택하세요',
   NOT_FINISHED: '아직 경기가 끝나지 않았습니다',
@@ -25,6 +31,7 @@ function formatElapsed(ms) {
 
 export default function MazeOperatorPanel({ game, participants }) {
   const { state, serverTime, start, reveal, end, reset } = game;
+  const [difficulty, setDifficulty] = useState('normal');
   const [control, setControl] = useState('tilt');
   const [limitSec, setLimitSec] = useState(90);
   const [error, setError] = useState(null);
@@ -54,7 +61,14 @@ export default function MazeOperatorPanel({ game, participants }) {
         {state.status === 'ended' && state.ranking && (
           <>
             <motion.div className="typing-final-banner" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={springPop}>
-              🏁 1등 {state.ranking[0] ? `${state.ranking[0].nickname} · ${formatElapsed(state.ranking[0].elapsedMs)}` : '없음'}
+              🏁 1등{' '}
+              {state.ranking[0]
+                ? `${state.ranking[0].nickname} · ${
+                    state.rankedBy === 'progress'
+                      ? `${state.ranking[0].remaining}칸 남음`
+                      : formatElapsed(state.ranking[0].elapsedMs)
+                  }`
+                : '없음'}
             </motion.div>
             <button className="button" disabled={busy} onClick={() => run(reset)}>
               확인
@@ -66,6 +80,30 @@ export default function MazeOperatorPanel({ game, participants }) {
           공을 굴려 미로를 빠져나가는 게임입니다. 미리 만들어둔 미로 20개 중 하나가 무작위로
           나오고, 빨리 도착한 순서로 순위를 매깁니다 (현재 참여자 {activeCount}명).
         </p>
+
+        <label className="field">
+          <span className="field__label">난이도</span>
+        </label>
+        <ul className="typing-difficulty-grid">
+          {DIFFICULTIES.map((d) => (
+            <li key={d.id}>
+              <button
+                type="button"
+                className={`typing-difficulty-tile${difficulty === d.id ? ' typing-difficulty-tile--active' : ''}`}
+                onClick={() => setDifficulty(d.id)}
+              >
+                {d.name}
+                <span className="maze-control-desc">{d.desc}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        {difficulty === 'hard' && (
+          <p className="subtitle">
+            벽에 <strong>스치기만 해도</strong> 출발점으로 돌아갑니다. 아주 어려우니 제한시간을
+            넉넉히 주세요. 아무도 완주하지 못하면 가장 멀리 간 순으로 순위를 매깁니다.
+          </p>
+        )}
 
         <label className="field">
           <span className="field__label">조작 방식 — 모두 같은 조건으로 진행됩니다</span>
@@ -113,7 +151,7 @@ export default function MazeOperatorPanel({ game, participants }) {
         <button
           className="button"
           disabled={busy || activeCount === 0}
-          onClick={() => run(start, { control, limitSec })}
+          onClick={() => run(start, { difficulty, control, limitSec })}
         >
           {busy ? '시작하는 중…' : '시작하기 (3초 뒤 출발)'}
         </button>
@@ -135,6 +173,7 @@ export default function MazeOperatorPanel({ game, participants }) {
             : `${Math.ceil(msLeft / 1000)}초 남음 · 완주 ${finishedCount}/${entrants}명`}
         </p>
         <p className="subtitle">
+          {state.difficulty === 'hard' ? '난이도 상' : '보통'} ·{' '}
           {state.control === 'tilt' ? '기울기' : '버튼'} 조작 · 제한시간 {state.limitMs / 1000}초
         </p>
         {error && <p className="error-text">{error}</p>}
@@ -160,7 +199,11 @@ export default function MazeOperatorPanel({ game, participants }) {
   // result
   return (
     <div className="stack">
-      <p className="badge badge--info">결과 공개됨 · 완주 {state.ranking?.length ?? 0}/{entrants}명</p>
+      <p className="badge badge--info">
+        {state.rankedBy === 'progress'
+          ? `완주자 없음 — 진출 거리 순위 (참가 ${entrants}명)`
+          : `결과 공개됨 · 완주 ${state.ranking?.length ?? 0}/${entrants}명`}
+      </p>
 
       {state.ranking?.length > 0 ? (
         <ol className="maze-rank-list">
@@ -168,13 +211,15 @@ export default function MazeOperatorPanel({ game, participants }) {
             <li key={r.participantId} className="maze-rank-list__row">
               <span className="maze-rank-list__rank">{r.rank}</span>
               <span className="maze-rank-list__name">{r.nickname}</span>
-              <span className="maze-rank-list__time">{formatElapsed(r.elapsedMs)}</span>
+              <span className="maze-rank-list__time">
+                {state.rankedBy === 'progress' ? `${r.remaining}칸 남음` : formatElapsed(r.elapsedMs)}
+              </span>
               <span className="maze-rank-list__points">+{r.points}</span>
             </li>
           ))}
         </ol>
       ) : (
-        <p className="subtitle">완주한 사람이 없습니다.</p>
+        <p className="subtitle">기록이 없습니다.</p>
       )}
 
       {error && <p className="error-text">{error}</p>}

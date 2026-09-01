@@ -127,8 +127,11 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
       const drawn = drawnRef.current;
       targetRef.current.forEach((t, id) => {
         const cur = drawn.get(id);
-        if (!cur) drawn.set(id, { x: t.x, y: t.y });
-        else drawn.set(id, { x: cur.x + (t.x - cur.x) * follow, y: cur.y + (t.y - cur.y) * follow });
+        if (!cur) { drawn.set(id, { x: t.x, y: t.y }); return; }
+        // '상' 난이도에서 벽에 닿아 출발점으로 되돌아간 경우처럼 한 번에 멀리 뛰면,
+        // 사이를 이어 그리면 미로를 가로질러 미끄러지는 이상한 그림이 된다. 그냥 튄다.
+        if (Math.hypot(t.x - cur.x, t.y - cur.y) > 2) { drawn.set(id, { x: t.x, y: t.y }); return; }
+        drawn.set(id, { x: cur.x + (t.x - cur.x) * follow, y: cur.y + (t.y - cur.y) * follow });
       });
 
       drawMaze();

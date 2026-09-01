@@ -7,6 +7,14 @@ import { MAZES, MAZE_HEIGHT, MAZE_WIDTH } from './mazes.js';
 
 export { MAZES, MAZE_HEIGHT, MAZE_WIDTH };
 
+// 난이도 (운영 결정: 2단계).
+// '상'은 벽에 스치기만 해도 출발점으로 되돌아간다. 공 크기는 '보통'과 같게 두어
+// 일부러 빡빡하게 만들었고, 그만큼 점수를 1.5배 준다.
+export const DIFFICULTIES = [
+  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다', resetOnWall: false, pointsScale: 1 },
+  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로', resetOnWall: true, pointsScale: 1.5 },
+];
+
 export const CONTROLS = [
   { id: 'tilt', name: '기울기', desc: '폰을 기울여 굴린다' },
   { id: 'buttons', name: '버튼', desc: '화면 방향 버튼으로 굴린다' },
@@ -25,6 +33,10 @@ export const WARN_MS = 5000; // 남은 시간이 이보다 적으면 화면에 �
 const RANK_POINTS = { 1: 100, 2: 80, 3: 60 };
 const FINISH_POINTS = 30;
 
+export function difficultyById(id) {
+  return DIFFICULTIES.find((d) => d.id === id) ?? null;
+}
+
 export function controlById(id) {
   return CONTROLS.find((c) => c.id === id) ?? null;
 }
@@ -41,8 +53,8 @@ export function mazeAt(index) {
   return MAZES[index] ?? null;
 }
 
-export function pointsForRank(rank) {
-  return RANK_POINTS[rank] ?? FINISH_POINTS;
+export function pointsForRank(rank, scale = 1) {
+  return Math.round((RANK_POINTS[rank] ?? FINISH_POINTS) * scale);
 }
 
 /**
@@ -52,19 +64,42 @@ export function pointsForRank(rank) {
  * @param {Map<number, number>} finishes participantId -> 걸린 시간(ms)
  * @returns {{participantId:number, elapsedMs:number, rank:number, points:number}[]}
  */
-export function rankFinishers(finishes) {
+export function rankFinishers(finishes, scale = 1) {
   const rows = [...finishes.entries()]
     .map(([participantId, elapsedMs]) => ({ participantId, elapsedMs }))
     .sort((a, b) => a.elapsedMs - b.elapsedMs || a.participantId - b.participantId);
 
-  let lastElapsed = null;
+  return assignRanks(rows, (r) => r.elapsedMs, scale);
+}
+
+/**
+ * 아무도 완주하지 못한 판의 순위 — "그 판에서 도달한 가장 먼 지점" 순으로 매긴다.
+ *
+ * 최종 위치로 재면 안 된다. '상' 난이도는 벽에 닿을 때마다 출발점으로 돌아가므로,
+ * 시간이 끝난 순간의 위치는 대개 출발점 근처다. 판이 도는 내내 최소값을 갱신해온
+ * bestRemaining 을 쓴다.
+ *
+ * @param {Map<number, number>} bestRemaining participantId -> 도달했던 최소 '남은 칸'
+ */
+export function rankByProgress(bestRemaining, scale = 1) {
+  const rows = [...bestRemaining.entries()]
+    .map(([participantId, remaining]) => ({ participantId, remaining }))
+    .sort((a, b) => a.remaining - b.remaining || a.participantId - b.participantId);
+
+  return assignRanks(rows, (r) => r.remaining, scale);
+}
+
+/** 같은 값이면 같은 등수를 주고 다음 등수는 건너뛴다 (1,2,2,4 — 일반적인 경기 방식). */
+function assignRanks(rows, valueOf, scale) {
+  let lastValue = null;
   let lastRank = 0;
 
   return rows.map((row, i) => {
-    const rank = row.elapsedMs === lastElapsed ? lastRank : i + 1;
-    lastElapsed = row.elapsedMs;
+    const value = valueOf(row);
+    const rank = value === lastValue ? lastRank : i + 1;
+    lastValue = value;
     lastRank = rank;
-    return { ...row, rank, points: pointsForRank(rank) };
+    return { ...row, rank, points: pointsForRank(rank, scale) };
   });
 }
 

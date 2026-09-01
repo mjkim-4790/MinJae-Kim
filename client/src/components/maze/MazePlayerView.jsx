@@ -53,10 +53,12 @@ export default function MazePlayerView({ game, participantId }) {
   const padRef = useRef({ ax: 0, ay: 0 });
   const [now, setNow] = useState(() => Date.now());
   const [finishing, setFinishing] = useState(false);
+  const [resets, setResets] = useState(0);
 
   const inRace = state.activeParticipantIds.includes(participantId);
   const racing = state.status === 'racing';
   const usingTilt = state.control === 'tilt';
+  const hardMode = state.difficulty === 'hard';
 
   // 카운트다운·남은시간 표시를 위해 경기 중에만 짧은 주기로 다시 그린다
   useEffect(() => {
@@ -70,9 +72,12 @@ export default function MazePlayerView({ game, participantId }) {
   useEffect(() => {
     if (state.status === 'countdown') {
       padRef.current = { ax: 0, ay: 0 };
+      setResets(0);
       calibrate();
     }
   }, [state.status, calibrate]);
+
+  const handleWallReset = useCallback(() => setResets((n) => n + 1), []);
 
   const handleGoal = useCallback(async () => {
     setFinishing(true);
@@ -90,7 +95,9 @@ export default function MazePlayerView({ game, participantId }) {
         <h2 className="panel__title">미로 찾기 — 종료</h2>
         {mine ? (
           <motion.p className="typing-final-banner" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={springPop}>
-            {mine.rank}등 · {formatElapsed(mine.elapsedMs)} · +{mine.points}점
+            {mine.rank}등 ·{' '}
+            {state.rankedBy === 'progress' ? `${mine.remaining}칸 남음` : formatElapsed(mine.elapsedMs)} · +
+            {mine.points}점
           </motion.p>
         ) : (
           <p className="rps-spectator">이번 판은 완주하지 못했어요.</p>
@@ -111,7 +118,11 @@ export default function MazePlayerView({ game, participantId }) {
         {mine ? (
           <motion.div className="maze-myresult" initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} transition={springPop}>
             <p className="maze-myresult__rank">{mine.rank}등</p>
-            <p className="maze-myresult__time">{formatElapsed(mine.elapsedMs)}</p>
+            <p className="maze-myresult__time">
+              {state.rankedBy === 'progress'
+                ? `도착까지 ${mine.remaining}칸 남음`
+                : formatElapsed(mine.elapsedMs)}
+            </p>
             <p className="maze-myresult__points">+{mine.points}점</p>
           </motion.div>
         ) : (
@@ -119,7 +130,11 @@ export default function MazePlayerView({ game, participantId }) {
             {inRace ? '시간 안에 도착하지 못했어요.' : '이번 판은 관전했어요.'}
           </p>
         )}
-        <p className="subtitle">완주 {state.ranking?.length ?? 0}명 / 참가 {state.activeParticipantIds.length}명</p>
+        <p className="subtitle">
+          {state.rankedBy === 'progress'
+            ? `완주자 없음 — 가장 멀리 간 순 (참가 ${state.activeParticipantIds.length}명)`
+            : `완주 ${state.ranking?.length ?? 0}명 / 참가 ${state.activeParticipantIds.length}명`}
+        </p>
       </section>
     );
   }
@@ -197,7 +212,17 @@ export default function MazePlayerView({ game, participantId }) {
             axisRef={usingTilt ? tilt.axisRef : padRef}
             onGoal={handleGoal}
             onPosition={sendPosition}
+            resetOnWall={hardMode}
+            onWallReset={handleWallReset}
           />
+
+          {hardMode && (
+            <p className={`subtitle maze-hard${resets > 0 ? ' maze-hard--hit' : ''}`}>
+              {resets === 0
+                ? '벽에 닿으면 처음부터! 조심조심…'
+                : `벽에 닿아 ${resets}번 처음으로 돌아갔어요`}
+            </p>
+          )}
 
           {myColor && (
             <p className="subtitle maze-mycolor">

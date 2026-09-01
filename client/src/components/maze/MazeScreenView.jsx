@@ -43,6 +43,7 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
         </motion.p>
         <p className="screen__hint">
           {state.control === 'tilt' ? '폰을 눕혀 들고 기울일 준비!' : '방향 버튼을 누를 준비!'}
+          {state.difficulty === 'hard' && ' · 벽에 닿으면 처음으로!'}
         </p>
       </div>
     );
@@ -56,7 +57,9 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
     return (
       <div className="screen__center maze-live">
         <div className="maze-live__head">
-          <p className="screen__eyebrow">미로 찾기 — 진행 중</p>
+          <p className="screen__eyebrow">
+            미로 찾기 — 진행 중{state.difficulty === 'hard' ? ' · 난이도 상' : ''}
+          </p>
           <motion.p
             key={warn ? Math.ceil(msLeft / 1000) : 'run'}
             className={`maze-live__timer${warn ? ' maze-live__timer--warn' : ''}`}
@@ -115,13 +118,14 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
   return (
     <div className="screen__center">
       <p className="screen__eyebrow">
-        미로 찾기 — 기록{state.status === 'ended' ? ' · 종료' : ''}
+        미로 찾기 — {state.rankedBy === 'progress' ? '가장 멀리 간 순' : '기록'}
+        {state.status === 'ended' ? ' · 종료' : ''}
       </p>
 
       <AnimatePresence>
         {ranking.length === 0 ? (
           <motion.p className="screen__hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={springSettle}>
-            완주한 사람이 없습니다
+            기록이 없습니다
           </motion.p>
         ) : (
           <motion.ol className="maze-screen__board" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={springSettle}>
@@ -135,7 +139,9 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
               >
                 <span className="maze-screen__rank">{MEDAL[r.rank] ?? r.rank}</span>
                 <span className="maze-screen__name">{r.nickname}</span>
-                <span className="maze-screen__time">{formatElapsed(r.elapsedMs)}</span>
+                <span className="maze-screen__time">
+                  {state.rankedBy === 'progress' ? `${r.remaining}칸 남음` : formatElapsed(r.elapsedMs)}
+                </span>
                 <span className="maze-screen__points">+{r.points}</span>
               </motion.li>
             ))}
@@ -144,7 +150,9 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
       </AnimatePresence>
 
       <p className="screen__hint">
-        완주 {ranking.length} / 참가 {entrants}명
+        {state.rankedBy === 'progress'
+          ? `아무도 완주하지 못했습니다 · 참가 ${entrants}명`
+          : `완주 ${ranking.length} / 참가 ${entrants}명`}
       </p>
     </div>
   );

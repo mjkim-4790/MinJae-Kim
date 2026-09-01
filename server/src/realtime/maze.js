@@ -5,9 +5,11 @@ import {
   COUNTDOWN_MS,
   controlById,
   decodeCells,
+  difficultyById,
   goalDistances,
   mazeAt,
   pickMazeIndex,
+  rankByProgress,
   rankFinishers,
   remainingAt,
   timeLimitById,
@@ -39,6 +41,7 @@ const MIN_PARTICIPANTS = 1; // 운영자가 혼자 리허설할 수 있어야 �
 function createInitialState() {
   return {
     status: 'idle', // idle | countdown | racing | finished | result | ended
+    difficulty: null, // 'normal' | 'hard' — 상은 벽에 닿으면 출발점으로
     control: null, // 'tilt' | 'buttons' — 진행자가 정해 전원 동일 조건
     limitMs: 0,
     mazeIndex: null,
@@ -48,8 +51,10 @@ function createInitialState() {
     colorOf: new Map(), // participantId -> 색 번호 (판 내내 고정)
     positions: new Map(), // participantId -> { x, y } (칸 단위) — 대형화면 중계용
     distToGoal: null, // 칸마다 "도착까지 남은 칸 수" (실시간 순위 기준)
+    bestRemaining: new Map(), // participantId -> 그 판에서 도달했던 최소 '남은 칸'
     finishes: new Map(), // participantId -> 걸린 시간(ms)
     ranking: null, // 결과 공개 때 계산
+    rankedBy: null, // 'time' | 'progress' — 완주자가 없으면 진출 거리로 매긴다
   };
 }
 
@@ -82,6 +87,7 @@ function publicState(state) {
 
   return {
     status: state.status,
+    difficulty: state.difficulty,
     control: state.control,
     limitMs: state.limitMs,
     // 미로 자체는 출발 전부터 내려준다 — 각 폰이 미리 그려두고 카운트다운을 봐야
@@ -103,6 +109,7 @@ function publicState(state) {
     ranking: revealed && state.ranking
       ? state.ranking.map((r) => ({ ...toParticipantRef(r.participantId), ...r }))
       : null,
+    rankedBy: revealed ? state.rankedBy : null,
   };
 }
 
@@ -167,6 +174,9 @@ export function registerMazeHandlers(io, socket) {
       return reply({ ok: false, error: 'RACE_IN_PROGRESS' });
     }
 
+    const difficulty = difficultyById(String(payload.difficulty ?? ''));
+    if (!difficulty) return reply({ ok: false, error: 'INVALID_DIFFICULTY' });
+
     const control = controlById(String(payload.control ?? ''));
     if (!control) return reply({ ok: false, error: 'INVALID_CONTROL' });
 
@@ -182,6 +192,7 @@ export function registerMazeHandlers(io, socket) {
     clearTimers(code);
     const now = Date.now();
     state.status = 'countdown';
+    state.difficulty = difficulty.id;
     state.control = control.id;
     state.limitMs = limit.id * 1000;
     state.mazeIndex = pickMazeIndex();
@@ -191,8 +202,12 @@ export function registerMazeHandlers(io, socket) {
     state.colorOf = new Map(state.activePool.map((id, i) => [id, i]));
     state.positions = new Map(state.activePool.map((id) => [id, { x: 0.5, y: 0.5 }]));
     state.distToGoal = goalDistances(decodeCells(mazeAt(state.mazeIndex)));
+    // 출발점의 남은 칸으로 시작 — 한 칸도 못 가면 이 값이 그대로 기록된다
+    const startRemaining = remainingAt(state.distToGoal, 0.5, 0.5);
+    state.bestRemaining = new Map(state.activePool.map((id) => [id, startRemaining]));
     state.finishes = new Map();
     state.ranking = null;
+    state.rankedBy = null;
 
     reply({ ok: true });
     broadcastNow(io, code);
@@ -232,6 +247,7 @@ export function registerMazeHandlers(io, socket) {
     // 걸린 시간은 서버가 잰다 (클라이언트가 보낸 값은 쓰지 않는다)
     const elapsedMs = Math.max(0, Date.now() - state.startsAt);
     state.finishes.set(id, elapsedMs);
+    state.bestRemaining.set(id, 0);
 
     reply({ ok: true, elapsedMs });
 
@@ -261,6 +277,14 @@ export function registerMazeHandlers(io, socket) {
     const y = Number(payload.y);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     state.positions.set(id, { x, y });
+
+    // 이 판에서 가장 멀리 간 지점을 기억해 둔다. '상' 난이도는 벽에 닿을 때마다
+    // 출발점으로 돌아가므로, 끝난 순간의 위치로는 누가 잘했는지 알 수 없다.
+    if (state.distToGoal) {
+      const now = remainingAt(state.distToGoal, x, y);
+      const best = state.bestRemaining.get(id);
+      if (best === undefined || now < best) state.bestRemaining.set(id, now);
+    }
   });
 
   // 결과 보기 — 여기서 순위가 확정되고 점수가 들어간다
@@ -275,7 +299,15 @@ export function registerMazeHandlers(io, socket) {
     }
 
     clearTimers(code);
-    state.ranking = rankFinishers(state.finishes);
+    const scale = difficultyById(state.difficulty)?.pointsScale ?? 1;
+    if (state.finishes.size > 0) {
+      state.ranking = rankFinishers(state.finishes, scale);
+      state.rankedBy = 'time';
+    } else {
+      // 아무도 못 들어왔으면 판이 통째로 허무해지지 않도록 진출 거리로 순위를 낸다
+      state.ranking = rankByProgress(state.bestRemaining, scale);
+      state.rankedBy = 'progress';
+    }
 
     const event = getEventByCode(code);
     if (event) {
@@ -302,6 +334,8 @@ export function registerMazeHandlers(io, socket) {
         eventId: event.id,
         gameType: 'maze',
         result: {
+          difficulty: state.difficulty,
+          rankedBy: state.rankedBy,
           control: state.control,
           limitSec: state.limitMs / 1000,
           mazeIndex: state.mazeIndex,

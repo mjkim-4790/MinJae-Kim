@@ -4293,3 +4293,13 @@ a.role-opt {
     width: min(420px, 100%);
   }
 }
+
+/* 미로 — 난이도 상 안내 */
+.maze-hard {
+  margin: 0;
+  font-weight: 600;
+}
+
+.maze-hard--hit {
+  color: var(--rainbow-red);
+}

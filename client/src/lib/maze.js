@@ -26,6 +26,14 @@ export const POSITION_SEND_MS = 80; // 폰이 위치를 보내는 간격 (초당
 export const NAME_LABEL_MAX = 12; // 이보다 많으면 공 옆 닉네임을 빼고 색만 쓴다
 export const SPOTLIGHT_COUNT = 10; // 선두 몇 명을 선명하게 볼지
 
+export const START = { x: 0.5, y: 0.5, vx: 0, vy: 0 }; // 출발점(왼쪽 위 칸 한가운데)
+
+// 난이도 (server/src/game/mazeEngine.js 의 DIFFICULTIES 와 맞춘 값)
+export const DIFFICULTIES = [
+  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다' },
+  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로' },
+];
+
 // 물리 상수 (칸 단위/초). 셀 크기가 화면마다 달라도 느낌이 같도록 px 가 아니라
 // "칸" 기준으로 계산하고, 그릴 때만 px 로 바꾼다.
 export const ACCEL = 26; // 최대로 기울였을 때 가속도 (칸/초²)
@@ -59,7 +67,8 @@ export function tiltToAxis(deg, deadzoneDeg = 2.5) {
  * 축을 하나씩 나눠 움직이고 그때마다 벽에 밀어내는 방식(축 분리 충돌)을 쓴다.
  * 이렇게 해야 모서리에서 공이 끼거나 벽을 뚫고 나가지 않는다.
  *
- * @returns {{x:number,y:number,vx:number,vy:number}} 다음 상태
+ * @returns {{x:number,y:number,vx:number,vy:number,hitWall:boolean}} 다음 상태.
+ *   hitWall 은 이번 프레임에 벽에 닿았는지 — '상' 난이도가 이걸 보고 되돌린다.
  */
 export function stepBall({ x, y, vx, vy }, { ax, ay }, cells, width, height, dt) {
   // 1) 가속 + 저항
@@ -82,17 +91,18 @@ export function stepBall({ x, y, vx, vy }, { ax, ay }, cells, width, height, dt)
 
   let nx = x;
   let ny = y;
+  let hitWall = false;
   for (let i = 0; i < steps; i += 1) {
     const moved = moveAxis(nx, ny, nvx * sdt, 0, cells, width, height);
     nx = moved.x;
-    if (moved.hit) nvx = 0;
+    if (moved.hit) { nvx = 0; hitWall = true; }
 
     const moved2 = moveAxis(nx, ny, 0, nvy * sdt, cells, width, height);
     ny = moved2.y;
-    if (moved2.hit) nvy = 0;
+    if (moved2.hit) { nvy = 0; hitWall = true; }
   }
 
-  return { x: nx, y: ny, vx: nvx, vy: nvy };
+  return { x: nx, y: ny, vx: nvx, vy: nvy, hitWall };
 }
 
 function wallAt(cells, width, height, cx, cy, dir) {
