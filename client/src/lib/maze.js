@@ -30,8 +30,8 @@ export const START = { x: 0.5, y: 0.5, vx: 0, vy: 0 }; // 출발점(왼쪽 위 �
 
 // 난이도 (server/src/game/mazeEngine.js 의 DIFFICULTIES 와 맞춘 값)
 export const DIFFICULTIES = [
-  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다' },
-  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로' },
+  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다', timed: true },
+  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로 · 1등이 나오면 끝', timed: false },
 ];
 
 // 물리 상수 (칸 단위/초). 셀 크기가 화면마다 달라도 느낌이 같도록 px 가 아니라
@@ -39,7 +39,14 @@ export const DIFFICULTIES = [
 export const ACCEL = 26; // 최대로 기울였을 때 가속도 (칸/초²)
 export const DAMPING = 7.5; // 속도에 비례해 깎이는 저항 — 이 값이 클수록 빨리 멈춘다
 export const MAX_SPEED = 7.5; // 칸/초 — 벽을 뚫고 지나가지 않도록 상한을 둔다
-export const BALL_RADIUS = 0.3; // 칸 기준 (셀의 30%)
+export const BALL_RADIUS = 0.3; // 기본값 (칸의 30%)
+
+// 난이도마다 공 크기가 다르다. '상'은 벽에 스치기만 해도 처음으로 돌아가므로,
+// 여유가 0.2칸뿐이면 실력이 아니라 운이 된다 — 조금 줄여 통로에 숨통을 틔운다.
+// server/src/game/mazeEngine.js 의 DIFFICULTIES.ballRadius 와 맞춘 값.
+export function ballRadiusFor(difficultyId) {
+  return difficultyId === 'hard' ? 0.24 : 0.3;
+}
 export const TILT_FULL_DEG = 22; // 이 각도 이상 기울이면 최대 가속
 
 /** 생성 스크립트가 만든 16진수 문자열을 칸 배열로 되돌린다. */
@@ -70,7 +77,7 @@ export function tiltToAxis(deg, deadzoneDeg = 2.5) {
  * @returns {{x:number,y:number,vx:number,vy:number,hitWall:boolean}} 다음 상태.
  *   hitWall 은 이번 프레임에 벽에 닿았는지 — '상' 난이도가 이걸 보고 되돌린다.
  */
-export function stepBall({ x, y, vx, vy }, { ax, ay }, cells, width, height, dt) {
+export function stepBall({ x, y, vx, vy }, { ax, ay }, cells, width, height, dt, radius = BALL_RADIUS) {
   // 1) 가속 + 저항
   let nvx = vx + ax * ACCEL * dt;
   let nvy = vy + ay * ACCEL * dt;
@@ -93,11 +100,11 @@ export function stepBall({ x, y, vx, vy }, { ax, ay }, cells, width, height, dt)
   let ny = y;
   let hitWall = false;
   for (let i = 0; i < steps; i += 1) {
-    const moved = moveAxis(nx, ny, nvx * sdt, 0, cells, width, height);
+    const moved = moveAxis(nx, ny, nvx * sdt, 0, cells, width, height, radius);
     nx = moved.x;
     if (moved.hit) { nvx = 0; hitWall = true; }
 
-    const moved2 = moveAxis(nx, ny, 0, nvy * sdt, cells, width, height);
+    const moved2 = moveAxis(nx, ny, 0, nvy * sdt, cells, width, height, radius);
     ny = moved2.y;
     if (moved2.hit) { nvy = 0; hitWall = true; }
   }
@@ -111,7 +118,7 @@ function wallAt(cells, width, height, cx, cy, dir) {
 }
 
 /** 한 축으로만 밀고, 벽에 닿으면 딱 붙여 세운다. */
-function moveAxis(x, y, dx, dy, cells, width, height) {
+function moveAxis(x, y, dx, dy, cells, width, height, radius = BALL_RADIUS) {
   let nx = x + dx;
   let ny = y + dy;
   let hit = false;
@@ -120,18 +127,18 @@ function moveAxis(x, y, dx, dy, cells, width, height) {
   const cy = Math.floor(y);
 
   if (dx > 0) {
-    const limit = cx + 1 - BALL_RADIUS;
+    const limit = cx + 1 - radius;
     if (nx > limit && wallAt(cells, width, height, cx, cy, E)) { nx = limit; hit = true; }
   } else if (dx < 0) {
-    const limit = cx + BALL_RADIUS;
+    const limit = cx + radius;
     if (nx < limit && wallAt(cells, width, height, cx, cy, W)) { nx = limit; hit = true; }
   }
 
   if (dy > 0) {
-    const limit = cy + 1 - BALL_RADIUS;
+    const limit = cy + 1 - radius;
     if (ny > limit && wallAt(cells, width, height, cx, cy, S)) { ny = limit; hit = true; }
   } else if (dy < 0) {
-    const limit = cy + BALL_RADIUS;
+    const limit = cy + radius;
     if (ny < limit && wallAt(cells, width, height, cx, cy, N)) { ny = limit; hit = true; }
   }
 

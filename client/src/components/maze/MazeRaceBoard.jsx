@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  BALL_RADIUS,
   NAME_LABEL_MAX,
   SPOTLIGHT_COUNT,
+  ballRadiusFor,
   decodeMaze,
   runnerColor,
   E,
@@ -12,8 +12,7 @@ import {
   W,
 } from '../../lib/maze.js';
 
-const MAZE_W = 9;
-const MAZE_H = 13;
+// 크기는 미로 자체가 들고 온다 (난이도마다 다르다)
 
 // 서버는 초당 12번만 위치를 보낸다. 그대로 찍으면 공이 뚝뚝 끊겨 보이므로,
 // 매 프레임 목표 위치 쪽으로 조금씩 따라붙게 해서 사이를 메운다.
@@ -24,7 +23,7 @@ const FOLLOW_PER_SEC = 14;
  * 대형화면용 미로 — 모두가 같은 미로를 풀기 때문에 한 판에 전원의 공을 겹쳐 그린다.
  * 자기 물리를 돌리지 않고, 서버가 중계해준 위치만 따라 그리는 점이 MazeBoard 와 다르다.
  */
-export default function MazeRaceBoard({ maze, runners, positions, height }) {
+export default function MazeRaceBoard({ maze, runners, positions, height, difficulty }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const drawnRef = useRef(new Map()); // participantId -> 화면에 실제로 찍고 있는 위치
@@ -33,7 +32,10 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
   const lastRef = useRef(0);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
-  const cells = useMemo(() => (maze ? decodeMaze(maze, MAZE_W, MAZE_H) : null), [maze]);
+  const cells = useMemo(() => (maze ? decodeMaze(maze, maze.width, maze.height) : null), [maze]);
+  const cols = maze?.width ?? 0;
+  const rows = maze?.height ?? 0;
+  const radius = ballRadiusFor(difficulty);
 
   const meta = useMemo(() => {
     const map = new Map();
@@ -62,14 +64,14 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
       const availH = height ?? wrap.clientHeight;
       const availW = wrap.clientWidth;
       // 세로가 긴 미로라 높이를 먼저 맞추고, 넘치면 폭에 맞춘다
-      const cell = Math.max(10, Math.floor(Math.min(availH / MAZE_H, availW / MAZE_W)));
-      setSize({ w: cell * MAZE_W, h: cell * MAZE_H });
+      const cell = Math.max(10, Math.floor(Math.min(availH / rows, availW / cols)));
+      setSize({ w: cell * cols, h: cell * rows });
     };
     update();
     const obs = new ResizeObserver(update);
     obs.observe(wrap);
     return () => obs.disconnect();
-  }, [height]);
+  }, [height, cols, rows]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -81,7 +83,7 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const cell = size.w / MAZE_W;
+    const cell = size.w / cols;
     const css = getComputedStyle(canvas);
     const wallColor = css.getPropertyValue('--maze-wall').trim() || '#3d2317';
     const goalColor = css.getPropertyValue('--maze-goal').trim() || '#48a848';
@@ -92,27 +94,27 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
 
       ctx.fillStyle = goalColor;
       ctx.globalAlpha = 0.18;
-      ctx.fillRect((MAZE_W - 1) * cell, (MAZE_H - 1) * cell, cell, cell);
+      ctx.fillRect((cols - 1) * cell, (rows - 1) * cell, cell, cell);
       ctx.globalAlpha = 1;
       ctx.fillStyle = goalColor;
       ctx.font = `600 ${Math.round(cell * 0.36)}px system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('도착', (MAZE_W - 0.5) * cell, (MAZE_H - 0.5) * cell);
+      ctx.fillText('도착', (cols - 0.5) * cell, (rows - 0.5) * cell);
 
       ctx.strokeStyle = wallColor;
       ctx.lineWidth = Math.max(2, cell * 0.09);
       ctx.lineCap = 'round';
       ctx.beginPath();
-      for (let y = 0; y < MAZE_H; y += 1) {
-        for (let x = 0; x < MAZE_W; x += 1) {
-          const c = cells[y * MAZE_W + x];
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < cols; x += 1) {
+          const c = cells[y * cols + x];
           const px = x * cell;
           const py = y * cell;
           if (c & N) { ctx.moveTo(px, py); ctx.lineTo(px + cell, py); }
           if (c & W) { ctx.moveTo(px, py); ctx.lineTo(px, py + cell); }
-          if ((c & S) && y === MAZE_H - 1) { ctx.moveTo(px, py + cell); ctx.lineTo(px + cell, py + cell); }
-          if ((c & E) && x === MAZE_W - 1) { ctx.moveTo(px + cell, py); ctx.lineTo(px + cell, py + cell); }
+          if ((c & S) && y === rows - 1) { ctx.moveTo(px, py + cell); ctx.lineTo(px + cell, py + cell); }
+          if ((c & E) && x === cols - 1) { ctx.moveTo(px + cell, py); ctx.lineTo(px + cell, py + cell); }
         }
       }
       ctx.stroke();
@@ -147,7 +149,7 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
 
         // 선두는 크고 선명하게, 나머지는 작고 흐리게 (사용자 선택)
         ctx.globalAlpha = lead ? 1 : 0.28;
-        const r = BALL_RADIUS * cell * (lead ? 1 : 0.62);
+        const r = radius * cell * (lead ? 1 : 0.62);
 
         ctx.beginPath();
         ctx.arc(p.x * cell, p.y * cell, r, 0, Math.PI * 2);
@@ -191,7 +193,7 @@ export default function MazeRaceBoard({ maze, runners, positions, height }) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [cells, size, meta, runners]);
+  }, [cells, size, meta, runners, cols, rows, radius]);
 
   return (
     <div className="maze-race-board" ref={wrapRef}>

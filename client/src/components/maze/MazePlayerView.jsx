@@ -217,8 +217,12 @@ export default function MazePlayerView({ game, participantId }) {
       )}
 
       {racing && !done && (
-        <p className={`maze-timer${msLeft <= WARN_MS ? ' maze-timer--warn' : ''}`}>
-          {msLeft <= WARN_MS ? Math.ceil(msLeft / 1000) : `${Math.ceil(msLeft / 1000)}초 남음`}
+        <p className={`maze-timer${state.endsAt && msLeft <= WARN_MS ? ' maze-timer--warn' : ''}`}>
+          {!state.endsAt
+            ? '먼저 도착하는 사람이 우승!'
+            : msLeft <= WARN_MS
+              ? Math.ceil(msLeft / 1000)
+              : `${Math.ceil(msLeft / 1000)}초 남음`}
         </p>
       )}
 
@@ -248,6 +252,7 @@ export default function MazePlayerView({ game, participantId }) {
         <>
           <MazeBoard
             maze={state.maze}
+            difficulty={state.difficulty}
             running={racing && !done}
             axisRef={usingTilt ? tilt.axisRef : padRef}
             onGoal={handleGoal}

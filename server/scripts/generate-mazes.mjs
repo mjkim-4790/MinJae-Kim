@@ -10,8 +10,14 @@ import { writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const WIDTH = 9; // 세로로 긴 폰 화면에 맞춘 칸 수
-const HEIGHT = 13;
+// 난이도마다 미로 크기가 다르다.
+// '상'은 벽에 닿으면 출발점으로 돌아가므로 같은 크기면 너무 길어 아무도 못 깬다.
+// 칸 수를 줄이면 경로가 짧아지는 동시에, 화면에 그릴 때 칸이 커져 통로도 넓어 보인다.
+const SETS = [
+  // '보통'은 원래 쓰던 조건 그대로 (floor((9+13)*1.6) = 35)
+  { id: 'normal', width: 9, height: 13, minPath: 35, maxPath: 999 },
+  { id: 'hard', width: 8, height: 11, minPath: 24, maxPath: 46 },
+];
 const COUNT = 20;
 
 // 벽 비트: 북1 동2 남4 서8 (칸마다 네 벽을 다 들고 있다 — 중복이지만 읽기 쉽고 안전하다)
@@ -20,8 +26,10 @@ const OPPOSITE = { [N]: S, [E]: W, [S]: N, [W]: E };
 const DX = { [N]: 0, [E]: 1, [S]: 0, [W]: -1 };
 const DY = { [N]: -1, [E]: 0, [S]: 1, [W]: 0 };
 
-const idx = (x, y) => y * WIDTH + x;
-const inside = (x, y) => x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
+// 주의: 이 파일의 W 는 '서쪽 벽 비트(8)'다. 크기는 반드시 width/height 로 받는다
+// (예전에 매개변수를 W 로 두었다가 벽 비트를 가려 미로가 직선으로 생성된 적이 있다).
+const idx = (x, y, width) => y * width + x;
+const inside = (x, y, width, height) => x >= 0 && x < width && y >= 0 && y < height;
 
 function shuffled(arr, rand) {
   const a = [...arr];
@@ -33,18 +41,18 @@ function shuffled(arr, rand) {
 }
 
 /** 재귀 백트래킹으로 완전미로(모든 칸이 연결되고 순환이 없는 미로)를 만든다. */
-function carve(rand) {
-  const cells = new Array(WIDTH * HEIGHT).fill(N | E | S | W);
-  const seen = new Array(WIDTH * HEIGHT).fill(false);
+function carve(rand, width, height) {
+  const cells = new Array(width * height).fill(N | E | S | W);
+  const seen = new Array(width * height).fill(false);
   const stack = [[0, 0]];
-  seen[idx(0, 0)] = true;
+  seen[idx(0, 0, width)] = true;
 
   while (stack.length > 0) {
     const [x, y] = stack[stack.length - 1];
     const next = shuffled([N, E, S, W], rand).find((dir) => {
       const nx = x + DX[dir];
       const ny = y + DY[dir];
-      return inside(nx, ny) && !seen[idx(nx, ny)];
+      return inside(nx, ny, width, height) && !seen[idx(nx, ny, width)];
     });
 
     if (next === undefined) {
@@ -53,9 +61,9 @@ function carve(rand) {
     }
     const nx = x + DX[next];
     const ny = y + DY[next];
-    cells[idx(x, y)] &= ~next; // 지금 칸의 벽을 튼다
-    cells[idx(nx, ny)] &= ~OPPOSITE[next]; // 맞은편 칸의 같은 벽도 함께 튼다
-    seen[idx(nx, ny)] = true;
+    cells[idx(x, y, width)] &= ~next; // 지금 칸의 벽을 튼다
+    cells[idx(nx, ny, width)] &= ~OPPOSITE[next]; // 맞은편 칸의 같은 벽도 함께 튼다
+    seen[idx(nx, ny, width)] = true;
     stack.push([nx, ny]);
   }
 
@@ -63,24 +71,24 @@ function carve(rand) {
 }
 
 /** 시작(0,0) → 도착(끝칸) 최단 경로 길이. 못 가면 -1. */
-function solveLength(cells) {
-  const start = idx(0, 0);
-    const goal = idx(WIDTH - 1, HEIGHT - 1);
-  const dist = new Array(WIDTH * HEIGHT).fill(-1);
+function solveLength(cells, width, height) {
+  const start = idx(0, 0, width);
+  const goal = idx(width - 1, height - 1, width);
+  const dist = new Array(width * height).fill(-1);
   dist[start] = 0;
   const queue = [start];
 
   for (let head = 0; head < queue.length; head += 1) {
     const cur = queue[head];
     if (cur === goal) return dist[cur];
-    const x = cur % WIDTH;
-    const y = Math.floor(cur / WIDTH);
+    const x = cur % width;
+    const y = Math.floor(cur / width);
     for (const dir of [N, E, S, W]) {
       if (cells[cur] & dir) continue; // 벽이 있으면 못 간다
       const nx = x + DX[dir];
       const ny = y + DY[dir];
-      if (!inside(nx, ny)) continue;
-      const next = idx(nx, ny);
+      if (!inside(nx, ny, width, height)) continue;
+      const next = idx(nx, ny, width);
       if (dist[next] !== -1) continue;
       dist[next] = dist[cur] + 1;
       queue.push(next);
@@ -101,23 +109,29 @@ function mulberry32(seed) {
   };
 }
 
-// 너무 쉬운 미로(거의 직선)는 버리고, 길이 넉넉한 것만 고른다.
-const MIN_PATH = Math.floor((WIDTH + HEIGHT) * 1.6);
-
-const picked = [];
-let seed = 1;
-while (picked.length < COUNT && seed < 100000) {
-  const cells = carve(mulberry32(seed));
-  const len = solveLength(cells);
-  if (len >= MIN_PATH) {
-    picked.push({ seed, len, cells: cells.map((c) => c.toString(16)).join('') });
+// 난이도마다 조건에 맞는 미로만 골라 담는다.
+const built = {};
+for (const set of SETS) {
+  const picked = [];
+  let seed = 1;
+  while (picked.length < COUNT && seed < 200000) {
+    const cells = carve(mulberry32(seed), set.width, set.height);
+    const len = solveLength(cells, set.width, set.height);
+    if (len >= set.minPath && len <= set.maxPath) {
+      picked.push({
+        cells: cells.map((c) => c.toString(16)).join(''),
+        pathLength: len,
+        width: set.width,
+        height: set.height,
+      });
+    }
+    seed += 1;
   }
-  seed += 1;
-}
-
-if (picked.length < COUNT) {
-  console.error(`미로를 ${COUNT}개 못 만들었습니다 (${picked.length}개). 조건을 낮추세요.`);
-  process.exit(1);
+  if (picked.length < COUNT) {
+    console.error(`'${set.id}' 미로를 ${COUNT}개 못 만들었습니다 (${picked.length}개). 조건을 낮추세요.`);
+    process.exit(1);
+  }
+  built[set.id] = { width: set.width, height: set.height, mazes: picked };
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -127,18 +141,20 @@ const body = `// 자동 생성 파일 — 직접 고치지 마세요.
 // 다시 만들려면: node server/scripts/generate-mazes.mjs
 //
 // cells 는 칸마다 벽 비트(북1 동2 남4 서8)를 16진수 한 글자로 적은 것이다.
-// 왼쪽 위(0,0)에서 출발해 오른쪽 아래(${WIDTH - 1},${HEIGHT - 1})에 도착하면 완주다.
+// 왼쪽 위(0,0)에서 출발해 오른쪽 아래에 도착하면 완주다.
+// 미로마다 width/height 를 들고 있으므로, 쓰는 쪽에서 크기를 따로 알 필요가 없다.
+//
+// '상'은 벽에 닿으면 출발점으로 돌아가서 같은 크기면 너무 길다. 그래서 칸 수를
+// 줄인 별도 묶음을 쓴다 — 경로가 짧아지고, 화면에 그릴 때 칸이 커져 통로도 넓어진다.
 
-export const MAZE_WIDTH = ${WIDTH};
-export const MAZE_HEIGHT = ${HEIGHT};
-
-export const MAZES = ${JSON.stringify(
-  picked.map(({ cells, len }) => ({ cells, pathLength: len })),
-  null,
-  2,
-)};
+export const MAZE_SETS = ${JSON.stringify(built, null, 2)};
 `;
 
 writeFileSync(out, body, 'utf8');
-console.log(`미로 ${picked.length}개 생성 → ${out}`);
-console.log(`  최단경로 길이: 최소 ${Math.min(...picked.map((p) => p.len))} / 최대 ${Math.max(...picked.map((p) => p.len))}`);
+for (const set of SETS) {
+  const lens = built[set.id].mazes.map((m) => m.pathLength);
+  console.log(
+    `${set.id}: ${set.width}x${set.height} · ${built[set.id].mazes.length}개 · 경로 ${Math.min(...lens)}~${Math.max(...lens)}칸`,
+  );
+}
+console.log(`→ ${out}`);

@@ -53,6 +53,7 @@ function createInitialState() {
     activePool: [],
     colorOf: new Map(), // participantId -> 색 번호 (판 내내 고정)
     positions: new Map(), // participantId -> { x, y } (칸 단위) — 대형화면 중계용
+    mazeSize: null, // 이번 판 미로의 칸 수 (난이도마다 다르다)
     distToGoal: null, // 칸마다 "도착까지 남은 칸 수" (실시간 순위 기준)
     bestRemaining: new Map(), // participantId -> 그 판에서 도달했던 최소 '남은 칸'
     readyIds: [], // 기울기 허용을 마친 참여자 (진행자가 준비 상황을 보고 시작한다)
@@ -97,7 +98,7 @@ function publicState(state) {
     limitMs: state.limitMs,
     // 미로 자체는 출발 전부터 내려준다 — 각 폰이 미리 그려두고 카운트다운을 봐야
     // 0초에 바로 굴릴 수 있다.
-    maze: state.mazeIndex != null ? mazeAt(state.mazeIndex) : null,
+    maze: state.mazeIndex != null ? mazeAt(state.difficulty, state.mazeIndex) : null,
     startsAt: state.startsAt,
     endsAt: state.endsAt,
     serverNow: Date.now(), // 각 폰이 시계 오차를 보정하는 기준
@@ -149,7 +150,10 @@ function broadcastPositions(io, code) {
       x: pos.x,
       y: pos.y,
       // 완주자는 남은 칸 0 으로 고정해 순위표 맨 위에 그대로 남는다
-      remaining: finishedMs != null ? 0 : remainingAt(state.distToGoal, pos.x, pos.y),
+      remaining:
+        finishedMs != null
+          ? 0
+          : remainingAt(state.distToGoal, pos.x, pos.y, state.mazeSize.width, state.mazeSize.height),
       finishedMs,
     };
   });
@@ -185,8 +189,9 @@ export function registerMazeHandlers(io, socket) {
     const control = controlById(String(payload.control ?? ''));
     if (!control) return reply({ ok: false, error: 'INVALID_CONTROL' });
 
-    const limit = timeLimitById(payload.limitSec);
-    if (!limit) return reply({ ok: false, error: 'INVALID_LIMIT' });
+    // 제한시간을 쓰지 않는 난이도('상')는 limitSec 을 아예 보지 않는다
+    const limit = difficulty.timed ? timeLimitById(payload.limitSec) : null;
+    if (difficulty.timed && !limit) return reply({ ok: false, error: 'INVALID_LIMIT' });
 
     const event = getEventByCode(code);
     if (!event) return reply({ ok: false, error: 'EVENT_NOT_FOUND' });
@@ -199,16 +204,18 @@ export function registerMazeHandlers(io, socket) {
     state.status = 'countdown';
     state.difficulty = difficulty.id;
     state.control = control.id;
-    state.limitMs = limit.id * 1000;
-    state.mazeIndex = pickMazeIndex();
+    state.limitMs = limit ? limit.id * 1000 : 0;
+    state.mazeIndex = pickMazeIndex(difficulty.id);
     state.startsAt = now + COUNTDOWN_MS;
-    state.endsAt = now + COUNTDOWN_MS + state.limitMs;
+    state.endsAt = limit ? now + COUNTDOWN_MS + state.limitMs : null;
     state.activePool = active.map((p) => p.id);
     state.colorOf = new Map(state.activePool.map((id, i) => [id, i]));
     state.positions = new Map(state.activePool.map((id) => [id, { x: 0.5, y: 0.5 }]));
-    state.distToGoal = goalDistances(decodeCells(mazeAt(state.mazeIndex)));
+    const maze = mazeAt(difficulty.id, state.mazeIndex);
+    state.mazeSize = { width: maze.width, height: maze.height };
+    state.distToGoal = goalDistances(decodeCells(maze), maze.width, maze.height);
     // 출발점의 남은 칸으로 시작 — 한 칸도 못 가면 이 값이 그대로 기록된다
-    const startRemaining = remainingAt(state.distToGoal, 0.5, 0.5);
+    const startRemaining = remainingAt(state.distToGoal, 0.5, 0.5, maze.width, maze.height);
     state.bestRemaining = new Map(state.activePool.map((id) => [id, startRemaining]));
     state.finishes = new Map();
     state.ranking = null;
@@ -225,7 +232,11 @@ export function registerMazeHandlers(io, socket) {
       broadcastNow(io, code);
     }, COUNTDOWN_MS);
 
-    const toFinish = setTimeout(() => finishRace(io, code), COUNTDOWN_MS + state.limitMs);
+    // 제한시간이 있는 난이도만 자동 종료 타이머를 건다.
+    // '상'은 한 명이 통과할 때까지(또는 진행자가 끊을 때까지) 계속 달린다.
+    const toFinish = limit
+      ? setTimeout(() => finishRace(io, code), COUNTDOWN_MS + state.limitMs)
+      : null;
     // 모아서 대형화면에만 내려보낸다 (참여자 폰은 자기 공만 보므로 받을 이유가 없다)
     const positions = setInterval(() => broadcastPositions(io, code), POSITION_MS);
     timers.set(code, { toRacing, toFinish, positions });
@@ -306,8 +317,10 @@ export function registerMazeHandlers(io, socket) {
 
     reply({ ok: true, elapsedMs });
 
-    // 전원이 들어왔으면 제한시간을 기다리지 않고 바로 닫는다
-    if (state.finishes.size >= state.activePool.length) finishRace(io, code);
+    // '상'은 한 명만 통과하면 그 자리에서 끝난다 (운영 결정).
+    // 제한시간이 있는 난이도는 전원이 들어왔을 때만 일찍 닫는다.
+    const firstWins = difficultyById(state.difficulty)?.timed === false;
+    if (firstWins || state.finishes.size >= state.activePool.length) finishRace(io, code);
     else broadcastNow(io, code);
   });
 
@@ -336,7 +349,7 @@ export function registerMazeHandlers(io, socket) {
     // 이 판에서 가장 멀리 간 지점을 기억해 둔다. '상' 난이도는 벽에 닿을 때마다
     // 출발점으로 돌아가므로, 끝난 순간의 위치로는 누가 잘했는지 알 수 없다.
     if (state.distToGoal) {
-      const now = remainingAt(state.distToGoal, x, y);
+      const now = remainingAt(state.distToGoal, x, y, state.mazeSize.width, state.mazeSize.height);
       const best = state.bestRemaining.get(id);
       if (best === undefined || now < best) state.bestRemaining.set(id, now);
     }

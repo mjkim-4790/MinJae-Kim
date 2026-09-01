@@ -61,7 +61,7 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
   }
 
   if (state.status === 'racing') {
-    const warn = msLeft <= WARN_MS;
+    const warn = !!state.endsAt && msLeft <= WARN_MS;
     const board = livePositions?.runners ?? [];
     const nameOf = new Map((state.runners ?? []).map((r) => [r.participantId, r]));
 
@@ -78,12 +78,21 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
             animate={{ scale: 1, opacity: 1 }}
             transition={springPop}
           >
-            {warn ? Math.ceil(msLeft / 1000) : `${Math.ceil(msLeft / 1000)}초`}
+            {!state.endsAt
+              ? '1등이 나오면 종료'
+              : warn
+                ? Math.ceil(msLeft / 1000)
+                : `${Math.ceil(msLeft / 1000)}초`}
           </motion.p>
         </div>
 
         <div className="maze-live__body">
-          <MazeRaceBoard maze={state.maze} runners={state.runners} positions={livePositions} />
+          <MazeRaceBoard
+            maze={state.maze}
+            difficulty={state.difficulty}
+            runners={state.runners}
+            positions={livePositions}
+          />
 
           <ol className="maze-live__rank">
             {board.slice(0, SPOTLIGHT_COUNT).map((r, i) => {

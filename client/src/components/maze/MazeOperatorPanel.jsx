@@ -4,8 +4,8 @@ import { motion } from 'motion/react';
 import { springPop } from '../../lib/motionPresets.js';
 
 const DIFFICULTIES = [
-  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다' },
-  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로 · 점수 1.5배' },
+  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다', timed: true },
+  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로 · 점수 1.5배', timed: false },
 ];
 
 const CONTROLS = [
@@ -39,6 +39,7 @@ export default function MazeOperatorPanel({ game, participants }) {
   const [, tick] = useState(0);
 
   const activeCount = participants.filter((p) => p.status === 'active').length;
+  const timed = DIFFICULTIES.find((d) => d.id === difficulty)?.timed ?? true;
   // 기울기 허용을 마친 사람 (지금 입장해 있는 사람 기준으로만 센다)
   const activeIds = new Set(participants.filter((p) => p.status === 'active').map((p) => p.id));
   const readyCount = (state.readyIds ?? []).filter((id) => activeIds.has(id)).length;
@@ -113,8 +114,10 @@ export default function MazeOperatorPanel({ game, participants }) {
         </ul>
         {difficulty === 'hard' && (
           <p className="subtitle">
-            벽에 <strong>스치기만 해도</strong> 출발점으로 돌아갑니다. 아주 어려우니 제한시간을
-            넉넉히 주세요. 아무도 완주하지 못하면 가장 멀리 간 순으로 순위를 매깁니다.
+            벽에 <strong>스치기만 해도</strong> 출발점으로 돌아갑니다. 대신 미로가 조금 작고
+            통로도 넓습니다. <strong>제한시간 없이</strong> 달리다가 한 명이 통과하면 그 자리에서
+            끝납니다. 아무도 못 끝내면 진행자가 '지금 끝내고 결과 보기'를 누르면 되고, 그때는
+            가장 멀리 간 순으로 순위를 매깁니다.
           </p>
         )}
 
@@ -142,22 +145,28 @@ export default function MazeOperatorPanel({ game, participants }) {
           </p>
         )}
 
-        <label className="field">
-          <span className="field__label">제한시간</span>
-        </label>
-        <ul className="typing-difficulty-grid">
-          {LIMITS.map((s) => (
-            <li key={s}>
-              <button
-                type="button"
-                className={`typing-difficulty-tile${limitSec === s ? ' typing-difficulty-tile--active' : ''}`}
-                onClick={() => setLimitSec(s)}
-              >
-                {s}초
-              </button>
-            </li>
-          ))}
-        </ul>
+        {timed ? (
+          <>
+            <label className="field">
+              <span className="field__label">제한시간</span>
+            </label>
+            <ul className="typing-difficulty-grid">
+              {LIMITS.map((s) => (
+                <li key={s}>
+                  <button
+                    type="button"
+                    className={`typing-difficulty-tile${limitSec === s ? ' typing-difficulty-tile--active' : ''}`}
+                    onClick={() => setLimitSec(s)}
+                  >
+                    {s}초
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="badge badge--info">제한시간 없음 · 1등이 나오면 종료</p>
+        )}
 
         {error && <p className="error-text">{error}</p>}
 
@@ -193,11 +202,14 @@ export default function MazeOperatorPanel({ game, participants }) {
         <p className="badge badge--info">
           {state.status === 'countdown'
             ? `출발까지 ${Math.max(1, Math.ceil(countdownLeft / 1000))}초`
-            : `${Math.ceil(msLeft / 1000)}초 남음 · 완주 ${finishedCount}/${entrants}명`}
+            : state.endsAt
+              ? `${Math.ceil(msLeft / 1000)}초 남음 · 완주 ${finishedCount}/${entrants}명`
+              : `진행 중 · 1등이 나오면 종료 (${entrants}명)`}
         </p>
         <p className="subtitle">
           {state.difficulty === 'hard' ? '난이도 상' : '보통'} ·{' '}
-          {state.control === 'tilt' ? '기울기' : '버튼'} 조작 · 제한시간 {state.limitMs / 1000}초
+          {state.control === 'tilt' ? '기울기' : '버튼'} 조작 ·{' '}
+          {state.endsAt ? `제한시간 ${state.limitMs / 1000}초` : '제한시간 없음'}
         </p>
         {error && <p className="error-text">{error}</p>}
         <button className="button button--ghost" disabled={busy} onClick={() => run(reveal)}>

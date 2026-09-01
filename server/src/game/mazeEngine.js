@@ -3,16 +3,27 @@
 // 기록은 서버가 잰다. 참여자가 "나 12.3초 걸렸어" 라고 보내온 값을 믿지 않고,
 // 출발 시각과 완주 신호가 도착한 시각의 차이로 계산한다.
 
-import { MAZES, MAZE_HEIGHT, MAZE_WIDTH } from './mazes.js';
+import { MAZE_SETS } from './mazes.js';
 
-export { MAZES, MAZE_HEIGHT, MAZE_WIDTH };
+export { MAZE_SETS };
 
 // 난이도 (운영 결정: 2단계).
 // '상'은 벽에 스치기만 해도 출발점으로 되돌아간다. 공 크기는 '보통'과 같게 두어
 // 일부러 빡빡하게 만들었고, 그만큼 점수를 1.5배 준다.
+// timed: false 인 난이도는 제한시간 없이 달리다가 한 명이 통과하면 그 자리에서 끝난다.
+// '상'은 벽에 닿을 때마다 처음으로 돌아가서 몇 분이 걸릴지 모르는데, 거기에 제한시간까지
+// 걸면 아무도 못 끝내고 판이 흐지부지된다 (운영 결정).
 export const DIFFICULTIES = [
-  { id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다', resetOnWall: false, pointsScale: 1 },
-  { id: 'hard', name: '상', desc: '벽에 닿으면 처음으로', resetOnWall: true, pointsScale: 1.5 },
+  {
+    id: 'normal', name: '보통', desc: '벽에 부딪히면 멈춘다',
+    resetOnWall: false, pointsScale: 1, timed: true, ballRadius: 0.3,
+  },
+  {
+    id: 'hard', name: '상', desc: '벽에 닿으면 처음으로 · 1등이 나오면 끝',
+    // 공을 조금 줄여 통로에 여유를 준다. 벽에 스치기만 해도 되돌아가는데 여유가
+    // 0.2칸뿐이면 실력이 아니라 운이 된다.
+    resetOnWall: true, pointsScale: 1.5, timed: false, ballRadius: 0.24,
+  },
 ];
 
 export const CONTROLS = [
@@ -45,12 +56,17 @@ export function timeLimitById(id) {
   return TIME_LIMITS.find((t) => t.id === Number(id)) ?? null;
 }
 
-export function pickMazeIndex(random = Math.random) {
-  return Math.floor(random() * MAZES.length);
+/** 난이도에 맞는 미로 묶음. 크기가 서로 다르다. */
+export function mazeSetFor(difficultyId) {
+  return MAZE_SETS[difficultyId] ?? MAZE_SETS.normal;
 }
 
-export function mazeAt(index) {
-  return MAZES[index] ?? null;
+export function pickMazeIndex(difficultyId, random = Math.random) {
+  return Math.floor(random() * mazeSetFor(difficultyId).mazes.length);
+}
+
+export function mazeAt(difficultyId, index) {
+  return mazeSetFor(difficultyId).mazes[index] ?? null;
 }
 
 export function pointsForRank(rank, scale = 1) {
@@ -121,7 +137,7 @@ export function decodeCells(maze) {
  * 진행도를 도착점까지의 직선거리로 재면 안 된다 — 미로라서 도착 바로 옆에 있어도
  * 벽에 막혀 한참 돌아가야 할 수 있다. 실시간 순위는 이 값으로 매긴다.
  */
-export function goalDistances(cells, width = MAZE_WIDTH, height = MAZE_HEIGHT) {
+export function goalDistances(cells, width, height) {
   const dist = new Array(width * height).fill(-1);
   const goal = (height - 1) * width + (width - 1);
   dist[goal] = 0;
@@ -146,7 +162,7 @@ export function goalDistances(cells, width = MAZE_WIDTH, height = MAZE_HEIGHT) {
 }
 
 /** 공의 좌표(칸 단위)를 그 칸의 "남은 칸 수"로 바꾼다. 판 밖 값이 와도 잘라서 쓴다. */
-export function remainingAt(dist, x, y, width = MAZE_WIDTH, height = MAZE_HEIGHT) {
+export function remainingAt(dist, x, y, width, height) {
   const cx = Math.min(width - 1, Math.max(0, Math.floor(x)));
   const cy = Math.min(height - 1, Math.max(0, Math.floor(y)));
   const d = dist[cy * width + cx];
