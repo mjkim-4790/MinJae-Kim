@@ -94,9 +94,12 @@ export function useMazeGame({ eventCode, initialState, initialYourFinish }) {
     [eventCode],
   );
 
+  // 옵션을 하나씩 골라 담지 않고 통째로 넘긴다. 예전에 여기서 difficulty 를 빠뜨려
+  // 운영자가 난이도를 골라도 서버에는 안 가는 버그가 있었다 — 항목을 추가할 때마다
+  // 이 줄을 같이 고쳐야 하는 구조 자체가 문제였다.
   const start = useCallback(
-    ({ control, limitSec }) =>
-      new Promise((resolve) => socket.emit('maze:start', { eventCode, control, limitSec }, resolve)),
+    (options = {}) =>
+      new Promise((resolve) => socket.emit('maze:start', { eventCode, ...options }, resolve)),
     [eventCode],
   );
   const reveal = useCallback(
