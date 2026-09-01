@@ -32,6 +32,7 @@ export function useRealtimeSession(role, eventCode) {
             acrostic: res.acrostic,
             values: res.values,
             yabawi: res.yabawi,
+            wordcloud: res.wordcloud,
             scoreboard: res.scoreboard,
             event: res.event,
           });

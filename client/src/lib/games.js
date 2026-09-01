@@ -16,6 +16,7 @@ export const GAMES = [
   { id: 'acrostic', name: '삼행시', ready: true },
   { id: 'values', name: '나의 가치여정', ready: true },
   { id: 'yabawi', name: '야바위 게임', ready: true },
+  { id: 'wordcloud', name: '단어 구름', ready: true },
 ];
 
 export function gameById(id) {

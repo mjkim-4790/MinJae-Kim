@@ -11,6 +11,7 @@ import RpsScreenView from '../../components/rps/RpsScreenView.jsx';
 import StatusBar from '../../components/StatusBar.jsx';
 import TypingScreenView from '../../components/typing/TypingScreenView.jsx';
 import ValuesScreenView from '../../components/values/ValuesScreenView.jsx';
+import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
@@ -20,6 +21,7 @@ import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { useTypingGame } from '../../hooks/useTypingGame.js';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useYabawiGame } from '../../hooks/useYabawiGame.js';
+import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -47,6 +49,7 @@ export default function ScreenView() {
   const acrosticGame = useAcrosticGame({ eventCode: code, initialState: init?.acrostic });
   const valuesGame = useValuesGame({ eventCode: code, initialState: init?.values });
   const yabawiGame = useYabawiGame({ eventCode: code, initialState: init?.yabawi });
+  const wordcloudGame = useWordcloudGame({ eventCode: code, initialState: init?.wordcloud });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -67,8 +70,15 @@ export default function ScreenView() {
   const acrosticActive = acrosticGame.state.status !== 'idle';
   const valuesActive = valuesGame.state.status !== 'idle';
   const yabawiActive = yabawiGame.state.status !== 'idle';
+  const wordcloudActive = wordcloudGame.state.status !== 'idle';
   const gameActive =
-    rpsActive || liarActive || typingActive || acrosticActive || valuesActive || yabawiActive;
+    rpsActive ||
+    liarActive ||
+    typingActive ||
+    acrosticActive ||
+    valuesActive ||
+    yabawiActive ||
+    wordcloudActive;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
@@ -84,6 +94,8 @@ export default function ScreenView() {
     content = <ValuesScreenView state={valuesGame.state} />;
   } else if (yabawiActive) {
     content = <YabawiScreenView state={yabawiGame.state} />;
+  } else if (wordcloudActive) {
+    content = <WordcloudScreenView state={wordcloudGame.state} />;
   } else if (mode === 'logo') {
     content = (
       <div className="screen__frame">

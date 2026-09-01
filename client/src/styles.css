@@ -3769,3 +3769,149 @@ a.role-opt {
   font-size: clamp(13px, 1.6vw, 20px);
   font-weight: 500;
 }
+
+/* 단어 구름 */
+
+.wordcloud-stage {
+  padding-top: 14px;
+  border-top: 3px solid var(--rainbow-blue);
+}
+
+/* 구름이 놓이는 판. 단어는 transform 으로만 자리를 잡으므로 여기는 position 기준만 잡는다. */
+.wordcloud-board {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface-muted, rgba(0, 0, 0, 0.02));
+}
+
+.wordcloud-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 실시간으로 자라는 게임이라 자리·크기가 자주 바뀐다. transform 과 font-size 에만
+   transition 을 걸어 갱신이 잦아도 부드럽게 이어지게 한다. */
+.wordcloud-word {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1;
+  will-change: transform;
+  transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    font-size 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    color 300ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordcloud-word {
+    transition: none;
+  }
+}
+
+/* 참여자 버튼 모드 — 연타를 편하게 하려고 크고 넉넉하게 둔다 */
+.wordcloud-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wordcloud-button {
+  position: relative;
+  flex: 1 1 calc(50% - 8px);
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* 연타할 때 확대 제스처로 오인되지 않게 */
+}
+
+.wordcloud-button--mine {
+  border-color: var(--button-bg);
+  background: color-mix(in srgb, var(--button-bg) 8%, var(--surface));
+}
+
+.wordcloud-button__count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--button-bg);
+  color: #fff;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wordcloud-form {
+  display: flex;
+  gap: 8px;
+}
+
+.wordcloud-form .input {
+  flex: 1;
+}
+
+.wordcloud-preset-input {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.wordcloud-mode-desc {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.wordcloud-top-line {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 대형스크린 — 구름이 주인공이라 판을 크게 잡는다 */
+.wordcloud-screen__prompt {
+  margin: 0 0 8px;
+  font-size: clamp(20px, 3vw, 34px);
+  text-wrap: balance;
+}
+
+.wordcloud-screen .wordcloud-board {
+  height: min(56vh, 520px);
+  background: none;
+}
+
+.wordcloud-screen__top {
+  margin: 6px 0 0;
+  font-size: clamp(14px, 1.6vw, 20px);
+}
+
+.wordcloud-screen__meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: clamp(12px, 1.2vw, 16px);
+}

@@ -8,6 +8,7 @@ import {
 import { getAcrosticSnapshot, getYourAcrosticEntry } from './acrostic.js';
 import { getValuesSnapshot, getYourValuesState } from './values.js';
 import { getYabawiSnapshot, getYourYabawiPick } from './yabawi.js';
+import { getWordcloudSnapshot, getYourWordcloudWords } from './wordcloud.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { getLiarSnapshot, getYourLiarWord } from './liar.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
@@ -101,6 +102,8 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       yourValuesState: getYourValuesState(code, participant.id),
       yabawi: getYabawiSnapshot(code),
       yourYabawiPick: getYourYabawiPick(code, participant.id),
+      wordcloud: getWordcloudSnapshot(code),
+      yourWordcloudWords: getYourWordcloudWords(code, participant.id),
       scoreboard: buildScoreboard(event.id),
     });
     await broadcastPresence(io, code);

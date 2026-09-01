@@ -26,6 +26,8 @@ export function usePlayerConnection(eventCode) {
   const [yourValuesState, setYourValuesState] = useState(null);
   const [yabawi, setYabawi] = useState(null);
   const [yourYabawiPick, setYourYabawiPick] = useState(null);
+  const [wordcloud, setWordcloud] = useState(null);
+  const [yourWordcloudWords, setYourWordcloudWords] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -52,6 +54,8 @@ export function usePlayerConnection(eventCode) {
             setYourValuesState(res.yourValuesState ?? null);
             setYabawi(res.yabawi);
             setYourYabawiPick(res.yourYabawiPick ?? null);
+            setWordcloud(res.wordcloud);
+            setYourWordcloudWords(res.yourWordcloudWords ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -123,6 +127,8 @@ export function usePlayerConnection(eventCode) {
     yourValuesState,
     yabawi,
     yourYabawiPick,
+    wordcloud,
+    yourWordcloudWords,
     scoreboard,
     error,
     join,

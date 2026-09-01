@@ -145,6 +145,22 @@ function YabawiIcon() {
   );
 }
 
+function WordcloudIcon() {
+  // 구름 윤곽 안에 크기가 다른 글줄 세 개 — "많이 나온 말일수록 크게"를 그대로 그린다
+  return (
+    <>
+      <path
+        d="M26 74a16 16 0 0 1-2-31.8A21 21 0 0 1 62 30a17 17 0 0 1 16 16 14 14 0 0 1-4 28z"
+        {...LINE}
+        strokeWidth={5}
+      />
+      <path d="M34 50h30" {...LINE} strokeWidth={8} />
+      <path d="M40 62h18" {...LINE} strokeWidth={5} />
+      <path d="M44 38h12" {...LINE} strokeWidth={4} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -174,6 +190,7 @@ const ICONS = {
   acrostic: AcrosticIcon,
   values: ValuesIcon,
   yabawi: YabawiIcon,
+  wordcloud: WordcloudIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란
