@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { socket } from '../lib/socket.js';
+import { POSITION_SEND_MS } from '../lib/maze.js';
 
 const IDLE_STATE = {
   status: 'idle',
@@ -26,7 +27,10 @@ export function useMazeGame({ eventCode, initialState, initialYourFinish }) {
   const [state, setState] = useState(initialState ?? IDLE_STATE);
   const [myFinishMs, setMyFinishMs] = useState(initialYourFinish ?? null);
   const [dismissed, setDismissed] = useState(false);
+  // 대형화면만 쓰는 값 — 참여자 폰에는 이 이벤트가 오지 않는다
+  const [livePositions, setLivePositions] = useState(null);
   const offsetRef = useRef(0); // 서버시각 - 내시각
+  const lastSentRef = useRef(0);
 
   const applyState = useCallback((next) => {
     if (next?.serverNow) offsetRef.current = next.serverNow - Date.now();
@@ -47,10 +51,34 @@ export function useMazeGame({ eventCode, initialState, initialYourFinish }) {
   }, [applyState]);
 
   useEffect(() => {
+    const onPositions = (payload) => setLivePositions(payload);
+    socket.on('maze:positions', onPositions);
+    return () => socket.off('maze:positions', onPositions);
+  }, []);
+
+  useEffect(() => {
     if (state.status !== 'ended') setDismissed(false);
     // 새 경기가 시작되면 지난 기록은 지운다
-    if (state.status === 'countdown') setMyFinishMs(null);
+    if (state.status === 'countdown') {
+      setMyFinishMs(null);
+      setLivePositions(null);
+    }
   }, [state.status]);
+
+  /**
+   * 내 공 위치를 알린다 (대형화면 중계용).
+   * 게임 루프가 매 프레임 부르므로 여기서 간격을 지켜 걸러낸다 — 60fps 그대로
+   * 쏘면 서버가 감당하지 못한다. ack 는 받지 않는다(왕복 자체가 부담).
+   */
+  const sendPosition = useCallback(
+    (x, y) => {
+      const now = Date.now();
+      if (now - lastSentRef.current < POSITION_SEND_MS) return;
+      lastSentRef.current = now;
+      socket.emit('maze:pos', { eventCode, x, y });
+    },
+    [eventCode],
+  );
 
   /** 서버 시계 기준 현재 시각 */
   const serverTime = useCallback(() => Date.now() + offsetRef.current, []);
@@ -85,5 +113,18 @@ export function useMazeGame({ eventCode, initialState, initialYourFinish }) {
   );
   const dismiss = useCallback(() => setDismissed(true), []);
 
-  return { state, myFinishMs, dismissed, serverTime, finish, start, reveal, end, reset, dismiss };
+  return {
+    state,
+    myFinishMs,
+    dismissed,
+    livePositions,
+    serverTime,
+    sendPosition,
+    finish,
+    start,
+    reveal,
+    end,
+    reset,
+    dismiss,
+  };
 }

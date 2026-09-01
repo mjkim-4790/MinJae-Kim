@@ -4,13 +4,16 @@ import { addScore, getParticipantById, listParticipantsByEvent } from '../db/par
 import {
   COUNTDOWN_MS,
   controlById,
+  decodeCells,
+  goalDistances,
   mazeAt,
   pickMazeIndex,
   rankFinishers,
+  remainingAt,
   timeLimitById,
 } from '../game/mazeEngine.js';
 import { isAuthorizedOperator } from './authz.js';
-import { eventRoom, normalizeEventCode } from './rooms.js';
+import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 import { broadcastScoreboard } from './scoreboard.js';
 
 // 미로 찾기 실시간 상태 (yabawi.js 와 같은 구조).
@@ -23,7 +26,13 @@ import { broadcastScoreboard } from './scoreboard.js';
 //     그래야 "3초 뒤 동시 출발"이 모든 폰에서 같은 순간이 된다.
 
 const games = new Map(); // eventCode -> MazeGameState
-const timers = new Map(); // eventCode -> { toRacing, toFinish }
+const timers = new Map(); // eventCode -> { toRacing, toFinish, positions }
+
+// 공 위치는 대형화면에만, 그것도 초당 12번만 보낸다.
+// 폰이 60fps 로 쏘면 50명이면 초당 3000건이라 감당이 안 되고, 화면은 어차피
+// 사이를 부드럽게 이어 그리므로 이 정도면 충분하다.
+const POSITION_HZ = 12;
+const POSITION_MS = Math.round(1000 / POSITION_HZ);
 
 const MIN_PARTICIPANTS = 1; // 운영자가 혼자 리허설할 수 있어야 한다
 
@@ -36,6 +45,9 @@ function createInitialState() {
     startsAt: null, // 카운트다운이 끝나고 실제로 출발하는 시각
     endsAt: null,
     activePool: [],
+    colorOf: new Map(), // participantId -> 색 번호 (판 내내 고정)
+    positions: new Map(), // participantId -> { x, y } (칸 단위) — 대형화면 중계용
+    distToGoal: null, // 칸마다 "도착까지 남은 칸 수" (실시간 순위 기준)
     finishes: new Map(), // participantId -> 걸린 시간(ms)
     ranking: null, // 결과 공개 때 계산
   };
@@ -56,6 +68,7 @@ function clearTimers(code) {
   if (!t) return;
   if (t.toRacing) clearTimeout(t.toRacing);
   if (t.toFinish) clearTimeout(t.toFinish);
+  if (t.positions) clearInterval(t.positions);
   timers.delete(code);
 }
 
@@ -78,6 +91,13 @@ function publicState(state) {
     endsAt: state.endsAt,
     serverNow: Date.now(), // 각 폰이 시계 오차를 보정하는 기준
     activeParticipantIds: state.activePool,
+    // 색은 판 내내 고정이라 상태에 같이 실어 보낸다. 참여자는 여기서 자기 색을,
+    // 대형화면은 범례·순위표를 만든다.
+    runners: state.activePool.map((id) => ({
+      ...toParticipantRef(id),
+      participantId: id,
+      colorIndex: state.colorOf.get(id) ?? 0,
+    })),
     // 경기 중에는 "누가 들어왔는지"만 보여준다 (기록은 결과 공개 때 한꺼번에).
     finishedParticipantIds: [...state.finishes.keys()],
     ranking: revealed && state.ranking
@@ -98,6 +118,33 @@ export function getMazeSnapshot(eventCode) {
 export function getYourMazeFinish(eventCode, participantId) {
   const state = getState(eventCode);
   return state.finishes.has(participantId) ? state.finishes.get(participantId) : null;
+}
+
+/**
+ * 지금 누가 어디쯤인지 대형화면에 보낸다.
+ * 순위는 "도착까지 남은 칸 수"로 매긴다 — 직선거리로 재면 도착 옆인데 벽에 막혀
+ * 한참 돌아가야 하는 사람이 1등으로 보인다.
+ */
+function broadcastPositions(io, code) {
+  const state = getState(code);
+  if (state.status !== 'racing' || !state.distToGoal) return;
+
+  const runners = state.activePool.map((id) => {
+    const finishedMs = state.finishes.get(id) ?? null;
+    const pos = state.positions.get(id) ?? { x: 0.5, y: 0.5 };
+    return {
+      participantId: id,
+      x: pos.x,
+      y: pos.y,
+      // 완주자는 남은 칸 0 으로 고정해 순위표 맨 위에 그대로 남는다
+      remaining: finishedMs != null ? 0 : remainingAt(state.distToGoal, pos.x, pos.y),
+      finishedMs,
+    };
+  });
+
+  runners.sort((a, b) => a.remaining - b.remaining || (a.finishedMs ?? Infinity) - (b.finishedMs ?? Infinity));
+
+  io.to(roleRoom(code, 'screen')).emit('maze:positions', { runners, at: Date.now() });
 }
 
 /** 제한시간이 끝났거나 전원이 완주했을 때 경기를 닫는다. */
@@ -141,6 +188,9 @@ export function registerMazeHandlers(io, socket) {
     state.startsAt = now + COUNTDOWN_MS;
     state.endsAt = now + COUNTDOWN_MS + state.limitMs;
     state.activePool = active.map((p) => p.id);
+    state.colorOf = new Map(state.activePool.map((id, i) => [id, i]));
+    state.positions = new Map(state.activePool.map((id) => [id, { x: 0.5, y: 0.5 }]));
+    state.distToGoal = goalDistances(decodeCells(mazeAt(state.mazeIndex)));
     state.finishes = new Map();
     state.ranking = null;
 
@@ -156,7 +206,9 @@ export function registerMazeHandlers(io, socket) {
     }, COUNTDOWN_MS);
 
     const toFinish = setTimeout(() => finishRace(io, code), COUNTDOWN_MS + state.limitMs);
-    timers.set(code, { toRacing, toFinish });
+    // 모아서 대형화면에만 내려보낸다 (참여자 폰은 자기 공만 보므로 받을 이유가 없다)
+    const positions = setInterval(() => broadcastPositions(io, code), POSITION_MS);
+    timers.set(code, { toRacing, toFinish, positions });
   });
 
   socket.on('maze:finish', (payload = {}, ack) => {
@@ -186,6 +238,29 @@ export function registerMazeHandlers(io, socket) {
     // 전원이 들어왔으면 제한시간을 기다리지 않고 바로 닫는다
     if (state.finishes.size >= state.activePool.length) finishRace(io, code);
     else broadcastNow(io, code);
+  });
+
+  // 공 위치 보고 — ack 를 돌려주지 않는다. 초당 12번씩 오는 것이라 왕복을 만들면
+  // 그 자체가 부담이고, 한 번쯤 빠져도 다음 것이 곧 온다.
+  socket.on('maze:pos', (payload = {}) => {
+    const code = normalizeEventCode(payload.eventCode);
+    if (
+      socket.data.role !== 'player' ||
+      !socket.data.participantId ||
+      socket.data.eventCode !== code
+    ) return;
+
+    const state = getState(code);
+    if (state.status !== 'racing') return;
+
+    const id = socket.data.participantId;
+    if (!state.positions.has(id)) return; // 이번 판 참가자가 아니다
+    if (state.finishes.has(id)) return; // 이미 들어온 사람은 더 안 움직인다
+
+    const x = Number(payload.x);
+    const y = Number(payload.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    state.positions.set(id, { x, y });
   });
 
   // 결과 보기 — 여기서 순위가 확정되고 점수가 들어간다

@@ -13,6 +13,7 @@ export default function MazeBoard({
   running,
   axisRef, // { current: { ax, ay } } — 기울기든 버튼이든 같은 모양으로 들어온다
   onGoal,
+  onPosition, // 매 프레임 현재 위치를 알린다 (보내는 간격은 받는 쪽에서 조절)
   ghostPos, // 결과 화면에서 공을 고정해 보여줄 때 (선택)
 }) {
   const wrapRef = useRef(null);
@@ -31,6 +32,11 @@ export default function MazeBoard({
   useEffect(() => {
     onGoalRef.current = onGoal;
   }, [onGoal]);
+
+  const onPositionRef = useRef(onPosition);
+  useEffect(() => {
+    onPositionRef.current = onPosition;
+  }, [onPosition]);
 
   // ghostPos 도 객체라 같은 문제가 있어 원시값으로 풀어 쓴다
   const ghostX = ghostPos?.x ?? null;
@@ -131,6 +137,8 @@ export default function MazeBoard({
 
       const axis = axisRef?.current ?? { ax: 0, ay: 0 };
       ballRef.current = stepBall(ballRef.current, axis, cells, MAZE_W, MAZE_H, dt);
+
+      onPositionRef.current?.(ballRef.current.x, ballRef.current.y);
 
       if (!goalHitRef.current && reachedGoal(ballRef.current, MAZE_W, MAZE_H)) {
         goalHitRef.current = true;

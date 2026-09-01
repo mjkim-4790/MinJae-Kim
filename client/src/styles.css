@@ -4141,3 +4141,155 @@ a.role-opt {
   color: var(--rainbow-green);
   font-weight: 700;
 }
+
+/* 미로 — 대형화면 실시간 경기 */
+
+/* .screen__center 는 자식을 가운데로 모으려고 align-items:center 를 쓴다.
+   여기서는 미로가 남는 폭을 다 가져가야 하므로 stretch 로 되돌린다
+   (안 그러면 본문이 내용 너비로 쪼그라들어 미로가 손톱만해진다). */
+.maze-live {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.maze-live__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.maze-live__timer {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 52px);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.maze-live__timer--warn {
+  color: var(--rainbow-red);
+}
+
+/* 왼쪽 미로 + 오른쪽 순위표. 좁은 화면에서는 위아래로 쌓인다. */
+.maze-live__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: clamp(12px, 2vw, 28px);
+  align-items: stretch;
+  justify-content: center;
+}
+
+.maze-race-board {
+  --maze-wall: var(--button-bg);
+  --maze-goal: var(--rainbow-green);
+  /* 미로가 주인공이라 남는 공간을 전부 가져간다. min-* 0 이 없으면 flex 항목이
+     내용 크기 아래로 못 줄어들어 캔버스 크기 계산이 어긋난다. */
+  /* 미로는 9:13 세로 비율이라 대개 높이에 먼저 묶인다. 가로를 무한정 차지하면
+     좌우가 텅 비므로 적당히 잘라두고, 남는 폭은 순위표가 가져간다. */
+  flex: 0 1 clamp(240px, 42vw, 640px);
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.maze-race-board .maze-canvas {
+  background: var(--surface);
+  border-radius: 12px;
+}
+
+.maze-live__rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 0 1 clamp(220px, 26vw, 400px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+  align-self: center;
+}
+
+.maze-live__row {
+  display: grid;
+  grid-template-columns: 1.6em 0.9em 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: clamp(13px, 1.5vw, 22px);
+}
+
+/* 1등은 눈에 띄게 */
+.maze-live__row:first-child {
+  background: color-mix(in srgb, var(--rainbow-green) 14%, var(--surface));
+  font-weight: 700;
+}
+
+.maze-live__pos {
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.maze-live__chip {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.maze-live__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maze-live__gap {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.maze-live__waiting {
+  padding: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* 참여자 폰에서 자기 공 색을 알려주는 줄 */
+.maze-mycolor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.maze-mycolor__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .maze-live__body {
+    flex-direction: column;
+    align-items: center;
+  }
+  .maze-live__rank {
+    flex-basis: auto;
+    width: min(420px, 100%);
+  }
+}

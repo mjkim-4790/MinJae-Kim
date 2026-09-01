@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 
 import MazeBoard from './MazeBoard.jsx';
 import { useTilt } from '../../hooks/useTilt.js';
+import { runnerColor } from '../../lib/maze.js';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 
 const WARN_MS = 5000; // 남은 시간이 이보다 적으면 큰 숫자로 센다
@@ -47,7 +48,7 @@ function PadButton({ dir, axisRef, label, symbol }) {
 }
 
 export default function MazePlayerView({ game, participantId }) {
-  const { state, myFinishMs, dismissed, serverTime, finish, dismiss } = game;
+  const { state, myFinishMs, dismissed, serverTime, sendPosition, finish, dismiss } = game;
   const tilt = useTilt();
   const padRef = useRef({ ax: 0, ay: 0 });
   const [now, setNow] = useState(() => Date.now());
@@ -138,6 +139,8 @@ export default function MazePlayerView({ game, participantId }) {
   const msLeft = state.endsAt ? Math.max(0, state.endsAt - serverTime()) : 0;
   const countdownLeft = state.startsAt ? Math.max(0, state.startsAt - serverTime()) : 0;
   const done = myFinishMs != null;
+  const myRunner = state.runners?.find((r) => r.participantId === participantId);
+  const myColor = myRunner ? runnerColor(myRunner.colorIndex) : null;
 
   // 기울기 모드인데 아직 권한을 안 받았으면 먼저 받아야 한다 (iOS 필수)
   const needsTiltSetup = usingTilt && !tilt.granted;
@@ -193,7 +196,15 @@ export default function MazePlayerView({ game, participantId }) {
             running={racing && !done}
             axisRef={usingTilt ? tilt.axisRef : padRef}
             onGoal={handleGoal}
+            onPosition={sendPosition}
           />
+
+          {myColor && (
+            <p className="subtitle maze-mycolor">
+              <span className="maze-mycolor__dot" style={{ background: myColor }} />
+              대형화면에서 내 공은 이 색이에요
+            </p>
+          )}
 
           {usingTilt ? (
             <>

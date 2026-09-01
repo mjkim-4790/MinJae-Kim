@@ -102,7 +102,13 @@ export default function ScreenView() {
   } else if (wordcloudActive) {
     content = <WordcloudScreenView state={wordcloudGame.state} />;
   } else if (mazeActive) {
-    content = <MazeScreenView state={mazeGame.state} serverTime={mazeGame.serverTime} />;
+    content = (
+      <MazeScreenView
+        state={mazeGame.state}
+        serverTime={mazeGame.serverTime}
+        livePositions={mazeGame.livePositions}
+      />
+    );
   } else if (mode === 'logo') {
     content = (
       <div className="screen__frame">

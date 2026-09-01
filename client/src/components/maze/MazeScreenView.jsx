@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import MazeRaceBoard from './MazeRaceBoard.jsx';
+import { SPOTLIGHT_COUNT, runnerColor } from '../../lib/maze.js';
 import { springPop, springSettle } from '../../lib/motionPresets.js';
 
 const WARN_MS = 5000;
@@ -12,7 +14,7 @@ function formatElapsed(ms) {
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 /** 대형스크린 — 진행 중에는 남은 시간과 완주 인원, 결과 공개 후에는 전체 기록. */
-export default function MazeScreenView({ state, serverTime }) {
+export default function MazeScreenView({ state, serverTime, livePositions }) {
   const [, tick] = useState(0);
 
   useEffect(() => {
@@ -48,20 +50,51 @@ export default function MazeScreenView({ state, serverTime }) {
 
   if (state.status === 'racing') {
     const warn = msLeft <= WARN_MS;
+    const board = livePositions?.runners ?? [];
+    const nameOf = new Map((state.runners ?? []).map((r) => [r.participantId, r]));
+
     return (
-      <div className="screen__center">
-        <p className="screen__eyebrow">미로 찾기 — 진행 중</p>
-        <motion.p
-          key={warn ? Math.ceil(msLeft / 1000) : 'run'}
-          className={`maze-screen__timer${warn ? ' maze-screen__timer--warn' : ''}`}
-          initial={warn ? { scale: 0.6, opacity: 0 } : false}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={springPop}
-        >
-          {warn ? Math.ceil(msLeft / 1000) : `${Math.ceil(msLeft / 1000)}초`}
-        </motion.p>
+      <div className="screen__center maze-live">
+        <div className="maze-live__head">
+          <p className="screen__eyebrow">미로 찾기 — 진행 중</p>
+          <motion.p
+            key={warn ? Math.ceil(msLeft / 1000) : 'run'}
+            className={`maze-live__timer${warn ? ' maze-live__timer--warn' : ''}`}
+            initial={warn ? { scale: 0.6, opacity: 0 } : false}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={springPop}
+          >
+            {warn ? Math.ceil(msLeft / 1000) : `${Math.ceil(msLeft / 1000)}초`}
+          </motion.p>
+        </div>
+
+        <div className="maze-live__body">
+          <MazeRaceBoard maze={state.maze} runners={state.runners} positions={livePositions} />
+
+          <ol className="maze-live__rank">
+            {board.slice(0, SPOTLIGHT_COUNT).map((r, i) => {
+              const info = nameOf.get(r.participantId);
+              return (
+                <li key={r.participantId} className="maze-live__row">
+                  <span className="maze-live__pos">{i + 1}</span>
+                  <span
+                    className="maze-live__chip"
+                    style={{ background: runnerColor(info?.colorIndex ?? 0) }}
+                  />
+                  <span className="maze-live__name">{info?.nickname ?? '…'}</span>
+                  <span className="maze-live__gap">
+                    {r.finishedMs != null ? '도착' : `${r.remaining}칸`}
+                  </span>
+                </li>
+              );
+            })}
+            {board.length === 0 && <li className="maze-live__waiting">출발 준비 중…</li>}
+          </ol>
+        </div>
+
         <p className="screen__hint">
           완주 {state.finishedParticipantIds.length} / {entrants}명
+          {board.length > SPOTLIGHT_COUNT && ` · 나머지 ${board.length - SPOTLIGHT_COUNT}명은 흐리게 표시`}
         </p>
       </div>
     );

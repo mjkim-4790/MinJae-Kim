@@ -9,6 +9,23 @@ export const E = 2;
 export const S = 4;
 export const W = 8;
 
+// 대형화면에서 참여자를 구분하는 색. 12색을 돌려쓰므로 인원이 더 많으면 색이
+// 겹치는데, 그래서 옆의 순위표(색칩+닉네임)가 실제 신원 확인 수단이다.
+// 프로젝터로 멀리서 보므로 파스텔 대신 채도가 높은 색만 골랐다.
+export const RUNNER_COLORS = [
+  '#d84848', '#1878c0', '#48a848', '#d86048',
+  '#783090', '#d84890', '#0f9b8e', '#c9971f',
+  '#5b6ee1', '#8fae1b', '#e0562f', '#a0522d',
+];
+
+export function runnerColor(colorIndex) {
+  return RUNNER_COLORS[((colorIndex % RUNNER_COLORS.length) + RUNNER_COLORS.length) % RUNNER_COLORS.length];
+}
+
+export const POSITION_SEND_MS = 80; // 폰이 위치를 보내는 간격 (초당 약 12번)
+export const NAME_LABEL_MAX = 12; // 이보다 많으면 공 옆 닉네임을 빼고 색만 쓴다
+export const SPOTLIGHT_COUNT = 10; // 선두 몇 명을 선명하게 볼지
+
 // 물리 상수 (칸 단위/초). 셀 크기가 화면마다 달라도 느낌이 같도록 px 가 아니라
 // "칸" 기준으로 계산하고, 그릴 때만 px 로 바꾼다.
 export const ACCEL = 26; // 최대로 기울였을 때 가속도 (칸/초²)

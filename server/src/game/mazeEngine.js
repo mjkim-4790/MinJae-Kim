@@ -72,3 +72,48 @@ export function rankFinishers(finishes) {
 export function formatElapsed(ms) {
   return `${(ms / 1000).toFixed(2)}초`;
 }
+
+// 벽 비트 (client/src/lib/maze.js 와 같은 값)
+const N = 1, E = 2, S = 4, W = 8;
+
+export function decodeCells(maze) {
+  return [...maze.cells].map((ch) => parseInt(ch, 16));
+}
+
+/**
+ * 각 칸에서 도착까지 남은 칸 수. 도착에서 거꾸로 BFS 한 번이면 전부 나온다.
+ *
+ * 진행도를 도착점까지의 직선거리로 재면 안 된다 — 미로라서 도착 바로 옆에 있어도
+ * 벽에 막혀 한참 돌아가야 할 수 있다. 실시간 순위는 이 값으로 매긴다.
+ */
+export function goalDistances(cells, width = MAZE_WIDTH, height = MAZE_HEIGHT) {
+  const dist = new Array(width * height).fill(-1);
+  const goal = (height - 1) * width + (width - 1);
+  dist[goal] = 0;
+  const queue = [goal];
+
+  for (let head = 0; head < queue.length; head += 1) {
+    const cur = queue[head];
+    const x = cur % width;
+    const y = Math.floor(cur / width);
+    for (const [dir, dx, dy] of [[N, 0, -1], [E, 1, 0], [S, 0, 1], [W, -1, 0]]) {
+      if (cells[cur] & dir) continue; // 벽이 막고 있으면 못 지나간다
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+      const next = ny * width + nx;
+      if (dist[next] !== -1) continue;
+      dist[next] = dist[cur] + 1;
+      queue.push(next);
+    }
+  }
+  return dist;
+}
+
+/** 공의 좌표(칸 단위)를 그 칸의 "남은 칸 수"로 바꾼다. 판 밖 값이 와도 잘라서 쓴다. */
+export function remainingAt(dist, x, y, width = MAZE_WIDTH, height = MAZE_HEIGHT) {
+  const cx = Math.min(width - 1, Math.max(0, Math.floor(x)));
+  const cy = Math.min(height - 1, Math.max(0, Math.floor(y)));
+  const d = dist[cy * width + cx];
+  return d === -1 ? Number.MAX_SAFE_INTEGER : d;
+}
