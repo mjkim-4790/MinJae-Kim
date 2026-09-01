@@ -4541,3 +4541,9 @@ a.role-opt {
 
 .chairs-op-line--safe { color: var(--rainbow-green); font-weight: 600; }
 .chairs-op-line--out { color: var(--rainbow-red); font-weight: 600; }
+
+/* 미로 — 기울기 준비 안 된 참여자 경고 */
+.maze-notready {
+  color: var(--rainbow-orange);
+  font-weight: 600;
+}

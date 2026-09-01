@@ -2,6 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { tiltToAxis } from '../lib/maze.js';
 
+// 한 번 허용하면 이 페이지가 열려 있는 동안은 계속 유효하다(iOS 도 origin 단위로 기억한다).
+// 그런데 허용 상태를 컴포넌트 state 에만 두면, 게임 화면이 잠깐 사라졌다 다시 그려질 때
+// false 로 돌아가 "허용하기" 버튼이 또 뜬다 — 미리 눌러둔 게 소용없어진다.
+// 그래서 모듈 밖에 기억해 둔다.
+let grantedInThisPage = false;
+
 /**
  * 폰 기울기를 읽는다.
  *
@@ -21,7 +27,7 @@ export function useTilt() {
   const axisRef = useRef({ ax: 0, ay: 0 });
   const baseRef = useRef({ beta: null, gamma: 0 });
   const [supported, setSupported] = useState(true);
-  const [granted, setGranted] = useState(false);
+  const [granted, setGranted] = useState(grantedInThisPage);
   const [error, setError] = useState(null);
 
   // iOS 는 권한 요청 함수가 따로 있다. 그게 있으면 물어봐야 하는 기기다.
@@ -84,6 +90,7 @@ export function useTilt() {
     }
 
     if (!needsPermission) {
+      grantedInThisPage = true;
       setGranted(true);
       return true;
     }
@@ -91,6 +98,7 @@ export function useTilt() {
     try {
       const res = await window.DeviceOrientationEvent.requestPermission();
       if (res === 'granted') {
+        grantedInThisPage = true;
         setGranted(true);
         return true;
       }

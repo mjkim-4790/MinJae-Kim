@@ -48,7 +48,7 @@ function PadButton({ dir, axisRef, label, symbol }) {
 }
 
 export default function MazePlayerView({ game, participantId }) {
-  const { state, myFinishMs, dismissed, serverTime, sendPosition, finish, dismiss } = game;
+  const { state, myFinishMs, dismissed, serverTime, sendPosition, finish, reportReady, dismiss } = game;
   const tilt = useTilt();
   const padRef = useRef({ ax: 0, ay: 0 });
   const [now, setNow] = useState(() => Date.now());
@@ -79,6 +79,17 @@ export default function MazePlayerView({ game, participantId }) {
 
   const handleWallReset = useCallback(() => setResets((n) => n + 1), []);
 
+  // 허용이 끝나면 진행자가 준비 인원을 볼 수 있게 알린다
+  const { granted: tiltGranted } = tilt;
+  useEffect(() => {
+    if (tiltGranted) reportReady();
+  }, [tiltGranted, reportReady]);
+
+  const askTilt = useCallback(async () => {
+    const ok = await tilt.request();
+    if (ok) reportReady();
+  }, [tilt, reportReady]);
+
   const handleGoal = useCallback(async () => {
     setFinishing(true);
     await finish();
@@ -86,6 +97,35 @@ export default function MazePlayerView({ game, participantId }) {
   }, [finish]);
 
   if (state.status === 'idle') return null;
+
+  // 진행자가 미로 게임을 펼쳐둔 상태 — 시작 전에 기울기 허용을 미리 받아둔다.
+  // (시작을 누른 뒤에 허용하면 카운트다운 3초 안에 팝업까지 처리해야 해서 늦는다)
+  if (state.status === 'ready') {
+    return (
+      <section className="panel stack maze-stage">
+        <h2 className="panel__title">미로 찾기 — 곧 시작합니다</h2>
+        {tilt.granted ? (
+          <p className="chairs-verdict chairs-verdict--safe">기울기 준비 완료! 시작을 기다려주세요</p>
+        ) : (
+          <>
+            <p className="subtitle">
+              폰을 눕혀 들고 기울여서 공을 굴립니다. 시작 전에 미리 허용해두세요.
+            </p>
+            <button className="button" onClick={askTilt}>
+              기울기 사용 허용하기
+            </button>
+            {tilt.error && <p className="error-text">{tilt.error}</p>}
+            {!tilt.supported && (
+              <p className="subtitle">
+                이 기기는 기울기를 쓸 수 없습니다. 진행자에게 <strong>버튼 조작</strong>으로
+                진행해달라고 요청하세요.
+              </p>
+            )}
+          </>
+        )}
+      </section>
+    );
+  }
 
   if (state.status === 'ended') {
     if (dismissed) return null;
@@ -194,7 +234,7 @@ export default function MazePlayerView({ game, participantId }) {
           <p className="subtitle">
             폰을 눕혀 들고 기울여서 공을 굴립니다. 먼저 기울기 사용을 허용해주세요.
           </p>
-          <button className="button" onClick={tilt.request}>
+          <button className="button" onClick={askTilt}>
             기울기 사용 허용하기
           </button>
           {tilt.error && <p className="error-text">{tilt.error}</p>}

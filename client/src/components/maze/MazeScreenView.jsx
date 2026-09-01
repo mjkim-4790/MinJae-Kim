@@ -27,6 +27,17 @@ export default function MazeScreenView({ state, serverTime, livePositions }) {
   const countdownLeft = state.startsAt ? Math.max(0, state.startsAt - serverTime()) : 0;
   const entrants = state.activeParticipantIds.length;
 
+  // 진행자가 미로를 펼쳐둔 상태 — 다들 폰에서 기울기를 허용할 시간을 준다
+  if (state.status === 'ready') {
+    return (
+      <div className="screen__center">
+        <p className="screen__eyebrow">미로 찾기 — 곧 시작합니다</p>
+        <p className="maze-screen__timer">📱</p>
+        <p className="screen__hint">폰에서 “기울기 사용 허용하기”를 눌러주세요</p>
+      </div>
+    );
+  }
+
   if (state.status === 'countdown') {
     const n = Math.max(1, Math.ceil(countdownLeft / 1000));
     return (

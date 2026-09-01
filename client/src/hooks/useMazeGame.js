@@ -5,6 +5,7 @@ import { POSITION_SEND_MS } from '../lib/maze.js';
 
 const IDLE_STATE = {
   status: 'idle',
+  readyIds: [],
   control: null,
   limitMs: 0,
   maze: null,
@@ -102,6 +103,18 @@ export function useMazeGame({ eventCode, initialState, initialYourFinish }) {
       new Promise((resolve) => socket.emit('maze:start', { eventCode, ...options }, resolve)),
     [eventCode],
   );
+  const prepare = useCallback(
+    () => new Promise((resolve) => socket.emit('maze:prepare', { eventCode }, resolve)),
+    [eventCode],
+  );
+  const unprepare = useCallback(
+    () => new Promise((resolve) => socket.emit('maze:unprepare', { eventCode }, resolve)),
+    [eventCode],
+  );
+  const reportReady = useCallback(
+    () => new Promise((resolve) => socket.emit('maze:ready', { eventCode }, resolve)),
+    [eventCode],
+  );
   const reveal = useCallback(
     () => new Promise((resolve) => socket.emit('maze:reveal', { eventCode }, resolve)),
     [eventCode],
@@ -125,6 +138,9 @@ export function useMazeGame({ eventCode, initialState, initialYourFinish }) {
     sendPosition,
     finish,
     start,
+    prepare,
+    unprepare,
+    reportReady,
     reveal,
     end,
     reset,

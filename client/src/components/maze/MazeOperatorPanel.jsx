@@ -30,7 +30,7 @@ function formatElapsed(ms) {
 }
 
 export default function MazeOperatorPanel({ game, participants }) {
-  const { state, serverTime, start, reveal, end, reset } = game;
+  const { state, serverTime, start, reveal, end, reset, prepare, unprepare } = game;
   const [difficulty, setDifficulty] = useState('normal');
   const [control, setControl] = useState('tilt');
   const [limitSec, setLimitSec] = useState(90);
@@ -39,12 +39,25 @@ export default function MazeOperatorPanel({ game, participants }) {
   const [, tick] = useState(0);
 
   const activeCount = participants.filter((p) => p.status === 'active').length;
+  // 기울기 허용을 마친 사람 (지금 입장해 있는 사람 기준으로만 센다)
+  const activeIds = new Set(participants.filter((p) => p.status === 'active').map((p) => p.id));
+  const readyCount = (state.readyIds ?? []).filter((id) => activeIds.has(id)).length;
+  const notReady = Math.max(0, activeCount - readyCount);
 
   useEffect(() => {
     if (state.status !== 'countdown' && state.status !== 'racing') return undefined;
     const id = setInterval(() => tick((n) => n + 1), 200);
     return () => clearInterval(id);
   }, [state.status]);
+
+  // 이 패널을 펼쳐두면 참여자 폰에 '기울기 허용' 버튼이 뜬다.
+  // 시작을 누른 뒤에 허용하게 하면 카운트다운 3초 안에 팝업까지 처리해야 해서 늦는다.
+  // 다른 게임으로 넘어가면(언마운트) 참여자 화면에서도 치운다.
+  const idle = state.status === 'idle';
+  useEffect(() => {
+    if (idle) prepare();
+  }, [idle, prepare]);
+  useEffect(() => () => { unprepare(); }, [unprepare]);
 
   const run = async (action, ...args) => {
     setBusy(true);
@@ -55,7 +68,7 @@ export default function MazeOperatorPanel({ game, participants }) {
     return res;
   };
 
-  if (state.status === 'idle' || state.status === 'ended') {
+  if (state.status === 'idle' || state.status === 'ready' || state.status === 'ended') {
     return (
       <div className="stack">
         {state.status === 'ended' && state.ranking && (
@@ -147,6 +160,16 @@ export default function MazeOperatorPanel({ game, participants }) {
         </ul>
 
         {error && <p className="error-text">{error}</p>}
+
+        {control === 'tilt' && (
+          <p className={`subtitle${notReady > 0 ? ' maze-notready' : ''}`}>
+            {notReady > 0
+              ? `기울기 허용: ${readyCount}/${activeCount}명 — ${notReady}명이 아직 안 눌렀습니다. 그대로 시작해도 되지만, 그 분들은 출발이 늦어집니다.`
+              : activeCount > 0
+                ? `기울기 허용: ${readyCount}/${activeCount}명 — 모두 준비됐습니다`
+                : '참여자가 입장하면 각자 폰에서 기울기 허용을 누르게 됩니다'}
+          </p>
+        )}
 
         <button
           className="button"

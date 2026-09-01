@@ -40,7 +40,10 @@ const MIN_PARTICIPANTS = 1; // 운영자가 혼자 리허설할 수 있어야 �
 
 function createInitialState() {
   return {
-    status: 'idle', // idle | countdown | racing | finished | result | ended
+    // idle | ready | countdown | racing | finished | result | ended
+    // 'ready' 는 진행자가 미로 게임을 펼쳐둔 상태다. 참여자가 기울기 허용을 미리
+    // 눌러둘 수 있게 하려고 둔 단계 — 카운트다운 3초 안에 허용까지 하기엔 촉박하다.
+    status: 'idle',
     difficulty: null, // 'normal' | 'hard' — 상은 벽에 닿으면 출발점으로
     control: null, // 'tilt' | 'buttons' — 진행자가 정해 전원 동일 조건
     limitMs: 0,
@@ -52,6 +55,7 @@ function createInitialState() {
     positions: new Map(), // participantId -> { x, y } (칸 단위) — 대형화면 중계용
     distToGoal: null, // 칸마다 "도착까지 남은 칸 수" (실시간 순위 기준)
     bestRemaining: new Map(), // participantId -> 그 판에서 도달했던 최소 '남은 칸'
+    readyIds: [], // 기울기 허용을 마친 참여자 (진행자가 준비 상황을 보고 시작한다)
     finishes: new Map(), // participantId -> 걸린 시간(ms)
     ranking: null, // 결과 공개 때 계산
     rankedBy: null, // 'time' | 'progress' — 완주자가 없으면 진출 거리로 매긴다
@@ -87,6 +91,7 @@ function publicState(state) {
 
   return {
     status: state.status,
+    readyIds: state.readyIds,
     difficulty: state.difficulty,
     control: state.control,
     limitMs: state.limitMs,
@@ -224,6 +229,56 @@ export function registerMazeHandlers(io, socket) {
     // 모아서 대형화면에만 내려보낸다 (참여자 폰은 자기 공만 보므로 받을 이유가 없다)
     const positions = setInterval(() => broadcastPositions(io, code), POSITION_MS);
     timers.set(code, { toRacing, toFinish, positions });
+  });
+
+  // 진행자가 미로 게임을 펼치면 참여자 폰에 '기울기 허용' 버튼을 띄운다.
+  // 시작을 누른 뒤에 허용하게 하면 카운트다운 3초 안에 팝업까지 처리해야 해서 늦는다.
+  socket.on('maze:prepare', (payload = {}, ack) => {
+    const reply = typeof ack === 'function' ? ack : () => {};
+    const code = normalizeEventCode(payload.eventCode);
+    if (!isAuthorizedOperator(socket, code)) return reply({ ok: false, error: 'FORBIDDEN' });
+
+    const state = getState(code);
+    if (state.status !== 'idle') return reply({ ok: true }); // 이미 진행 중이면 건드리지 않는다
+
+    state.status = 'ready';
+    reply({ ok: true });
+    broadcastNow(io, code);
+  });
+
+  /** 진행자가 다른 게임으로 넘어가면 참여자 화면에서도 치운다. */
+  socket.on('maze:unprepare', (payload = {}, ack) => {
+    const reply = typeof ack === 'function' ? ack : () => {};
+    const code = normalizeEventCode(payload.eventCode);
+    if (!isAuthorizedOperator(socket, code)) return reply({ ok: false, error: 'FORBIDDEN' });
+
+    const state = getState(code);
+    if (state.status !== 'ready') return reply({ ok: true });
+
+    state.status = 'idle';
+    reply({ ok: true });
+    broadcastNow(io, code);
+  });
+
+  /** 참여자가 기울기 허용을 마쳤다고 알린다 (진행자가 준비 인원을 보려고). */
+  socket.on('maze:ready', (payload = {}, ack) => {
+    const reply = typeof ack === 'function' ? ack : () => {};
+    const code = normalizeEventCode(payload.eventCode);
+    if (
+      socket.data.role !== 'player' ||
+      !socket.data.participantId ||
+      socket.data.eventCode !== code
+    ) {
+      return reply({ ok: false, error: 'FORBIDDEN' });
+    }
+
+    const state = getState(code);
+    const id = socket.data.participantId;
+    if (state.readyIds.includes(id)) return reply({ ok: true });
+
+    state.readyIds = [...state.readyIds, id];
+    reply({ ok: true });
+    broadcastNow(io, code);
   });
 
   socket.on('maze:finish', (payload = {}, ack) => {
