@@ -28,6 +28,8 @@ export function usePlayerConnection(eventCode) {
   const [yourYabawiPick, setYourYabawiPick] = useState(null);
   const [wordcloud, setWordcloud] = useState(null);
   const [yourWordcloudWords, setYourWordcloudWords] = useState(null);
+  const [maze, setMaze] = useState(null);
+  const [yourMazeFinish, setYourMazeFinish] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -56,6 +58,8 @@ export function usePlayerConnection(eventCode) {
             setYourYabawiPick(res.yourYabawiPick ?? null);
             setWordcloud(res.wordcloud);
             setYourWordcloudWords(res.yourWordcloudWords ?? null);
+            setMaze(res.maze);
+            setYourMazeFinish(res.yourMazeFinish ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -129,6 +133,8 @@ export function usePlayerConnection(eventCode) {
     yourYabawiPick,
     wordcloud,
     yourWordcloudWords,
+    maze,
+    yourMazeFinish,
     scoreboard,
     error,
     join,

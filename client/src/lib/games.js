@@ -17,6 +17,7 @@ export const GAMES = [
   { id: 'values', name: '나의 가치여정', ready: true },
   { id: 'yabawi', name: '야바위 게임', ready: true },
   { id: 'wordcloud', name: '단어 구름', ready: true },
+  { id: 'maze', name: '미로 찾기', ready: true },
 ];
 
 export function gameById(id) {

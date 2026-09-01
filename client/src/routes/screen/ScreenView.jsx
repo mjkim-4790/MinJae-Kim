@@ -11,6 +11,7 @@ import RpsScreenView from '../../components/rps/RpsScreenView.jsx';
 import StatusBar from '../../components/StatusBar.jsx';
 import TypingScreenView from '../../components/typing/TypingScreenView.jsx';
 import ValuesScreenView from '../../components/values/ValuesScreenView.jsx';
+import MazeScreenView from '../../components/maze/MazeScreenView.jsx';
 import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
@@ -22,6 +23,7 @@ import { useTypingGame } from '../../hooks/useTypingGame.js';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
+import { useMazeGame } from '../../hooks/useMazeGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -50,6 +52,7 @@ export default function ScreenView() {
   const valuesGame = useValuesGame({ eventCode: code, initialState: init?.values });
   const yabawiGame = useYabawiGame({ eventCode: code, initialState: init?.yabawi });
   const wordcloudGame = useWordcloudGame({ eventCode: code, initialState: init?.wordcloud });
+  const mazeGame = useMazeGame({ eventCode: code, initialState: init?.maze });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -71,6 +74,7 @@ export default function ScreenView() {
   const valuesActive = valuesGame.state.status !== 'idle';
   const yabawiActive = yabawiGame.state.status !== 'idle';
   const wordcloudActive = wordcloudGame.state.status !== 'idle';
+  const mazeActive = mazeGame.state.status !== 'idle';
   const gameActive =
     rpsActive ||
     liarActive ||
@@ -78,7 +82,8 @@ export default function ScreenView() {
     acrosticActive ||
     valuesActive ||
     yabawiActive ||
-    wordcloudActive;
+    wordcloudActive ||
+    mazeActive;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
@@ -96,6 +101,8 @@ export default function ScreenView() {
     content = <YabawiScreenView state={yabawiGame.state} />;
   } else if (wordcloudActive) {
     content = <WordcloudScreenView state={wordcloudGame.state} />;
+  } else if (mazeActive) {
+    content = <MazeScreenView state={mazeGame.state} serverTime={mazeGame.serverTime} />;
   } else if (mode === 'logo') {
     content = (
       <div className="screen__frame">

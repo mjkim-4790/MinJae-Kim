@@ -10,6 +10,7 @@ import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsOperatorPanel from '../../components/rps/RpsOperatorPanel.jsx';
 import TypingOperatorPanel from '../../components/typing/TypingOperatorPanel.jsx';
 import ValuesOperatorPanel from '../../components/values/ValuesOperatorPanel.jsx';
+import MazeOperatorPanel from '../../components/maze/MazeOperatorPanel.jsx';
 import WordcloudOperatorPanel from '../../components/wordcloud/WordcloudOperatorPanel.jsx';
 import YabawiOperatorPanel from '../../components/yabawi/YabawiOperatorPanel.jsx';
 import { gameById } from '../../lib/games.js';
@@ -18,6 +19,7 @@ import { useAuth } from '../../hooks/useAuth.jsx';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
+import { useMazeGame } from '../../hooks/useMazeGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -71,6 +73,7 @@ export default function OperatorEventDetail() {
   const valuesGame = useValuesGame({ eventCode: event?.code, initialState: init?.values });
   const yabawiGame = useYabawiGame({ eventCode: event?.code, initialState: init?.yabawi });
   const wordcloudGame = useWordcloudGame({ eventCode: event?.code, initialState: init?.wordcloud });
+  const mazeGame = useMazeGame({ eventCode: event?.code, initialState: init?.maze });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -101,6 +104,7 @@ export default function OperatorEventDetail() {
       ['values', valuesGame],
       ['yabawi', yabawiGame],
       ['wordcloud', wordcloudGame],
+      ['maze', mazeGame],
     ].find(([, g]) => g.state.status !== 'idle')?.[0] ?? null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
@@ -306,6 +310,9 @@ export default function OperatorEventDetail() {
               <YabawiOperatorPanel game={yabawiGame} participants={participants} />
             )}
             {selectedGameId === 'wordcloud' && <WordcloudOperatorPanel game={wordcloudGame} />}
+            {selectedGameId === 'maze' && (
+              <MazeOperatorPanel game={mazeGame} participants={participants} />
+            )}
           </>
         ) : (
           <>

@@ -161,6 +161,18 @@ function WordcloudIcon() {
   );
 }
 
+function MazeIcon() {
+  // 미로 벽 몇 줄 + 출발점 공, 오른쪽 아래 도착 표시
+  return (
+    <>
+      <rect x="12" y="12" width="76" height="76" rx="8" {...LINE} strokeWidth={5} />
+      <path d="M12 34h30M58 12v34M34 34v22M58 46h30M34 68h42M12 56h10" {...LINE} strokeWidth={5} />
+      <circle cx="23" cy="23" r="6" fill={STROKE} />
+      <circle cx="78" cy="78" r="7" {...LINE} strokeWidth={5} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -191,6 +203,7 @@ const ICONS = {
   values: ValuesIcon,
   yabawi: YabawiIcon,
   wordcloud: WordcloudIcon,
+  maze: MazeIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

@@ -9,12 +9,14 @@ import RankingBoard from '../../components/RankingBoard.jsx';
 import RpsPlayerView from '../../components/rps/RpsPlayerView.jsx';
 import TypingPlayerView from '../../components/typing/TypingPlayerView.jsx';
 import ValuesPlayerView from '../../components/values/ValuesPlayerView.jsx';
+import MazePlayerView from '../../components/maze/MazePlayerView.jsx';
 import WordcloudPlayerView from '../../components/wordcloud/WordcloudPlayerView.jsx';
 import YabawiPlayerView from '../../components/yabawi/YabawiPlayerView.jsx';
 import { useAcrosticGame } from '../../hooks/useAcrosticGame.js';
 import { useValuesGame } from '../../hooks/useValuesGame.js';
 import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
+import { useMazeGame } from '../../hooks/useMazeGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
@@ -56,6 +58,8 @@ export default function PlayerJoin() {
     yourYabawiPick: initialYourYabawiPick,
     wordcloud: initialWordcloud,
     yourWordcloudWords: initialYourWordcloudWords,
+    maze: initialMaze,
+    yourMazeFinish: initialYourMazeFinish,
     scoreboard: initialScoreboard,
     error,
     join,
@@ -93,6 +97,11 @@ export default function PlayerJoin() {
     eventCode: code,
     initialState: initialWordcloud,
     initialYourWords: initialYourWordcloudWords,
+  });
+  const mazeGame = useMazeGame({
+    eventCode: code,
+    initialState: initialMaze,
+    initialYourFinish: initialYourMazeFinish,
   });
   const scoreboard = useScoreboard(initialScoreboard);
   // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
@@ -141,6 +150,7 @@ export default function PlayerJoin() {
     valuesGame,
     yabawiGame,
     wordcloudGame,
+    mazeGame,
   ].some(
     (g) => g.state.status !== 'idle' && !g.dismissed,
   );
@@ -184,6 +194,7 @@ export default function PlayerJoin() {
         <ValuesPlayerView game={valuesGame} participantId={participant?.id} />
         <YabawiPlayerView game={yabawiGame} participantId={participant?.id} />
         <WordcloudPlayerView game={wordcloudGame} />
+        <MazePlayerView game={mazeGame} participantId={participant?.id} />
 
         {!gameRunning && (
           <>
