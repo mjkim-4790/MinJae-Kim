@@ -16,6 +16,7 @@ import { getYabawiSnapshot, registerYabawiHandlers } from './yabawi.js';
 import { getWordcloudSnapshot, registerWordcloudHandlers } from './wordcloud.js';
 import { getMazeSnapshot, registerMazeHandlers } from './maze.js';
 import { getChairsSnapshot, registerChairsHandlers } from './chairs.js';
+import { getMugunghwaSnapshot, registerMugunghwaHandlers } from './mugunghwa.js';
 import { buildScoreboard } from './scoreboard.js';
 import {
   countInRoom,
@@ -58,6 +59,7 @@ export function createRealtime(httpServer) {
     registerWordcloudHandlers(io, socket);
     registerMazeHandlers(io, socket);
     registerChairsHandlers(io, socket);
+    registerMugunghwaHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -112,6 +114,7 @@ export function createRealtime(httpServer) {
         response.wordcloud = getWordcloudSnapshot(code);
         response.maze = getMazeSnapshot(code);
         response.chairs = getChairsSnapshot(code);
+        response.mugunghwa = getMugunghwaSnapshot(code);
         if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {

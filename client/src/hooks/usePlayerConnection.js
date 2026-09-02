@@ -32,6 +32,8 @@ export function usePlayerConnection(eventCode) {
   const [yourMazeFinish, setYourMazeFinish] = useState(null);
   const [chairs, setChairs] = useState(null);
   const [yourChairsSeat, setYourChairsSeat] = useState(null);
+  const [mugunghwa, setMugunghwa] = useState(null);
+  const [yourMugunghwaPos, setYourMugunghwaPos] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
   const [error, setError] = useState(null);
 
@@ -64,6 +66,8 @@ export function usePlayerConnection(eventCode) {
             setYourMazeFinish(res.yourMazeFinish ?? null);
             setChairs(res.chairs);
             setYourChairsSeat(res.yourChairsSeat ?? null);
+            setMugunghwa(res.mugunghwa);
+            setYourMugunghwaPos(res.yourMugunghwaPos ?? null);
             setScoreboard(res.scoreboard);
             setError(null);
             setStatus('joined');
@@ -141,6 +145,8 @@ export function usePlayerConnection(eventCode) {
     yourMazeFinish,
     chairs,
     yourChairsSeat,
+    mugunghwa,
+    yourMugunghwaPos,
     scoreboard,
     error,
     join,

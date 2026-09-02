@@ -12,6 +12,7 @@ import StatusBar from '../../components/StatusBar.jsx';
 import TypingScreenView from '../../components/typing/TypingScreenView.jsx';
 import ValuesScreenView from '../../components/values/ValuesScreenView.jsx';
 import ChairsScreenView from '../../components/chairs/ChairsScreenView.jsx';
+import MugunghwaScreenView from '../../components/mugunghwa/MugunghwaScreenView.jsx';
 import MazeScreenView from '../../components/maze/MazeScreenView.jsx';
 import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
@@ -26,6 +27,7 @@ import { useYabawiGame } from '../../hooks/useYabawiGame.js';
 import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
 import { useMazeGame } from '../../hooks/useMazeGame.js';
 import { useChairsGame } from '../../hooks/useChairsGame.js';
+import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -56,6 +58,7 @@ export default function ScreenView() {
   const wordcloudGame = useWordcloudGame({ eventCode: code, initialState: init?.wordcloud });
   const mazeGame = useMazeGame({ eventCode: code, initialState: init?.maze });
   const chairsGame = useChairsGame({ eventCode: code, initialState: init?.chairs });
+  const mugunghwaGame = useMugunghwaGame({ eventCode: code, initialState: init?.mugunghwa });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -79,6 +82,7 @@ export default function ScreenView() {
   const wordcloudActive = wordcloudGame.state.status !== 'idle';
   const mazeActive = mazeGame.state.status !== 'idle';
   const chairsActive = chairsGame.state.status !== 'idle' || chairsGame.state.round > 0;
+  const mugunghwaActive = mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0;
   const gameActive =
     rpsActive ||
     liarActive ||
@@ -88,7 +92,8 @@ export default function ScreenView() {
     yabawiActive ||
     wordcloudActive ||
     mazeActive ||
-    chairsActive;
+    chairsActive ||
+    mugunghwaActive;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
@@ -106,6 +111,14 @@ export default function ScreenView() {
     content = <YabawiScreenView state={yabawiGame.state} />;
   } else if (wordcloudActive) {
     content = <WordcloudScreenView state={wordcloudGame.state} />;
+  } else if (mugunghwaActive) {
+    content = (
+      <MugunghwaScreenView
+        state={mugunghwaGame.state}
+        serverTime={mugunghwaGame.serverTime}
+        livePositions={mugunghwaGame.livePositions}
+      />
+    );
   } else if (chairsActive) {
     content = <ChairsScreenView state={chairsGame.state} serverTime={chairsGame.serverTime} />;
   } else if (mazeActive) {

@@ -4547,3 +4547,187 @@ a.role-opt {
   color: var(--rainbow-orange);
   font-weight: 600;
 }
+
+/* 무궁화꽃이 피었습니다 */
+
+.mg-stage {
+  padding-top: 14px;
+  border-top: 3px solid var(--rainbow-pink);
+}
+
+.mg-track {
+  --mg-line: var(--button-bg);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.mg-canvas {
+  display: block;
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+/* 초록불/빨간불 안내 — 참여자가 순간적으로 읽어야 해서 크고 굵게 */
+.mg-light {
+  margin: 0;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  padding: 14px 10px;
+  border-radius: 14px;
+}
+
+.mg-light--green {
+  color: var(--rainbow-green);
+  background: color-mix(in srgb, var(--rainbow-green) 12%, var(--surface));
+}
+
+.mg-light--red {
+  color: var(--rainbow-red);
+  background: color-mix(in srgb, var(--rainbow-red) 12%, var(--surface));
+}
+
+.mg-light--sprint {
+  color: var(--rainbow-blue);
+  background: color-mix(in srgb, var(--rainbow-blue) 12%, var(--surface));
+}
+
+.mg-countdown {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* 내 진행도 — 왼쪽 출발선, 오른쪽 영희 */
+.mg-bar {
+  position: relative;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--surface-muted, rgba(0, 0, 0, 0.06));
+  border: 1.5px solid var(--line);
+  overflow: hidden;
+}
+
+.mg-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 120ms linear;
+}
+
+.mg-bar__doll {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+}
+
+/* 도망칠 때 두드리는 버튼 — 화면을 크게 차지해야 연타가 쉽다 */
+.mg-tap {
+  width: 100%;
+  min-height: 130px;
+  border: 2px solid var(--rainbow-blue);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--rainbow-blue) 8%, var(--surface));
+  color: var(--rainbow-blue);
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.mg-tap:active {
+  background: color-mix(in srgb, var(--rainbow-blue) 20%, var(--surface));
+}
+
+.mg-doll-btn {
+  min-height: 64px;
+  font-size: 20px;
+}
+
+.mg-doll-btn--turn {
+  background: var(--rainbow-red);
+}
+
+.mg-mycolor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mg-mycolor__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+/* 대형화면 */
+.mg-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.mg-screen__head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.mg-screen__sound {
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+.mg-screen__chant {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(20px, 3.4vw, 46px);
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.mg-screen__chant--green { color: var(--rainbow-green); }
+.mg-screen__chant--red { color: var(--rainbow-red); }
+.mg-screen__chant--sprint { color: var(--rainbow-blue); }
+
+.mg-screen__winner {
+  margin: 8px 0;
+  font-size: clamp(36px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.mg-screen__big {
+  margin: 8px 0;
+  font-size: clamp(48px, 10vw, 120px);
+  line-height: 1;
+}
+
+.mg-screen__result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.mg-screen__out {
+  margin: 0;
+  font-size: clamp(16px, 2.4vw, 30px);
+  font-weight: 700;
+  color: var(--rainbow-red);
+}

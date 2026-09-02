@@ -35,6 +35,7 @@ export function useRealtimeSession(role, eventCode) {
             wordcloud: res.wordcloud,
             maze: res.maze,
             chairs: res.chairs,
+            mugunghwa: res.mugunghwa,
             scoreboard: res.scoreboard,
             event: res.event,
           });

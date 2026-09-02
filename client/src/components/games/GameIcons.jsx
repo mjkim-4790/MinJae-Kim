@@ -188,6 +188,21 @@ function ChairsIcon() {
   );
 }
 
+function MugunghwaIcon() {
+  // 무궁화 한 송이와 그 앞에 멈춰 선 사람 — "꽃 앞에서 얼어붙는다"
+  return (
+    <>
+      <circle cx="68" cy="30" r="7" {...LINE} strokeWidth={5} />
+      <path d="M68 16a8 8 0 0 1 0 14M68 44a8 8 0 0 0 0-14M55 23a8 8 0 0 1 13 7M81 37a8 8 0 0 0-13-7M55 37a8 8 0 0 0 13-7M81 23a8 8 0 0 1-13 7" {...LINE} strokeWidth={4} />
+      <path d="M68 44v22" {...LINE} strokeWidth={4} />
+      <circle cx="28" cy="30" r="8" {...LINE} strokeWidth={5} />
+      <path d="M28 38v24" {...LINE} strokeWidth={5} />
+      <path d="M28 62l-8 20M28 62l8 20" {...LINE} strokeWidth={5} />
+      <path d="M16 46h24" {...LINE} strokeWidth={5} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -220,6 +235,7 @@ const ICONS = {
   wordcloud: WordcloudIcon,
   maze: MazeIcon,
   chairs: ChairsIcon,
+  mugunghwa: MugunghwaIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

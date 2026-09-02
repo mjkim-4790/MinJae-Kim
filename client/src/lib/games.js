@@ -19,6 +19,7 @@ export const GAMES = [
   { id: 'wordcloud', name: '단어 구름', ready: true },
   { id: 'maze', name: '미로 찾기', ready: true },
   { id: 'chairs', name: '의자 빨리 뺏기', ready: true },
+  { id: 'mugunghwa', name: '무궁화꽃이 피었습니다', ready: true },
 ];
 
 export function gameById(id) {

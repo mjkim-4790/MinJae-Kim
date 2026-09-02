@@ -11,6 +11,7 @@ import { getYabawiSnapshot, getYourYabawiPick } from './yabawi.js';
 import { getWordcloudSnapshot, getYourWordcloudWords } from './wordcloud.js';
 import { getMazeSnapshot, getYourMazeFinish } from './maze.js';
 import { getChairsSnapshot, getYourChairsSeat } from './chairs.js';
+import { getMugunghwaSnapshot, getYourMugunghwaPos } from './mugunghwa.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { getLiarSnapshot, getYourLiarWord } from './liar.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
@@ -110,6 +111,8 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       yourMazeFinish: getYourMazeFinish(code, participant.id),
       chairs: getChairsSnapshot(code),
       yourChairsSeat: getYourChairsSeat(code, participant.id),
+      mugunghwa: getMugunghwaSnapshot(code),
+      yourMugunghwaPos: getYourMugunghwaPos(code, participant.id),
       scoreboard: buildScoreboard(event.id),
     });
     await broadcastPresence(io, code);
