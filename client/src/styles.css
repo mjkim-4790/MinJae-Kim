@@ -4731,3 +4731,9 @@ a.role-opt {
   font-weight: 700;
   color: var(--rainbow-red);
 }
+
+/* 시작 버튼이 막혀 있을 때 이유 안내 */
+.mg-blocked {
+  color: var(--rainbow-orange);
+  font-weight: 600;
+}

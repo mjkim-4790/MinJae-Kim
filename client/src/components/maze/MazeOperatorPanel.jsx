@@ -169,6 +169,9 @@ export default function MazeOperatorPanel({ game, participants }) {
         )}
 
         {error && <p className="error-text">{error}</p>}
+        {!error && activeCount === 0 && (
+          <p className="subtitle mg-blocked">참여자가 입장해야 시작할 수 있습니다 (지금 0명).</p>
+        )}
 
         {control === 'tilt' && (
           <p className={`subtitle${notReady > 0 ? ' maze-notready' : ''}`}>

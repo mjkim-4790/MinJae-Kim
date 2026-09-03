@@ -59,7 +59,16 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
   // 시작 전 / 라운드 사이
   if (state.status === 'idle' || state.status === 'ready' || state.status === 'ended') {
     const isNextRound = state.round > 0 && survivorCount > 1;
-    const canStart = isNextRound ? survivorCount >= 2 : activeCount >= 2;
+    // '참가자 중 무작위'는 영희가 주자에서 빠지므로 한 명이 더 필요하다
+    const need = dollMode === 'random' ? 3 : 2;
+    const have = isNextRound ? survivorCount : activeCount;
+    const canStart = have >= need;
+    // 버튼만 회색으로 막아두면 왜 안 되는지 알 수가 없다 (실제로 그렇게 막혀 있었다)
+    const blockedReason = canStart
+      ? null
+      : dollMode === 'random'
+        ? `참가자 중 영희를 뽑으려면 3명 이상이어야 합니다 (지금 ${have}명). 영희가 주자에서 빠지기 때문이에요 — '내가 영희'로 하면 2명부터 됩니다.`
+        : `참여자가 2명 이상 입장해야 시작할 수 있습니다 (지금 ${have}명).`;
 
     return (
       <div className="stack">
@@ -132,6 +141,7 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
         </p>
 
         {error && <p className="error-text">{error}</p>}
+        {!error && blockedReason && <p className="subtitle mg-blocked">{blockedReason}</p>}
 
         <button
           className="button"
