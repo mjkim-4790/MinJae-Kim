@@ -242,7 +242,8 @@ export function registerMugunghwaHandlers(io, socket) {
     const mode = payload.dollMode === 'random' ? 'random' : 'operator';
     let dollId = null;
     if (mode === 'random') {
-      if (pool.length < MIN_PARTICIPANTS + 1) {
+      // 영희 1명 + 주자 최소 1명
+      if (pool.length < 2) {
         return reply({ ok: false, error: 'NOT_ENOUGH_FOR_RANDOM_DOLL' });
       }
       dollId = pickDoll(pool);

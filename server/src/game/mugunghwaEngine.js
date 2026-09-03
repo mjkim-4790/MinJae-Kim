@@ -24,7 +24,10 @@ export const STRICTNESS = [
   { id: 'strict', name: '엄격', desc: '살짝만 움직여도 탈락', moveThreshold: 0.7 },
 ];
 
-export const MIN_PARTICIPANTS = 2;
+// 혼자서도 굴려볼 수 있게 1명부터 시작된다 (진행자가 리허설하거나 직접 해볼 때).
+// 단, '참가자 중 영희 뽑기'는 영희가 주자에서 빠지므로 2명이 필요하다 —
+// 그 검사는 realtime/mugunghwa.js 가 따로 한다.
+export const MIN_PARTICIPANTS = 1;
 export const FREEZE_GRACE_MS = 500; // 빨간불이 된 뒤 멈출 시간을 준다 (반응 시간 + 통신 지연)
 export const SPRINT_MS = 10000; // 2단계 제한시간
 export const APPROACH_SPEED = 0.1; // 최대로 흔들 때 초당 나아가는 거리
