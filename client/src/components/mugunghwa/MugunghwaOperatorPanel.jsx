@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
+import DollChase from './DollChase.jsx';
 import { STRICTNESS } from '../../lib/mugunghwa.js';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 
@@ -190,9 +191,13 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
           </>
         )}
 
+        {/* 도망 구간에서는 진행자가 영희일 때 직접 쫓아간다 */}
+        {iAmDoll && state.status === 'sprinting' && <DollChase game={game} />}
+
         {!iAmDoll && (
           <p className="subtitle">
-            영희: <strong>{state.doll?.nickname}</strong> — 그분 폰에서 돌아보기를 조작합니다.
+            영희: <strong>{state.doll?.nickname}</strong> — 그분 폰에서 돌아보기와 쫓기를
+            조작합니다.
           </p>
         )}
 

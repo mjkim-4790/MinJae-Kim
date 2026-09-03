@@ -78,6 +78,15 @@ export function useMugunghwaGame({ eventCode, initialState, initialYourPos }) {
     [eventCode],
   );
 
+  /** 영희가 쫓아온다 — 두드린 횟수를 모아 보낸다 (ack 없음, 위치 보고와 같은 이유). */
+  const chase = useCallback(
+    (taps) => {
+      if (!taps) return;
+      socket.emit('mugunghwa:chase', { eventCode, taps });
+    },
+    [eventCode],
+  );
+
   /** 영희가 등을 돌리거나(green=true) 돌아본다(false). */
   const setLight = useCallback(
     (green) =>
@@ -125,6 +134,7 @@ export function useMugunghwaGame({ eventCode, initialState, initialYourPos }) {
     livePositions,
     serverTime,
     sendPos,
+    chase,
     setLight,
     start,
     prepare,

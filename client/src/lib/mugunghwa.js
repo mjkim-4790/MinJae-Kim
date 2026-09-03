@@ -5,6 +5,7 @@ export const APPROACH_SPEED = 0.1; // 최대로 흔들 때 초당 나아가는 �
 export const TAP_GAIN = 0.02; // 연타 한 번에 되돌아가는 거리
 export const TOUCH_REACH = 0.985;
 export const POSITION_SEND_MS = 80; // 위치 보고 간격 (약 12Hz)
+export const DOLL_CHASE_DELAY_MS = 1000; // 도망 시작 후 영희가 몸을 돌리는 시간
 
 // 흔들기 세기를 0~1 로 바꿀 때 쓰는 범위.
 // 손떨림(0.2~0.5)은 걸러내고, 걷듯이 흔드는 3 이상이면 최대 속도가 되게 잡았다.

@@ -33,10 +33,17 @@ export const SPRINT_MS = 10000; // 2단계 제한시간
 export const APPROACH_SPEED = 0.1; // 최대로 흔들 때 초당 나아가는 거리
 export const TAP_GAIN = 0.02; // 2단계에서 한 번 두드릴 때 나아가는 거리
 
+// 도망이 시작되면 영희도 쫓아온다 (전통 놀이 그대로 — 술래가 잡으러 온다).
+// 영희(1.0)와 터치한 사람(0.985)이 거의 같은 자리라 바로 두드리면 한 방에 잡힌다.
+// 몸을 돌리는 시간을 줘서, 그 뒤로는 '더 빨리 두드린 쪽이 이기는' 공정한 추격이 되게 한다.
+export const DOLL_CHASE_DELAY_MS = 1000;
+export const DOLL_START_POS = 1;
+
 // 점수
 const WIN_POINTS = 150; // 최후의 1인
 const SURVIVE_POINTS = 20; // 라운드를 넘길 때마다
 const TOUCH_BONUS = 50; // 영희를 터치한 사람
+const DOLL_CATCH_POINTS = 30; // 영희가 한 명 잡을 때마다
 
 export function strictnessById(id) {
   return STRICTNESS.find((s) => s.id === id) ?? null;
@@ -101,6 +108,27 @@ export function pointsFor({ outcome, survived, touchedDoll }) {
   if (survived) points += outcome === 'ended' ? WIN_POINTS : SURVIVE_POINTS;
   if (touchedDoll) points += TOUCH_BONUS;
   return points;
+}
+
+/**
+ * 영희가 이 주자를 추월했는가.
+ *
+ * 도망 구간에서는 둘 다 1(영희 앞) → 0(출발선) 방향으로 달린다. 그래서 영희의
+ * 위치가 주자보다 작아지면(더 출발선에 가까워지면) 지나쳐 잡은 것이다.
+ */
+export function overtaken(dollPos, runnerPos) {
+  return clampPos(runnerPos) >= clampPos(dollPos);
+}
+
+/** 영희가 쫓기 시작할 수 있는 시각인지. */
+export function canChaseYet(sprintStartedAt, now) {
+  if (sprintStartedAt == null) return false;
+  return now - sprintStartedAt >= DOLL_CHASE_DELAY_MS;
+}
+
+/** 영희가 받을 점수 — 잡은 사람 수만큼. */
+export function dollPoints(catchCount) {
+  return Math.max(0, Math.floor(Number(catchCount) || 0)) * DOLL_CATCH_POINTS;
 }
 
 /** 참가자 중 한 명을 영희로 뽑는다. */

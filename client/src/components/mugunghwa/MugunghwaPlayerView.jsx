@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
+import DollChase from './DollChase.jsx';
 import { useMotion } from '../../hooks/useMotion.js';
 import {
   APPROACH_SPEED,
@@ -12,7 +13,7 @@ import {
 import { springPop, springTap } from '../../lib/motionPresets.js';
 
 /** 영희를 맡은 참가자의 조작 화면. */
-function DollControl({ state, setLight }) {
+function DollControl({ game, state, setLight }) {
   const [busy, setBusy] = useState(false);
   const flip = async (green) => {
     setBusy(true);
@@ -20,13 +21,12 @@ function DollControl({ state, setLight }) {
     setBusy(false);
   };
 
+  // 도망 구간 — 이제 영희가 쫓아간다
+  if (state.status === 'sprinting') return <DollChase game={game} />;
+
   if (state.status !== 'approaching') {
     return (
-      <p className="subtitle">
-        {state.status === 'sprinting'
-          ? '잡혔습니다! 다들 출발선으로 도망가는 중이에요'
-          : '당신이 영희입니다. 라운드가 시작되면 조종할 수 있어요'}
-      </p>
+      <p className="subtitle">당신이 영희입니다. 라운드가 시작되면 조종할 수 있어요</p>
     );
   }
 
@@ -187,11 +187,12 @@ export default function MugunghwaPlayerView({ game, participantId }) {
     return (
       <section className="panel stack mg-stage">
         <h2 className="panel__title">당신이 영희입니다 🌺</h2>
-        <DollControl state={state} setLight={setLight} />
+        <DollControl game={game} state={state} setLight={setLight} />
         {state.status === 'result' && (
           <p className="subtitle">
             잡힌 사람 {state.result?.eliminated?.length ?? 0}명 · 살아남은 사람{' '}
             {state.result?.survivors?.length ?? 0}명
+            {state.dollCatchCount > 0 && ` · 내가 쫓아가 잡은 사람 ${state.dollCatchCount}명 (+${state.dollCatchCount * 30}점)`}
           </p>
         )}
       </section>
@@ -221,7 +222,13 @@ export default function MugunghwaPlayerView({ game, participantId }) {
 
       {state.status === 'result' && (
         <p className={`chairs-verdict ${me.caught ? 'chairs-verdict--out' : me.home ? 'chairs-verdict--safe' : 'chairs-verdict--out'}`}>
-          {me.caught ? '움직여서 잡혔어요…' : me.home ? '무사히 돌아왔어요!' : '시간 안에 못 돌아왔어요…'}
+          {me.caughtByDoll
+            ? '영희에게 잡혔어요…'
+            : me.caught
+              ? '움직여서 잡혔어요…'
+              : me.home
+                ? '무사히 돌아왔어요!'
+                : '시간 안에 못 돌아왔어요…'}
         </p>
       )}
 
@@ -232,7 +239,9 @@ export default function MugunghwaPlayerView({ game, participantId }) {
       {running && (
         <>
           {me.caught ? (
-            <p className="chairs-verdict chairs-verdict--out">잡혔습니다! 다음 라운드를 기다려요</p>
+            <p className="chairs-verdict chairs-verdict--out">
+              {me.caughtByDoll ? '영희에게 잡혔습니다!' : '잡혔습니다!'} 다음 라운드를 기다려요
+            </p>
           ) : me.home ? (
             <p className="chairs-verdict chairs-verdict--safe">출발선 도착! 살았어요</p>
           ) : (

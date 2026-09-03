@@ -4737,3 +4737,21 @@ a.role-opt {
   color: var(--rainbow-orange);
   font-weight: 600;
 }
+
+/* 영희가 쫓아갈 때 두드리는 버튼 */
+.mg-tap--doll {
+  border-color: var(--rainbow-red);
+  background: color-mix(in srgb, var(--rainbow-red) 8%, var(--surface));
+  color: var(--rainbow-red);
+}
+
+.mg-tap--doll:active {
+  background: color-mix(in srgb, var(--rainbow-red) 20%, var(--surface));
+}
+
+.mg-tap--doll:disabled {
+  border-color: var(--line);
+  background: var(--surface-muted, rgba(0, 0, 0, 0.04));
+  color: var(--muted);
+  cursor: default;
+}

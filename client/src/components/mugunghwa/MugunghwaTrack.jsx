@@ -132,17 +132,23 @@ export default function MugunghwaTrack({ state, positions }) {
     return m;
   }, [state.runners]);
 
+  const dollTargetRef = useRef(1);
+  const dollDrawnRef = useRef(1);
+
   useEffect(() => {
     if (!positions?.runners) return;
     const next = new Map();
     positions.runners.forEach((r) => next.set(r.participantId, r));
     targetRef.current = next;
+    if (typeof positions.dollPos === 'number') dollTargetRef.current = positions.dollPos;
   }, [positions]);
 
   // 새 라운드가 시작되면 잔상을 지운다
   useEffect(() => {
     drawnRef.current = new Map();
     targetRef.current = new Map();
+    dollTargetRef.current = 1;
+    dollDrawnRef.current = 1;
   }, [state.round]);
 
   useLayoutEffect(() => {
@@ -229,12 +235,13 @@ export default function MugunghwaTrack({ state, positions }) {
       ctx.textAlign = 'center';
       ctx.fillText('출발선', startX, bandBottom + size.h * 0.11);
 
-      // 영희 — 레인 한가운데 서 있다
+      // 영희 — 접근 구간에는 제자리, 도망 구간에는 쫓아 달린다
       const dollY = (bandTop + bandBottom) / 2 + size.h * 0.06;
-      drawDoll(ctx, dollX, dollY, Math.min(size.h * 0.34, (bandBottom - bandTop) * 0.7 + size.h * 0.1), green);
-      ctx.fillStyle = green ? '#c9971f' : '#d84848';
+      const dollDrawX = startX + (dollX - startX) * (sprinting ? dollDrawnRef.current : 1);
+      drawDoll(ctx, dollDrawX, dollY, Math.min(size.h * 0.34, (bandBottom - bandTop) * 0.7 + size.h * 0.1), green && !sprinting);
+      ctx.fillStyle = sprinting ? '#d84848' : green ? '#c9971f' : '#d84848';
       ctx.font = `700 ${Math.round(size.h * 0.075)}px system-ui, sans-serif`;
-      ctx.fillText(state.doll?.nickname ?? '영희', dollX, bandBottom + size.h * 0.11);
+      ctx.fillText(state.doll?.nickname ?? '영희', dollDrawX, bandBottom + size.h * 0.11);
 
       // 주자들
       const drawn = drawnRef.current;
@@ -275,6 +282,7 @@ export default function MugunghwaTrack({ state, positions }) {
       phaseRef.current += dt * 11; // 다리 흔드는 속도
 
       const follow = Math.min(1, dt * FOLLOW_PER_SEC);
+      dollDrawnRef.current += (dollTargetRef.current - dollDrawnRef.current) * follow;
       const drawn = drawnRef.current;
       targetRef.current.forEach((t, id) => {
         const cur = drawn.get(id);

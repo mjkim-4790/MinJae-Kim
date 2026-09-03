@@ -3,15 +3,20 @@ import { getEventByCode } from '../db/events.js';
 import { addScore, getParticipantById, listParticipantsByEvent } from '../db/participants.js';
 import { shuffle } from '../game/acrosticEngine.js';
 import {
+  DOLL_START_POS,
   MIN_PARTICIPANTS,
   SPRINT_MS,
+  canChaseYet,
   clampPos,
+  dollPoints,
   movedOnRed,
+  overtaken,
   pickDoll,
   pointsFor,
   reachedDoll,
   reachedHome,
   resolveRound,
+  sprintStep,
   strictnessById,
 } from '../game/mugunghwaEngine.js';
 import { isAuthorizedOperator } from './authz.js';
@@ -48,7 +53,10 @@ function createInitialState() {
     caught: new Set(), // 빨간불에 움직여 잡힌 사람
     home: new Set(), // 출발선으로 돌아온 사람
     toucherId: null, // 영희를 처음 터치한 사람
+    sprintStartedAt: null,
     sprintEndsAt: null,
+    dollPos: DOLL_START_POS, // 도망 구간에서 영희가 쫓아온 위치
+    caughtByDoll: new Set(), // 영희가 추월해서 잡은 사람 (점수 계산용)
     lastResult: null,
   };
 }
@@ -85,7 +93,10 @@ function publicState(state) {
     dollId: state.dollId,
     green: state.green,
     lightChangedAt: state.lightChangedAt,
+    sprintStartedAt: state.sprintStartedAt,
     sprintEndsAt: state.sprintEndsAt,
+    dollPos: state.dollPos,
+    dollCatchCount: state.caughtByDoll.size,
     serverNow: Date.now(),
     // 주자 명단 — 화면이 사람 모양을 그리고, 각자는 여기서 자기 색을 찾는다
     runners: state.activePool.map((id, i) => ({
@@ -93,6 +104,8 @@ function publicState(state) {
       participantId: id,
       colorIndex: i,
       caught: state.caught.has(id),
+      // 빨간불에 움직여 잡힌 것과 영희에게 쫓겨 잡힌 것을 구분해서 보여준다
+      caughtByDoll: state.caughtByDoll.has(id),
       home: state.home.has(id),
     })),
     eliminatedIds: state.eliminatedIds,
@@ -120,6 +133,7 @@ function broadcastPositions(io, code) {
 
   io.to(roleRoom(code, 'screen')).emit('mugunghwa:positions', {
     at: Date.now(),
+    dollPos: state.dollPos,
     runners: state.activePool.map((id) => ({
       participantId: id,
       pos: state.positions.get(id) ?? 0,
@@ -137,6 +151,17 @@ export function getMugunghwaSnapshot(eventCode) {
 export function getYourMugunghwaPos(eventCode, participantId) {
   const state = getState(eventCode);
   return state.positions.has(participantId) ? state.positions.get(participantId) : null;
+}
+
+/**
+ * 더 지켜볼 사람이 없으면(전원 잡혔거나 들어왔으면) 제한시간을 기다리지 않는다.
+ * 예전에는 '전원 복귀'만 봐서, 잡힌 사람이 섞이면 10초를 멍하니 기다렸다.
+ */
+function endIfSettled(io, code) {
+  const state = getState(code);
+  if (state.status !== 'sprinting') return;
+  const done = state.activePool.filter((id) => state.caught.has(id) || state.home.has(id)).length;
+  if (done >= state.activePool.length) endRound(io, code);
 }
 
 function endRound(io, code) {
@@ -157,7 +182,9 @@ function startSprint(io, code, toucherId) {
   state.status = 'sprinting';
   state.green = true; // 더 이상 빨간불은 없다 (도망치는 구간)
   state.redSince = null;
-  state.sprintEndsAt = Date.now() + SPRINT_MS;
+  state.sprintStartedAt = Date.now();
+  state.sprintEndsAt = state.sprintStartedAt + SPRINT_MS;
+  state.dollPos = DOLL_START_POS;
   broadcastNow(io, code);
 
   const t = timers.get(code) ?? {};
@@ -261,7 +288,10 @@ export function registerMugunghwaHandlers(io, socket) {
     state.caught = new Set();
     state.home = new Set();
     state.toucherId = null;
+    state.sprintStartedAt = null;
     state.sprintEndsAt = null;
+    state.dollPos = DOLL_START_POS;
+    state.caughtByDoll = new Set();
     state.lastResult = null;
 
     reply({ ok: true });
@@ -323,8 +353,48 @@ export function registerMugunghwaHandlers(io, socket) {
     } else if (reachedHome(pos)) {
       state.home.add(id);
       broadcastNow(io, code);
-      // 전원이 들어왔으면 제한시간을 기다리지 않는다
-      if (state.home.size >= state.activePool.length) endRound(io, code);
+      endIfSettled(io, code);
+    } else if (overtaken(state.dollPos, pos)) {
+      // 영희가 이미 지나쳐 간 자리에 있다 — 뒤늦게 보고가 와도 잡는다
+      state.caught.add(id);
+      state.caughtByDoll.add(id);
+      broadcastNow(io, code);
+      endIfSettled(io, code);
+    }
+  });
+
+  /**
+   * 영희가 쫓아온다 — 도망 구간에서만.
+   * 두드린 만큼 출발선 쪽으로 나아가고, 지나친 주자는 모두 잡힌다.
+   * 진행자가 영희일 때도 같은 규칙이라 어느 쪽이든 설명이 같다.
+   */
+  socket.on('mugunghwa:chase', (payload = {}) => {
+    const code = normalizeEventCode(payload.eventCode);
+    const state = getState(code);
+    if (!isDoll(socket, state, code)) return;
+    if (state.status !== 'sprinting') return;
+    // 몸을 돌리는 시간 — 이게 없으면 터치한 사람이 한 번의 두드림에 바로 잡힌다
+    if (!canChaseYet(state.sprintStartedAt, Date.now())) return;
+
+    const step = sprintStep(payload.taps);
+    if (step <= 0) return;
+
+    state.dollPos = clampPos(state.dollPos - step);
+
+    let caughtNow = false;
+    state.activePool.forEach((id) => {
+      if (state.caught.has(id) || state.home.has(id)) return;
+      const pos = state.positions.get(id) ?? 0;
+      if (overtaken(state.dollPos, pos)) {
+        state.caught.add(id);
+        state.caughtByDoll.add(id);
+        caughtNow = true;
+      }
+    });
+
+    if (caughtNow) {
+      broadcastNow(io, code);
+      endIfSettled(io, code);
     }
   });
 
@@ -371,6 +441,11 @@ export function registerMugunghwaHandlers(io, socket) {
         });
         if (points > 0) addScore(id, points);
       });
+      // 영희도 잡은 사람 수만큼 받는다 (참가자가 영희일 때만 — 진행자는 점수가 없다)
+      if (state.dollId != null) {
+        const dp = dollPoints(state.caughtByDoll.size);
+        if (dp > 0) addScore(state.dollId, dp);
+      }
       broadcastScoreboard(io, code, event.id);
     }
 
