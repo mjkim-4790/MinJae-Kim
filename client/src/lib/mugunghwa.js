@@ -45,23 +45,73 @@ export function clampPos(pos) {
   return Math.min(1, Math.max(0, p));
 }
 
+// 구호를 끊어 읽을 덩이. 한 문장으로 읽으면 그냥 안내방송처럼 들린다.
+// 덩이로 나눠 큐에 넣으면 사이가 살짝 벌어져 인형이 또박또박 읊는 느낌이 난다.
+const CHANT_CHUNKS = ['무궁화', '꽃이', '피었습니다'];
+
+// 어린아이 목소리를 만드는 값. pitch 는 브라우저 상한이 2 인데, 2.0 은 소리가
+// 깨져서 바로 아래에 둔다.
+const CHILD_PITCH = 1.9;
+
+// 라운드가 올라갈수록 빨라진다 — 뒤로 갈수록 숨막히게.
+const BASE_RATE = 1.0;
+const RATE_PER_ROUND = 0.16;
+const MAX_RATE = 1.9;
+
+/** 이번 라운드의 구호 속도. */
+export function chantRate(round) {
+  const n = Math.max(1, Math.floor(Number(round) || 1));
+  return Math.min(MAX_RATE, BASE_RATE + (n - 1) * RATE_PER_ROUND);
+}
+
+// 어느 한국어 목소리를 고르느냐가 음높이보다 결과를 더 크게 좌우한다.
+// 각 OS 의 표준 목소리 이름 — 음높이를 올렸을 때 아이처럼 들리는 것들이다.
+const PREFERRED_VOICES = ['yuna', 'heami', 'sunhi', 'google', 'nara', 'sora', '한국'];
+
+// macOS 는 Korean 목록 맨 앞에 장난 목소리를 둔다. 그냥 첫 번째를 집으면
+// 어린아이가 아니라 코미디가 된다 (실제로 Eddy 가 잡혔다).
+const NOVELTY_VOICES = ['eddy', 'flo', 'grandma', 'grandpa', 'reed', 'rocko', 'sandy', 'shelley'];
+
+/** 아이 목소리로 쓸 한국어 음성을 고른다. 못 찾으면 null (브라우저 기본값). */
+export function pickChantVoice(voices) {
+  const ko = (voices ?? []).filter((v) => v.lang?.startsWith('ko'));
+  if (ko.length === 0) return null;
+  const name = (v) => (v.name ?? '').toLowerCase();
+  for (const want of PREFERRED_VOICES) {
+    const hit = ko.find((v) => name(v).includes(want));
+    if (hit) return hit;
+  }
+  return ko.find((v) => !NOVELTY_VOICES.some((n) => name(v).includes(n))) ?? ko[0];
+}
+
 /**
- * "무궁화꽃이 피었습니다"를 한국어로 읽어준다 (대형화면 전용).
+ * "무궁화꽃이 피었습니다"를 읽어준다 (대형화면 전용).
  *
  * 음원 없이 브라우저 음성 합성을 쓴다 — 외국인 참가자가 이 문장 자체를 듣고
  * 배우는 게 이 게임의 재미 중 하나다. 한국어 목소리가 없는 PC 도 있어서,
  * 없으면 조용히 넘어가고 화면 자막으로 대신한다.
+ *
+ * 음높이를 끝까지 올려 어린아이 목소리로 만든다. 드라마의 실제 음원은 저작권이
+ * 있어 쓸 수 없어서, 합성 음성으로 그 분위기에 가깝게 맞춘 것이다.
+ *
+ * @param round 라운드 번호 (뒤로 갈수록 빨라진다)
  */
-export function speakChant(rate = 1) {
+export function speakChant(round = 1) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return false;
   try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance('무궁화 꽃이 피었습니다');
-    u.lang = 'ko-KR';
-    u.rate = Math.min(2, Math.max(0.5, rate));
-    const korean = window.speechSynthesis.getVoices().find((v) => v.lang?.startsWith('ko'));
-    if (korean) u.voice = korean;
-    window.speechSynthesis.speak(u);
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const korean = pickChantVoice(synth.getVoices());
+    const rate = chantRate(round);
+    for (const chunk of CHANT_CHUNKS) {
+      const u = new SpeechSynthesisUtterance(chunk);
+      u.lang = 'ko-KR';
+      u.rate = rate;
+      u.pitch = CHILD_PITCH;
+      u.volume = 1;
+      if (korean) u.voice = korean;
+      synth.speak(u);
+    }
     return true;
   } catch {
     return false;

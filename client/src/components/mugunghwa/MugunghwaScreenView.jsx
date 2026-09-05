@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import MugunghwaTrack from './MugunghwaTrack.jsx';
 import { speakChant, stopChant } from '../../lib/mugunghwa.js';
+import { dispose as disposeAudio, headTurn, unlock } from '../../lib/mugunghwaAudio.js';
 import { springPop, springSettle } from '../../lib/motionPresets.js';
 
 /**
@@ -32,16 +33,29 @@ export default function MugunghwaScreenView({ state, serverTime, livePositions }
       return;
     }
     if (prev === state.green) return;
-    if (state.green) speakChant();
-    else stopChant();
-  }, [state.green, state.status, soundOn]);
+    if (state.green) {
+      speakChant(state.round);
+    } else {
+      // 돌아보는 순간 — 구호를 뚝 끊고 고개 돌아가는 기계음을 낸다.
+      // prev 가 null 이면 라운드 도중에 화면을 켠 것뿐이라 소리를 내지 않는다.
+      stopChant();
+      if (prev !== null) headTurn();
+    }
+  }, [state.green, state.status, state.round, soundOn]);
 
-  useEffect(() => () => stopChant(), []);
+  useEffect(
+    () => () => {
+      stopChant();
+      disposeAudio();
+    },
+    [],
+  );
 
   const enableSound = () => {
-    // 첫 발화는 클릭 안에서 해야 브라우저가 막지 않는다
+    // 첫 발화와 오디오 잠금 해제는 클릭 안에서 해야 브라우저가 막지 않는다
     speakChant();
     stopChant();
+    unlock();
     setSoundOn(true);
   };
 
