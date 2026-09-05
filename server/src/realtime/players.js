@@ -119,6 +119,11 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
   });
 }
 
+/** 이 참가자가 지금 붙어 있는 소켓 id (없으면 null). 특정 한 명에게만 보낼 때 쓴다. */
+export function socketIdOf(participantId) {
+  return socketIdByParticipant.get(participantId) ?? null;
+}
+
 export function clearPlayerSocket(participantId, socketId) {
   if (socketIdByParticipant.get(participantId) === socketId) {
     socketIdByParticipant.delete(participantId);

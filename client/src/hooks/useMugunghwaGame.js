@@ -24,7 +24,7 @@ export function useMugunghwaGame({ eventCode, initialState, initialYourPos }) {
   const [state, setState] = useState(initialState ?? IDLE_STATE);
   const [myPos, setMyPos] = useState(initialYourPos ?? 0);
   const [dismissed, setDismissed] = useState(false);
-  const [livePositions, setLivePositions] = useState(null); // 대형화면만 받는다
+  const [livePositions, setLivePositions] = useState(null); // 대형화면과 영희만 받는다
   const offsetRef = useRef(0);
   const lastSentRef = useRef(0);
 

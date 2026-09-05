@@ -238,10 +238,28 @@ export default function MugunghwaTrack({ state, positions }) {
       // 영희 — 접근 구간에는 제자리, 도망 구간에는 쫓아 달린다
       const dollY = (bandTop + bandBottom) / 2 + size.h * 0.06;
       const dollDrawX = startX + (dollX - startX) * (sprinting ? dollDrawnRef.current : 1);
+
+      // 쫓아온 자취 — 영희가 실제로 움직이고 있다는 걸 한눈에 보이게 한다
+      if (sprinting && dollDrawnRef.current < 0.995) {
+        ctx.strokeStyle = '#d84848';
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = Math.max(3, size.h * 0.02);
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(dollX, dollY);
+        ctx.lineTo(dollDrawX, dollY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
       drawDoll(ctx, dollDrawX, dollY, Math.min(size.h * 0.34, (bandBottom - bandTop) * 0.7 + size.h * 0.1), green && !sprinting);
       ctx.fillStyle = sprinting ? '#d84848' : green ? '#c9971f' : '#d84848';
       ctx.font = `700 ${Math.round(size.h * 0.075)}px system-ui, sans-serif`;
-      ctx.fillText(state.doll?.nickname ?? '영희', dollDrawX, bandBottom + size.h * 0.11);
+      ctx.fillText(
+        sprinting ? `${state.doll?.nickname ?? '영희'} 추격!` : (state.doll?.nickname ?? '영희'),
+        dollDrawX,
+        bandBottom + size.h * 0.11,
+      );
 
       // 주자들
       const drawn = drawnRef.current;

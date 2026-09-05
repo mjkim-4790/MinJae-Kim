@@ -20,6 +20,7 @@ import {
   strictnessById,
 } from '../game/mugunghwaEngine.js';
 import { isAuthorizedOperator } from './authz.js';
+import { socketIdOf } from './players.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 import { broadcastScoreboard } from './scoreboard.js';
 
@@ -126,12 +127,29 @@ function broadcastNow(io, code) {
   io.to(eventRoom(code)).emit('mugunghwa:state', publicState(getState(code)));
 }
 
-/** 위치는 대형화면에만 보낸다 (참여자 폰은 자기 것만 보므로 받을 이유가 없다). */
+/**
+ * 위치 중계 — 대형화면과 '영희'에게만 보낸다.
+ *
+ * 주자 폰은 자기 위치만 알면 되지만, 영희는 누구를 어디까지 쫓았는지 봐야 한다.
+ * 예전에는 영희 화면에 두드리는 버튼만 있어서 자기가 쫓고 있는지조차 알 수 없었다.
+ * 그렇다고 전원에게 뿌리면 12Hz × 인원수가 되므로, 영희 한 명만 따로 넣는다.
+ */
 function broadcastPositions(io, code) {
   const state = getState(code);
   if (state.status !== 'approaching' && state.status !== 'sprinting') return;
 
-  io.to(roleRoom(code, 'screen')).emit('mugunghwa:positions', {
+  // .to() 는 대상을 더한 '새' 객체를 돌려준다 — 반환값을 다시 담지 않으면 아무 일도 안 일어난다
+  let targets = io.to(roleRoom(code, 'screen'));
+  if (state.dollId != null) {
+    const sid = socketIdOf(state.dollId);
+    if (sid) targets = targets.to(sid);
+  } else {
+    // 진행자가 영희인 경우 — 노트북 패널에서도 쫓는 모습을 봐야 한다.
+    // 진행자는 보통 한 명이라 12Hz 를 더 얹어도 부담이 없다.
+    targets = targets.to(roleRoom(code, 'operator'));
+  }
+
+  targets.emit('mugunghwa:positions', {
     at: Date.now(),
     dollPos: state.dollPos,
     runners: state.activePool.map((id) => ({

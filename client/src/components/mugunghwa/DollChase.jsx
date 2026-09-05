@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import MugunghwaTrack from './MugunghwaTrack.jsx';
 import { DOLL_CHASE_DELAY_MS, POSITION_SEND_MS } from '../../lib/mugunghwa.js';
 
 /**
@@ -11,7 +12,7 @@ import { DOLL_CHASE_DELAY_MS, POSITION_SEND_MS } from '../../lib/mugunghwa.js';
  * 두드림은 모아서 12Hz 로 보낸다 — 누를 때마다 소켓을 쏘면 연타가 곧 폭주가 된다.
  */
 export default function DollChase({ game }) {
-  const { state, chase, serverTime } = game;
+  const { state, chase, serverTime, livePositions } = game;
   const tapsRef = useRef(0);
   const [taps, setTaps] = useState(0);
   const [, tick] = useState(0);
@@ -72,6 +73,9 @@ export default function DollChase({ game }) {
           ? `몸을 돌리는 중… ${(waitLeft / 1000).toFixed(1)}`
           : `쫓아가세요! ${(msLeft / 1000).toFixed(1)}초`}
       </p>
+
+      {/* 영희도 트랙을 본다 — 누구를 어디까지 쫓았는지 알아야 두드릴 맛이 난다 */}
+      <MugunghwaTrack state={state} positions={livePositions} />
 
       <button
         type="button"
