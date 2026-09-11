@@ -14,6 +14,7 @@ import { getChairsSnapshot, getYourChairsSeat } from './chairs.js';
 import { getMugunghwaSnapshot, getYourMugunghwaPos } from './mugunghwa.js';
 import { getColorhuntSnapshot, getYourColorhunt } from './colorhunt.js';
 import { getLaterpsSnapshot } from './laterps.js';
+import { getSilhouetteSnapshot } from './silhouette.js';
 import { getOrCreateState, publicChatState } from './eventState.js';
 import { getLiarSnapshot, getYourLiarWord } from './liar.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
@@ -116,6 +117,7 @@ export function registerPlayerHandlers(io, socket, { broadcastPresence }) {
       mugunghwa: getMugunghwaSnapshot(code),
       yourMugunghwaPos: getYourMugunghwaPos(code, participant.id),
       laterps: getLaterpsSnapshot(code),
+      silhouette: getSilhouetteSnapshot(code),
       colorhunt: getColorhuntSnapshot(code),
       yourColorhunt: getYourColorhunt(code, participant.id),
       scoreboard: buildScoreboard(event.id),

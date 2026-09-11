@@ -203,6 +203,19 @@ function MugunghwaIcon() {
   );
 }
 
+function SilhouetteIcon() {
+  // 사람 모양 실루엣과 그 위에 겹친 사람 — "이 모양에 몸을 맞춰라"
+  return (
+    <>
+      <rect x="10" y="10" width="80" height="80" rx="10" {...LINE} strokeWidth={5} />
+      <circle cx="50" cy="30" r="8" {...LINE} strokeWidth={5} />
+      <path d="M50 38v24" {...LINE} strokeWidth={5} />
+      <path d="M26 44h48" {...LINE} strokeWidth={5} />
+      <path d="M50 62l-12 20M50 62l12 20" {...LINE} strokeWidth={5} />
+    </>
+  );
+}
+
 function LaterpsIcon() {
   // 화면 밖으로 내민 손 + 그 앞에 뜬 물음표 — "무엇을 내야 하지?"
   return (
@@ -264,6 +277,7 @@ const ICONS = {
   mugunghwa: MugunghwaIcon,
   colorhunt: ColorhuntIcon,
   laterps: LaterpsIcon,
+  silhouette: SilhouetteIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

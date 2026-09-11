@@ -22,6 +22,7 @@ export const GAMES = [
   { id: 'mugunghwa', name: '무궁화꽃이 피었습니다', ready: true },
   { id: 'colorhunt', name: '색깔 사냥', ready: true },
   { id: 'laterps', name: '후출 가위바위보', ready: true },
+  { id: 'silhouette', name: '실루엣 통과', ready: true },
 ];
 
 export function gameById(id) {

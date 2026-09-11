@@ -14,6 +14,7 @@ import ChairsOperatorPanel from '../../components/chairs/ChairsOperatorPanel.jsx
 import MugunghwaOperatorPanel from '../../components/mugunghwa/MugunghwaOperatorPanel.jsx';
 import ColorhuntOperatorPanel from '../../components/colorhunt/ColorhuntOperatorPanel.jsx';
 import LaterpsOperatorPanel from '../../components/laterps/LaterpsOperatorPanel.jsx';
+import SilhouetteOperatorPanel from '../../components/silhouette/SilhouetteOperatorPanel.jsx';
 import MazeOperatorPanel from '../../components/maze/MazeOperatorPanel.jsx';
 import WordcloudOperatorPanel from '../../components/wordcloud/WordcloudOperatorPanel.jsx';
 import YabawiOperatorPanel from '../../components/yabawi/YabawiOperatorPanel.jsx';
@@ -28,6 +29,7 @@ import { useChairsGame } from '../../hooks/useChairsGame.js';
 import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
 import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
+import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -86,6 +88,7 @@ export default function OperatorEventDetail() {
   const mugunghwaGame = useMugunghwaGame({ eventCode: event?.code, initialState: init?.mugunghwa });
   const colorhuntGame = useColorhuntGame({ eventCode: event?.code, initialState: init?.colorhunt });
   const laterpsGame = useLaterpsGame({ eventCode: event?.code, initialState: init?.laterps });
+  const silhouetteGame = useSilhouetteGame({ eventCode: event?.code, initialState: init?.silhouette });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -121,6 +124,7 @@ export default function OperatorEventDetail() {
       ['mugunghwa', mugunghwaGame],
       ['colorhunt', colorhuntGame],
       ['laterps', laterpsGame],
+      ['silhouette', silhouetteGame],
     ].find(([, g]) => g.state.status !== 'idle')?.[0] ?? null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
@@ -340,6 +344,9 @@ export default function OperatorEventDetail() {
             )}
             {selectedGameId === 'laterps' && (
               <LaterpsOperatorPanel game={laterpsGame} participants={participants} />
+            )}
+            {selectedGameId === 'silhouette' && (
+              <SilhouetteOperatorPanel game={silhouetteGame} participants={participants} />
             )}
           </>
         ) : (

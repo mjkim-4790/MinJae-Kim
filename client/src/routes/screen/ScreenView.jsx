@@ -15,6 +15,7 @@ import ChairsScreenView from '../../components/chairs/ChairsScreenView.jsx';
 import MugunghwaScreenView from '../../components/mugunghwa/MugunghwaScreenView.jsx';
 import ColorhuntScreenView from '../../components/colorhunt/ColorhuntScreenView.jsx';
 import LaterpsScreenView from '../../components/laterps/LaterpsScreenView.jsx';
+import SilhouetteScreenView from '../../components/silhouette/SilhouetteScreenView.jsx';
 import MazeScreenView from '../../components/maze/MazeScreenView.jsx';
 import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
@@ -32,6 +33,7 @@ import { useChairsGame } from '../../hooks/useChairsGame.js';
 import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
 import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
+import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -65,6 +67,7 @@ export default function ScreenView() {
   const mugunghwaGame = useMugunghwaGame({ eventCode: code, initialState: init?.mugunghwa });
   const colorhuntGame = useColorhuntGame({ eventCode: code, initialState: init?.colorhunt });
   const laterpsGame = useLaterpsGame({ eventCode: code, initialState: init?.laterps });
+  const silhouetteGame = useSilhouetteGame({ eventCode: code, initialState: init?.silhouette });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -110,6 +113,8 @@ export default function ScreenView() {
       () => <ColorhuntScreenView state={colorhuntGame.state} />],
     ['laterps', laterpsGame.state.status !== 'idle', laterpsGame.state.status,
       () => <LaterpsScreenView state={laterpsGame.state} sendGesture={laterpsGame.sendGesture} />],
+    ['silhouette', silhouetteGame.state.status !== 'idle', silhouetteGame.state.status,
+      () => <SilhouetteScreenView state={silhouetteGame.state} sendAngles={silhouetteGame.sendAngles} />],
     ['mugunghwa',
       mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0,
       mugunghwaGame.state.status,

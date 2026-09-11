@@ -13,6 +13,7 @@ import ChairsPlayerView from '../../components/chairs/ChairsPlayerView.jsx';
 import MugunghwaPlayerView from '../../components/mugunghwa/MugunghwaPlayerView.jsx';
 import ColorhuntPlayerView from '../../components/colorhunt/ColorhuntPlayerView.jsx';
 import LaterpsPlayerView from '../../components/laterps/LaterpsPlayerView.jsx';
+import SilhouettePlayerView from '../../components/silhouette/SilhouettePlayerView.jsx';
 import MazePlayerView from '../../components/maze/MazePlayerView.jsx';
 import WordcloudPlayerView from '../../components/wordcloud/WordcloudPlayerView.jsx';
 import YabawiPlayerView from '../../components/yabawi/YabawiPlayerView.jsx';
@@ -25,6 +26,7 @@ import { useChairsGame } from '../../hooks/useChairsGame.js';
 import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
 import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
+import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
@@ -73,6 +75,7 @@ export default function PlayerJoin() {
     mugunghwa: initialMugunghwa,
     yourMugunghwaPos: initialYourMugunghwaPos,
     laterps: initialLaterps,
+    silhouette: initialSilhouette,
     colorhunt: initialColorhunt,
     yourColorhunt: initialYourColorhunt,
     scoreboard: initialScoreboard,
@@ -134,6 +137,7 @@ export default function PlayerJoin() {
     initialYours: initialYourColorhunt,
   });
   const laterpsGame = useLaterpsGame({ eventCode: code, initialState: initialLaterps });
+  const silhouetteGame = useSilhouetteGame({ eventCode: code, initialState: initialSilhouette });
   const scoreboard = useScoreboard(initialScoreboard);
   // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
   const myRankIndex = scoreboard.participants.findIndex((p) => p.id === participant?.id);
@@ -186,6 +190,7 @@ export default function PlayerJoin() {
     mugunghwaGame,
     colorhuntGame,
     laterpsGame,
+    silhouetteGame,
   ].some(
     (g) => g.state.status !== 'idle' && !g.dismissed,
   );
@@ -234,6 +239,7 @@ export default function PlayerJoin() {
         <MugunghwaPlayerView game={mugunghwaGame} participantId={participant?.id} />
         <ColorhuntPlayerView game={colorhuntGame} />
         <LaterpsPlayerView game={laterpsGame} participantId={participant?.id} />
+        <SilhouettePlayerView game={silhouetteGame} participantId={participant?.id} />
 
         {!gameRunning && (
           <>
