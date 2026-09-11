@@ -5,7 +5,6 @@ export const APPROACH_SPEED = 0.1; // 최대로 흔들 때 초당 나아가는 �
 export const TAP_GAIN = 0.02; // 연타 한 번에 되돌아가는 거리
 export const TOUCH_REACH = 0.985;
 export const POSITION_SEND_MS = 80; // 위치 보고 간격 (약 12Hz)
-export const DOLL_CHASE_DELAY_MS = 1000; // 도망 시작 후 영희가 몸을 돌리는 시간
 
 // 흔들기 세기를 0~1 로 바꿀 때 쓰는 범위.
 // 손떨림(0.2~0.5)은 걸러내고, 걷듯이 흔드는 3 이상이면 최대 속도가 되게 잡았다.
@@ -53,16 +52,9 @@ const CHANT_CHUNKS = ['무궁화', '꽃이', '피었습니다'];
 // 깨져서 바로 아래에 둔다.
 const CHILD_PITCH = 1.9;
 
-// 라운드가 올라갈수록 빨라진다 — 뒤로 갈수록 숨막히게.
-const BASE_RATE = 1.0;
-const RATE_PER_ROUND = 0.16;
-const MAX_RATE = 1.9;
-
-/** 이번 라운드의 구호 속도. */
-export function chantRate(round) {
-  const n = Math.max(1, Math.floor(Number(round) || 1));
-  return Math.min(MAX_RATE, BASE_RATE + (n - 1) * RATE_PER_ROUND);
-}
+// 읽는 속도는 서버가 매 구호마다 새로 뽑아 내려준다. 라운드에 따라 여기서 계산하던
+// 때는 박자가 판마다 일정해서, 사람들이 "지금쯤 끝나겠다"를 외워버렸다.
+const FALLBACK_RATE = 1.2;
 
 // 어느 한국어 목소리를 고르느냐가 음높이보다 결과를 더 크게 좌우한다.
 // 각 OS 의 표준 목소리 이름 — 음높이를 올렸을 때 아이처럼 들리는 것들이다.
@@ -94,19 +86,22 @@ export function pickChantVoice(voices) {
  * 음높이를 끝까지 올려 어린아이 목소리로 만든다. 드라마의 실제 음원은 저작권이
  * 있어 쓸 수 없어서, 합성 음성으로 그 분위기에 가깝게 맞춘 것이다.
  *
- * @param round 라운드 번호 (뒤로 갈수록 빨라진다)
+ * 읽는 속도는 **서버가 정해서 내려준 값**을 쓴다. 매번 달라지고, 빨간불이 켜지는
+ * 시각과 맞아야 하기 때문이다. 화면이 제멋대로 정하면 말과 불이 어긋난다.
+ *
+ * @param rate 이번 구호를 읽을 속도 (서버가 준 값)
  */
-export function speakChant(round = 1) {
+export function speakChant(rate = FALLBACK_RATE) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return false;
   try {
     const synth = window.speechSynthesis;
     synth.cancel();
     const korean = pickChantVoice(synth.getVoices());
-    const rate = chantRate(round);
+    const r = Math.min(2, Math.max(0.5, Number(rate) || FALLBACK_RATE));
     for (const chunk of CHANT_CHUNKS) {
       const u = new SpeechSynthesisUtterance(chunk);
       u.lang = 'ko-KR';
-      u.rate = rate;
+      u.rate = r;
       u.pitch = CHILD_PITCH;
       u.volume = 1;
       if (korean) u.voice = korean;

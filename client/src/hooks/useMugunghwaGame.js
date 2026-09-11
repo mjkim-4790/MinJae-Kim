@@ -7,10 +7,10 @@ const IDLE_STATE = {
   status: 'idle',
   round: 0,
   strictness: 'normal',
-  doll: null,
-  dollId: null,
   green: true,
   lightChangedAt: null,
+  chantRate: 1,
+  chantEndsAt: null,
   sprintEndsAt: null,
   serverNow: null,
   runners: [],
@@ -24,7 +24,7 @@ export function useMugunghwaGame({ eventCode, initialState, initialYourPos }) {
   const [state, setState] = useState(initialState ?? IDLE_STATE);
   const [myPos, setMyPos] = useState(initialYourPos ?? 0);
   const [dismissed, setDismissed] = useState(false);
-  const [livePositions, setLivePositions] = useState(null); // 대형화면과 영희만 받는다
+  const [livePositions, setLivePositions] = useState(null); // 대형화면만 받는다
   const offsetRef = useRef(0);
   const lastSentRef = useRef(0);
 
@@ -78,22 +78,6 @@ export function useMugunghwaGame({ eventCode, initialState, initialYourPos }) {
     [eventCode],
   );
 
-  /** 영희가 쫓아온다 — 두드린 횟수를 모아 보낸다 (ack 없음, 위치 보고와 같은 이유). */
-  const chase = useCallback(
-    (taps) => {
-      if (!taps) return;
-      socket.emit('mugunghwa:chase', { eventCode, taps });
-    },
-    [eventCode],
-  );
-
-  /** 영희가 등을 돌리거나(green=true) 돌아본다(false). */
-  const setLight = useCallback(
-    (green) =>
-      new Promise((resolve) => socket.emit('mugunghwa:light', { eventCode, green }, resolve)),
-    [eventCode],
-  );
-
   // 옵션은 통째로 넘긴다 (항목이 늘 때 빠뜨리지 않도록 — 미로에서 겪은 문제)
   const start = useCallback(
     (options = {}) =>
@@ -134,8 +118,6 @@ export function useMugunghwaGame({ eventCode, initialState, initialYourPos }) {
     livePositions,
     serverTime,
     sendPos,
-    chase,
-    setLight,
     start,
     prepare,
     unprepare,

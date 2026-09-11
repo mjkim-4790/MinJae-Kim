@@ -3,31 +3,29 @@ import { getEventByCode } from '../db/events.js';
 import { addScore, getParticipantById, listParticipantsByEvent } from '../db/participants.js';
 import { shuffle } from '../game/acrosticEngine.js';
 import {
-  DOLL_START_POS,
+  DOLL_POST,
   MIN_PARTICIPANTS,
+  RED_MS,
   SPRINT_MS,
-  canChaseYet,
   clampPos,
-  dollPoints,
+  lastToArrive,
   movedOnRed,
-  overtaken,
-  pickDoll,
   pointsFor,
   reachedDoll,
   reachedHome,
   resolveRound,
-  sprintStep,
+  rollChant,
   strictnessById,
 } from '../game/mugunghwaEngine.js';
 import { isAuthorizedOperator } from './authz.js';
-import { socketIdOf } from './players.js';
 import { eventRoom, normalizeEventCode, roleRoom } from './rooms.js';
 import { broadcastScoreboard } from './scoreboard.js';
 
 // '무궁화꽃이 피었습니다' 실시간 상태 (maze.js 와 같은 구조).
 //
-// 영희는 진행자가 직접 맡거나, 참가자 중 한 명을 뽑는다. 어느 쪽이든 등을 돌리고
-// 돌아보는 타이밍은 사람이 직접 정한다 — 빨리 돌았다 늦게 돌았다 속이는 게
+// 영희는 사람이 맡지 않는다. 서버가 자동으로 돌린다 — 그래야 전원이 주자가 되고,
+// "누가 영희 할래요"로 시작 전에 시간을 쓰지 않는다. 대신 구호 속도를 매번 바꿔서
+// 박자를 못 외우게 한다. 돌아보는 타이밍은 사람이 정한다 — 빨리 돌았다 늦게 돌았다 속이는 게
 // 이 놀이의 핵심이라, 자동으로 돌리면 재미가 없다 (운영 결정).
 //
 // 위치는 각 폰이 계산해서 12Hz 로 보고하고(미로와 같은 방식), 서버는 그걸 모아
@@ -43,21 +41,23 @@ function createInitialState() {
     status: 'idle', // idle | ready | approaching | sprinting | result | ended
     round: 0,
     strictness: 'normal',
-    dollId: null, // 참가자가 영희면 그 id, 진행자가 영희면 null
-    activePool: [], // 이번 라운드 주자 (영희는 빠진다)
+    activePool: [], // 이번 라운드 주자 (전원이 주자다 — 영희는 사람이 아니다)
     eliminatedIds: [],
     readyIds: [], // 모션 센서 허용을 마친 사람
-    green: true, // 영희가 등을 돌리고 있는가
+    green: true, // 영희가 등을 돌리고 있는가 (판은 등을 돌린 채로 시작한다)
     lightChangedAt: null,
+    chantRate: 1, // 이번 구호를 읽을 속도 (매번 달라진다)
+    chantEndsAt: null, // 구호가 끝나고 영희가 돌아볼 시각
     redSince: null, // 빨간불이 된 시각 (유예 시간 계산용)
     positions: new Map(), // participantId -> 0(출발선)~1(영희)
     caught: new Set(), // 빨간불에 움직여 잡힌 사람
     home: new Set(), // 출발선으로 돌아온 사람
+    homeAt: new Map(), // participantId -> 출발선 도착 시각 (꼴찌를 가리는 기준)
     toucherId: null, // 영희를 처음 터치한 사람
     sprintStartedAt: null,
     sprintEndsAt: null,
-    dollPos: DOLL_START_POS, // 도망 구간에서 영희가 쫓아온 위치
-    caughtByDoll: new Set(), // 영희가 추월해서 잡은 사람 (점수 계산용)
+    dollPos: DOLL_POST, // 영희는 제자리를 지킨다
+    caughtByDoll: new Set(), // 영희에게 잡힌 사람 (꼴찌)
     lastResult: null,
   };
 }
@@ -76,6 +76,7 @@ function clearTimers(code) {
   const t = timers.get(code);
   if (!t) return;
   if (t.sprint) clearTimeout(t.sprint);
+  if (t.light) clearTimeout(t.light);
   if (t.positions) clearInterval(t.positions);
   timers.delete(code);
 }
@@ -90,14 +91,15 @@ function publicState(state) {
     status: state.status,
     round: state.round,
     strictness: state.strictness,
-    doll: state.dollId != null ? toRef(state.dollId) : null,
-    dollId: state.dollId,
     green: state.green,
     lightChangedAt: state.lightChangedAt,
+    // 화면이 이 속도로 구호를 읽는다. 불이 바뀌는 시각은 서버가 쥐고 있고,
+    // 말은 거기에 맞춰 따라올 뿐이다.
+    chantRate: state.chantRate,
+    chantEndsAt: state.chantEndsAt,
     sprintStartedAt: state.sprintStartedAt,
     sprintEndsAt: state.sprintEndsAt,
     dollPos: state.dollPos,
-    dollCatchCount: state.caughtByDoll.size,
     serverNow: Date.now(),
     // 주자 명단 — 화면이 사람 모양을 그리고, 각자는 여기서 자기 색을 찾는다
     runners: state.activePool.map((id, i) => ({
@@ -128,28 +130,14 @@ function broadcastNow(io, code) {
 }
 
 /**
- * 위치 중계 — 대형화면과 '영희'에게만 보낸다.
- *
- * 주자 폰은 자기 위치만 알면 되지만, 영희는 누구를 어디까지 쫓았는지 봐야 한다.
- * 예전에는 영희 화면에 두드리는 버튼만 있어서 자기가 쫓고 있는지조차 알 수 없었다.
- * 그렇다고 전원에게 뿌리면 12Hz × 인원수가 되므로, 영희 한 명만 따로 넣는다.
+ * 위치 중계 — 대형화면에만 보낸다.
+ * 전원에게 뿌리면 12Hz × 인원수가 되고, 주자 폰은 자기 위치만 알면 된다.
  */
 function broadcastPositions(io, code) {
   const state = getState(code);
   if (state.status !== 'approaching' && state.status !== 'sprinting') return;
 
-  // .to() 는 대상을 더한 '새' 객체를 돌려준다 — 반환값을 다시 담지 않으면 아무 일도 안 일어난다
-  let targets = io.to(roleRoom(code, 'screen'));
-  if (state.dollId != null) {
-    const sid = socketIdOf(state.dollId);
-    if (sid) targets = targets.to(sid);
-  } else {
-    // 진행자가 영희인 경우 — 노트북 패널에서도 쫓는 모습을 봐야 한다.
-    // 진행자는 보통 한 명이라 12Hz 를 더 얹어도 부담이 없다.
-    targets = targets.to(roleRoom(code, 'operator'));
-  }
-
-  targets.emit('mugunghwa:positions', {
+  io.to(roleRoom(code, 'screen')).emit('mugunghwa:positions', {
     at: Date.now(),
     dollPos: state.dollPos,
     runners: state.activePool.map((id) => ({
@@ -182,10 +170,69 @@ function endIfSettled(io, code) {
   if (done >= state.activePool.length) endRound(io, code);
 }
 
+/**
+ * 영희를 자동으로 돌린다.
+ *
+ * 등을 돌린 채로 구호를 읽고(초록불), 구호가 끝나면 홱 돌아본다(빨간불).
+ * 구호 길이를 매번 새로 뽑기 때문에 박자를 외울 수 없다 — 그게 이 게임의 긴장이다.
+ * 화면은 서버가 내려준 속도로 읽기만 하고, 불이 바뀌는 시각은 여기서만 정한다.
+ */
+function scheduleLight(io, code) {
+  const state = getState(code);
+  if (state.status !== 'approaching') return;
+
+  const t = timers.get(code) ?? {};
+  if (t.light) clearTimeout(t.light);
+
+  if (state.green) {
+    // 등을 돌리고 구호를 읽는 중 — 끝나면 돌아본다
+    const chant = rollChant();
+    state.chantRate = chant.rate;
+    state.chantEndsAt = Date.now() + chant.ms;
+    state.lightChangedAt = Date.now();
+    t.light = setTimeout(() => {
+      const cur = getState(code);
+      if (cur.status !== 'approaching') return;
+      cur.green = false;
+      cur.redSince = Date.now();
+      cur.lightChangedAt = cur.redSince;
+      cur.chantEndsAt = null;
+      broadcastNow(io, code);
+      scheduleLight(io, code);
+    }, chant.ms);
+  } else {
+    // 돌아본 채로 노려보는 중 — 이 길이는 흔들지 않는다
+    t.light = setTimeout(() => {
+      const cur = getState(code);
+      if (cur.status !== 'approaching') return;
+      cur.green = true;
+      cur.redSince = null;
+      broadcastNow(io, code);
+      scheduleLight(io, code);
+    }, RED_MS);
+  }
+
+  timers.set(code, t);
+  broadcastNow(io, code);
+}
+
 function endRound(io, code) {
   const state = getState(code);
   if (state.status !== 'approaching' && state.status !== 'sprinting') return;
   clearTimers(code);
+
+  // 도망까지 간 판에서는 **가장 늦게 들어온 한 명**을 영희가 잡는다 (운영 결정).
+  // 빨간불에 이미 잡힌 사람은 후보에서 뺀다 — 두 번 잡을 수는 없다.
+  if (state.status === 'sprinting') {
+    const alive = state.activePool.filter((id) => !state.caught.has(id));
+    const last = lastToArrive(alive, state.homeAt, state.positions);
+    if (last != null) {
+      state.caught.add(last);
+      state.caughtByDoll.add(last);
+      state.home.delete(last); // 들어왔더라도 꼴찌면 문 앞에서 잡힌 셈이다
+    }
+  }
+
   state.lastResult = resolveRound(state.activePool, state.caught, state.home);
   state.status = 'result';
   broadcastNow(io, code);
@@ -202,19 +249,13 @@ function startSprint(io, code, toucherId) {
   state.redSince = null;
   state.sprintStartedAt = Date.now();
   state.sprintEndsAt = state.sprintStartedAt + SPRINT_MS;
-  state.dollPos = DOLL_START_POS;
+  state.dollPos = DOLL_POST;
   broadcastNow(io, code);
 
   const t = timers.get(code) ?? {};
   if (t.sprint) clearTimeout(t.sprint);
   t.sprint = setTimeout(() => endRound(io, code), SPRINT_MS);
   timers.set(code, t);
-}
-
-/** 영희가 이 소켓의 주인인지 (참가자 영희 또는 진행자 영희). */
-function isDoll(socket, state, code) {
-  if (state.dollId == null) return isAuthorizedOperator(socket, code);
-  return socket.data.role === 'player' && socket.data.participantId === state.dollId;
 }
 
 export function registerMugunghwaHandlers(io, socket) {
@@ -282,65 +323,35 @@ export function registerMugunghwaHandlers(io, socket) {
       state.eliminatedIds = [];
     }
 
-    // 영희를 정한다: 'operator' 면 진행자가 직접, 'random' 이면 참가자 중 한 명.
-    // 참가자가 영희를 맡으면 그 사람은 이번 판 주자에서 빠진다.
-    const mode = payload.dollMode === 'random' ? 'random' : 'operator';
-    let dollId = null;
-    if (mode === 'random') {
-      // 영희 1명 + 주자 최소 1명
-      if (pool.length < 2) {
-        return reply({ ok: false, error: 'NOT_ENOUGH_FOR_RANDOM_DOLL' });
-      }
-      dollId = pickDoll(pool);
-    }
-
-    state.dollId = dollId;
-    state.activePool = shuffle(pool.filter((id) => id !== dollId));
+    // 영희는 사람이 맡지 않는다 — 전원이 주자다.
+    state.activePool = shuffle(pool);
     state.round += 1;
     state.strictness = strictness.id;
     state.status = 'approaching';
-    state.green = false; // 영희가 돌아본 채로 시작한다 — 영희가 등을 돌려야 출발
+    // 영희는 **등을 돌린 채로 시작한다**. 돌아본 채로 시작하면 출발 신호를 기다리는
+    // 멈춘 시간부터 생겨서, 판이 열리자마자 달릴 수 있는 지금이 훨씬 시원하다.
+    state.green = true;
     state.lightChangedAt = Date.now();
-    state.redSince = Date.now();
+    state.redSince = null;
     state.positions = new Map(state.activePool.map((id) => [id, 0]));
     state.caught = new Set();
     state.home = new Set();
+    state.homeAt = new Map();
     state.toucherId = null;
     state.sprintStartedAt = null;
     state.sprintEndsAt = null;
-    state.dollPos = DOLL_START_POS;
+    state.dollPos = DOLL_POST;
     state.caughtByDoll = new Set();
     state.lastResult = null;
 
     reply({ ok: true });
-    broadcastNow(io, code);
 
     clearTimers(code);
     timers.set(code, { positions: setInterval(() => broadcastPositions(io, code), POSITION_MS) });
+    scheduleLight(io, code); // 구호를 읽기 시작한다 (broadcastNow 도 여기서 한다)
   });
 
-  /** 영희가 등을 돌리거나(초록) 돌아본다(빨강). */
-  socket.on('mugunghwa:light', (payload = {}, ack) => {
-    const reply = typeof ack === 'function' ? ack : () => {};
-    const code = normalizeEventCode(payload.eventCode);
-    const state = getState(code);
-    if (!isDoll(socket, state, code)) return reply({ ok: false, error: 'NOT_DOLL' });
-    if (state.status !== 'approaching') return reply({ ok: false, error: 'NOT_APPROACHING' });
-
-    const green = Boolean(payload.green);
-    if (green === state.green) return reply({ ok: true });
-
-    state.green = green;
-    state.lightChangedAt = Date.now();
-    state.redSince = green ? null : Date.now();
-    reply({ ok: true });
-    broadcastNow(io, code);
-  });
-
-  /**
-   * 폰이 자기 위치와 흔들림을 알린다 (초당 12번쯤).
-   * ack 를 돌려주지 않는다 — 왕복이 그 자체로 부담이고, 한 번쯤 빠져도 곧 다음 게 온다.
-   */
+  /** 폰이 12Hz 로 보고하는 내 위치와 흔들림 세기. */
   socket.on('mugunghwa:pos', (payload = {}) => {
     const code = normalizeEventCode(payload.eventCode);
     if (socket.data.role !== 'player' || !socket.data.participantId || socket.data.eventCode !== code) return;
@@ -349,7 +360,7 @@ export function registerMugunghwaHandlers(io, socket) {
     if (state.status !== 'approaching' && state.status !== 'sprinting') return;
 
     const id = socket.data.participantId;
-    if (!state.positions.has(id)) return; // 이번 판 주자가 아니다 (영희이거나 탈락자)
+    if (!state.positions.has(id)) return; // 이번 판 주자가 아니다 (탈락자)
     if (state.caught.has(id) || state.home.has(id)) return; // 이미 끝난 사람
 
     const pos = clampPos(payload.pos);
@@ -369,48 +380,10 @@ export function registerMugunghwaHandlers(io, socket) {
         return;
       }
     } else if (reachedHome(pos)) {
+      // 도착 시각을 남긴다 — 이게 나중에 꼴찌를 가리는 기준이 된다.
+      // 영희는 쫓아오지 않는다. 누가 잡히는지는 판이 끝날 때 한 번에 정해진다.
       state.home.add(id);
-      broadcastNow(io, code);
-      endIfSettled(io, code);
-    } else if (overtaken(state.dollPos, pos)) {
-      // 영희가 이미 지나쳐 간 자리에 있다 — 뒤늦게 보고가 와도 잡는다
-      state.caught.add(id);
-      state.caughtByDoll.add(id);
-      broadcastNow(io, code);
-      endIfSettled(io, code);
-    }
-  });
-
-  /**
-   * 영희가 쫓아온다 — 도망 구간에서만.
-   * 두드린 만큼 출발선 쪽으로 나아가고, 지나친 주자는 모두 잡힌다.
-   * 진행자가 영희일 때도 같은 규칙이라 어느 쪽이든 설명이 같다.
-   */
-  socket.on('mugunghwa:chase', (payload = {}) => {
-    const code = normalizeEventCode(payload.eventCode);
-    const state = getState(code);
-    if (!isDoll(socket, state, code)) return;
-    if (state.status !== 'sprinting') return;
-    // 몸을 돌리는 시간 — 이게 없으면 터치한 사람이 한 번의 두드림에 바로 잡힌다
-    if (!canChaseYet(state.sprintStartedAt, Date.now())) return;
-
-    const step = sprintStep(payload.taps);
-    if (step <= 0) return;
-
-    state.dollPos = clampPos(state.dollPos - step);
-
-    let caughtNow = false;
-    state.activePool.forEach((id) => {
-      if (state.caught.has(id) || state.home.has(id)) return;
-      const pos = state.positions.get(id) ?? 0;
-      if (overtaken(state.dollPos, pos)) {
-        state.caught.add(id);
-        state.caughtByDoll.add(id);
-        caughtNow = true;
-      }
-    });
-
-    if (caughtNow) {
+      state.homeAt.set(id, Date.now());
       broadcastNow(io, code);
       endIfSettled(io, code);
     }
@@ -459,11 +432,6 @@ export function registerMugunghwaHandlers(io, socket) {
         });
         if (points > 0) addScore(id, points);
       });
-      // 영희도 잡은 사람 수만큼 받는다 (참가자가 영희일 때만 — 진행자는 점수가 없다)
-      if (state.dollId != null) {
-        const dp = dollPoints(state.caughtByDoll.size);
-        if (dp > 0) addScore(state.dollId, dp);
-      }
       broadcastScoreboard(io, code, event.id);
     }
 

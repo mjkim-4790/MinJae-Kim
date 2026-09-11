@@ -132,23 +132,17 @@ export default function MugunghwaTrack({ state, positions }) {
     return m;
   }, [state.runners]);
 
-  const dollTargetRef = useRef(1);
-  const dollDrawnRef = useRef(1);
-
   useEffect(() => {
     if (!positions?.runners) return;
     const next = new Map();
     positions.runners.forEach((r) => next.set(r.participantId, r));
     targetRef.current = next;
-    if (typeof positions.dollPos === 'number') dollTargetRef.current = positions.dollPos;
   }, [positions]);
 
   // 새 라운드가 시작되면 잔상을 지운다
   useEffect(() => {
     drawnRef.current = new Map();
     targetRef.current = new Map();
-    dollTargetRef.current = 1;
-    dollDrawnRef.current = 1;
   }, [state.round]);
 
   useLayoutEffect(() => {
@@ -235,31 +229,13 @@ export default function MugunghwaTrack({ state, positions }) {
       ctx.textAlign = 'center';
       ctx.fillText('출발선', startX, bandBottom + size.h * 0.11);
 
-      // 영희 — 접근 구간에는 제자리, 도망 구간에는 쫓아 달린다
+      // 영희는 제자리를 지킨다. 예전에는 사람이 조종해 쫓아왔지만, 지금은 자동이라
+      // 누가 잡히는지는 판이 끝날 때 '꼴찌'로 한 번에 정해진다.
       const dollY = (bandTop + bandBottom) / 2 + size.h * 0.06;
-      const dollDrawX = startX + (dollX - startX) * (sprinting ? dollDrawnRef.current : 1);
-
-      // 쫓아온 자취 — 영희가 실제로 움직이고 있다는 걸 한눈에 보이게 한다
-      if (sprinting && dollDrawnRef.current < 0.995) {
-        ctx.strokeStyle = '#d84848';
-        ctx.globalAlpha = 0.3;
-        ctx.lineWidth = Math.max(3, size.h * 0.02);
-        ctx.setLineDash([6, 6]);
-        ctx.beginPath();
-        ctx.moveTo(dollX, dollY);
-        ctx.lineTo(dollDrawX, dollY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.globalAlpha = 1;
-      }
-      drawDoll(ctx, dollDrawX, dollY, Math.min(size.h * 0.34, (bandBottom - bandTop) * 0.7 + size.h * 0.1), green && !sprinting);
+      drawDoll(ctx, dollX, dollY, Math.min(size.h * 0.34, (bandBottom - bandTop) * 0.7 + size.h * 0.1), green && !sprinting);
       ctx.fillStyle = sprinting ? '#d84848' : green ? '#c9971f' : '#d84848';
       ctx.font = `700 ${Math.round(size.h * 0.075)}px system-ui, sans-serif`;
-      ctx.fillText(
-        sprinting ? `${state.doll?.nickname ?? '영희'} 추격!` : (state.doll?.nickname ?? '영희'),
-        dollDrawX,
-        bandBottom + size.h * 0.11,
-      );
+      ctx.fillText(sprinting ? '영희가 기다린다' : '영희', dollX, bandBottom + size.h * 0.11);
 
       // 주자들
       const drawn = drawnRef.current;
@@ -300,7 +276,6 @@ export default function MugunghwaTrack({ state, positions }) {
       phaseRef.current += dt * 11; // 다리 흔드는 속도
 
       const follow = Math.min(1, dt * FOLLOW_PER_SEC);
-      dollDrawnRef.current += (dollTargetRef.current - dollDrawnRef.current) * follow;
       const drawn = drawnRef.current;
       targetRef.current.forEach((t, id) => {
         const cur = drawn.get(id);
@@ -326,7 +301,7 @@ export default function MugunghwaTrack({ state, positions }) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [size, meta, green, sprinting, running, state.runners, state.doll]);
+  }, [size, meta, green, sprinting, running, state.runners]);
 
   return (
     <div className="mg-track" ref={wrapRef}>

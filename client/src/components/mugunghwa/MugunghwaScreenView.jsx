@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import MugunghwaTrack from './MugunghwaTrack.jsx';
 import { speakChant, stopChant } from '../../lib/mugunghwa.js';
-import { dispose as disposeAudio, headTurn, unlock } from '../../lib/mugunghwaAudio.js';
+import { dispose as disposeAudio, headTurn } from '../../lib/mugunghwaAudio.js';
 import { springPop, springSettle } from '../../lib/motionPresets.js';
 
 /**
@@ -12,8 +12,7 @@ import { springPop, springSettle } from '../../lib/motionPresets.js';
  * 구호는 여기서만 읽는다. 참여자 폰마다 읽으면 기기별 시차로 여러 번 겹쳐 들린다.
  * 브라우저 음성 합성이라 한국어 목소리가 없는 PC 도 있는데, 그때는 자막으로 대신한다.
  */
-export default function MugunghwaScreenView({ state, serverTime, livePositions }) {
-  const [soundOn, setSoundOn] = useState(false);
+export default function MugunghwaScreenView({ state, serverTime, livePositions, soundOn = false }) {
   const lastGreenRef = useRef(null);
   const [, tick] = useState(0);
 
@@ -34,14 +33,15 @@ export default function MugunghwaScreenView({ state, serverTime, livePositions }
     }
     if (prev === state.green) return;
     if (state.green) {
-      speakChant(state.round);
+      // 속도는 서버가 이번 구호마다 새로 정해서 내려준다 — 박자를 못 외우게 하려는 것
+      speakChant(state.chantRate);
     } else {
       // 돌아보는 순간 — 구호를 뚝 끊고 고개 돌아가는 기계음을 낸다.
       // prev 가 null 이면 라운드 도중에 화면을 켠 것뿐이라 소리를 내지 않는다.
       stopChant();
       if (prev !== null) headTurn();
     }
-  }, [state.green, state.status, state.round, soundOn]);
+  }, [state.green, state.status, state.chantRate, soundOn]);
 
   useEffect(
     () => () => {
@@ -50,14 +50,6 @@ export default function MugunghwaScreenView({ state, serverTime, livePositions }
     },
     [],
   );
-
-  const enableSound = () => {
-    // 첫 발화와 오디오 잠금 해제는 클릭 안에서 해야 브라우저가 막지 않는다
-    speakChant();
-    stopChant();
-    unlock();
-    setSoundOn(true);
-  };
 
   const msLeft = state.sprintEndsAt ? Math.max(0, state.sprintEndsAt - serverTime()) : 0;
   const alive = (state.runners ?? []).filter((r) => !r.caught).length;
@@ -85,11 +77,6 @@ export default function MugunghwaScreenView({ state, serverTime, livePositions }
         <p className="screen__eyebrow">무궁화꽃이 피었습니다 — 곧 시작합니다</p>
         <p className="mg-screen__big">📱</p>
         <p className="screen__hint">폰에서 “움직임 감지 허용하기”를 눌러주세요</p>
-        {!soundOn && (
-          <button className="button button--ghost" onClick={enableSound}>
-            🔊 소리 켜기
-          </button>
-        )}
       </div>
     );
   }
@@ -99,13 +86,7 @@ export default function MugunghwaScreenView({ state, serverTime, livePositions }
       <div className="mg-screen__head">
         <p className="screen__eyebrow">
           무궁화꽃이 피었습니다 — {state.round}라운드 · 남은 사람 {alive}명
-          {state.doll ? ` · 영희 ${state.doll.nickname}` : ' · 영희 진행자'}
         </p>
-        {!soundOn && (
-          <button className="button button--ghost mg-screen__sound" onClick={enableSound}>
-            🔊 소리 켜기
-          </button>
-        )}
       </div>
 
       <MugunghwaTrack state={state} positions={livePositions} />
@@ -132,6 +113,7 @@ export default function MugunghwaScreenView({ state, serverTime, livePositions }
             transition={springPop}
           >
             {state.toucher?.nickname ?? '누군가'}가 영희를 터치! 도망쳐 — {(msLeft / 1000).toFixed(1)}
+            <span className="mg-screen__last">꼴찌는 영희에게 잡힙니다</span>
           </motion.p>
         )}
         {state.status === 'result' && (

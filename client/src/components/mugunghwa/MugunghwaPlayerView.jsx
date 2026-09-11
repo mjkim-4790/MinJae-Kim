@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
-import DollChase from './DollChase.jsx';
 import { useMotion } from '../../hooks/useMotion.js';
 import {
   APPROACH_SPEED,
@@ -12,49 +11,8 @@ import {
 } from '../../lib/mugunghwa.js';
 import { springPop, springTap } from '../../lib/motionPresets.js';
 
-/** 영희를 맡은 참가자의 조작 화면. */
-function DollControl({ game, state, setLight }) {
-  const [busy, setBusy] = useState(false);
-  const flip = async (green) => {
-    setBusy(true);
-    await setLight(green);
-    setBusy(false);
-  };
-
-  // 도망 구간 — 이제 영희가 쫓아간다
-  if (state.status === 'sprinting') return <DollChase game={game} />;
-
-  if (state.status !== 'approaching') {
-    return (
-      <p className="subtitle">당신이 영희입니다. 라운드가 시작되면 조종할 수 있어요</p>
-    );
-  }
-
-  return (
-    <>
-      <p className={`mg-light ${state.green ? 'mg-light--green' : 'mg-light--red'}`}>
-        {state.green ? '등을 돌린 중 — 다들 다가옵니다' : '돌아본 중 — 움직이면 잡힙니다'}
-      </p>
-      <motion.button
-        className={`button mg-doll-btn${state.green ? ' mg-doll-btn--turn' : ''}`}
-        disabled={busy}
-        onClick={() => flip(!state.green)}
-        whileTap={{ scale: 0.96 }}
-        transition={springTap}
-      >
-        {state.green ? '돌아보기!' : '다시 등 돌리기'}
-      </motion.button>
-      <p className="subtitle">
-        빨리 돌았다 늦게 돌았다 하며 속이는 게 재미입니다. 등을 돌리면 대형화면에서 구호가
-        나갑니다.
-      </p>
-    </>
-  );
-}
-
 export default function MugunghwaPlayerView({ game, participantId }) {
-  const { state, myPos, setMyPos, dismissed, serverTime, sendPos, setLight, reportReady, dismiss } =
-    game;
+  const { state, myPos, setMyPos, dismissed, serverTime, sendPos, reportReady, dismiss } = game;
   const motionSensor = useMotion();
   const posRef = useRef(0);
   const rafRef = useRef(null);
@@ -63,7 +21,6 @@ export default function MugunghwaPlayerView({ game, participantId }) {
   const [, tick] = useState(0);
 
   const me = state.runners?.find((r) => r.participantId === participantId);
-  const isDoll = state.dollId != null && state.dollId === participantId;
   const inRound = !!me;
   const approaching = state.status === 'approaching';
   const sprinting = state.status === 'sprinting';
@@ -97,7 +54,7 @@ export default function MugunghwaPlayerView({ game, participantId }) {
 
   // 움직임 루프 — 1단계는 흔들기, 2단계는 연타
   useEffect(() => {
-    if (!running || !inRound || isDoll) return undefined;
+    if (!running || !inRound) return undefined;
     if (me?.caught || me?.home) return undefined;
 
     lastRef.current = performance.now();
@@ -129,7 +86,7 @@ export default function MugunghwaPlayerView({ game, participantId }) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [running, approaching, inRound, isDoll, state.green, me?.caught, me?.home, motionSensor.shakeRef, sendPos, setMyPos]);
+  }, [running, approaching, inRound, state.green, me?.caught, me?.home, motionSensor.shakeRef, sendPos, setMyPos]);
 
   if (state.status === 'idle' && state.round === 0) return null;
 
@@ -178,22 +135,6 @@ export default function MugunghwaPlayerView({ game, participantId }) {
               </p>
             )}
           </>
-        )}
-      </section>
-    );
-  }
-
-  if (isDoll) {
-    return (
-      <section className="panel stack mg-stage">
-        <h2 className="panel__title">당신이 영희입니다 🌺</h2>
-        <DollControl game={game} state={state} setLight={setLight} />
-        {state.status === 'result' && (
-          <p className="subtitle">
-            잡힌 사람 {state.result?.eliminated?.length ?? 0}명 · 살아남은 사람{' '}
-            {state.result?.survivors?.length ?? 0}명
-            {state.dollCatchCount > 0 && ` · 내가 쫓아가 잡은 사람 ${state.dollCatchCount}명 (+${state.dollCatchCount * 30}점)`}
-          </p>
         )}
       </section>
     );

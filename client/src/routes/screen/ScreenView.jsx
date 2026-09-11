@@ -35,6 +35,7 @@ import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
 import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { socket } from '../../lib/socket.js';
+import { arm as armSound } from '../../lib/screenSound.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
 // 모드가 바뀔 때마다 "새 화면이 도착한다"는 느낌을 주는 크로스페이드+스케일 전환.
@@ -70,6 +71,10 @@ export default function ScreenView() {
   const silhouetteGame = useSilhouetteGame({ eventCode: code, initialState: init?.silhouette });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
+
+  // 소리는 화면 단위로 한 번만 연다 (screenSound.js 주석 참고)
+  const [soundOn, setSoundOn] = useState(false);
+  const enableSound = async () => setSoundOn(await armSound());
 
   const [mode, setMode] = useState(null);
   useEffect(() => {
@@ -123,12 +128,13 @@ export default function ScreenView() {
           state={mugunghwaGame.state}
           serverTime={mugunghwaGame.serverTime}
           livePositions={mugunghwaGame.livePositions}
+          soundOn={soundOn}
         />
       )],
     ['chairs',
       chairsGame.state.status !== 'idle' || chairsGame.state.round > 0,
       chairsGame.state.status,
-      () => <ChairsScreenView state={chairsGame.state} serverTime={chairsGame.serverTime} />],
+      () => <ChairsScreenView state={chairsGame.state} serverTime={chairsGame.serverTime} soundOn={soundOn} />],
     ['maze', mazeGame.state.status !== 'idle', mazeGame.state.status,
       () => (
         <MazeScreenView
@@ -217,6 +223,12 @@ export default function ScreenView() {
   return (
     <main className="page page--screen">
       <StatusBar status={status} session={session} presence={presence} />
+      {/* 게임과 무관하게 떠 있다 — 행사 준비할 때 한 번 누르면 모든 게임 소리가 살아난다 */}
+      {!soundOn && (
+        <button className="button screen__sound-arm" onClick={enableSound}>
+          🔊 소리 켜기
+        </button>
+      )}
       <AnimatePresence mode="wait">
         <motion.div
           key={contentKey}

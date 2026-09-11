@@ -33,17 +33,20 @@ export const SPRINT_MS = 10000; // 2단계 제한시간
 export const APPROACH_SPEED = 0.1; // 최대로 흔들 때 초당 나아가는 거리
 export const TAP_GAIN = 0.02; // 2단계에서 한 번 두드릴 때 나아가는 거리
 
-// 도망이 시작되면 영희도 쫓아온다 (전통 놀이 그대로 — 술래가 잡으러 온다).
-// 영희(1.0)와 터치한 사람(0.985)이 거의 같은 자리라 바로 두드리면 한 방에 잡힌다.
-// 몸을 돌리는 시간을 줘서, 그 뒤로는 '더 빨리 두드린 쪽이 이기는' 공정한 추격이 되게 한다.
-export const DOLL_CHASE_DELAY_MS = 1000;
-export const DOLL_START_POS = 1;
+// 도망 구간이 끝나면 영희가 **가장 늦게 들어온 한 명**을 잡는다 (운영 결정).
+// 예전에는 영희를 사람이 조종해 쫓아다녔는데, 그러려면 누군가 영희를 맡아야 해서
+// 한 명이 게임에서 빠졌다. 영희를 자동으로 돌리면 전원이 주자가 되고, 규칙도
+// "꼴찌만 잡힌다" 한 줄로 끝나 설명이 짧아진다.
+export const DOLL_POST = 1; // 영희는 제자리를 지킨다
+
+// 혼자 남은 사람까지 잡으면 아무도 안 남아 판이 무효가 된다 (wipeout 무한반복).
+// 두 명 이상일 때만 꼴찌를 잡는다.
+export const MIN_RUNNERS_TO_CATCH = 2;
 
 // 점수
 const WIN_POINTS = 150; // 최후의 1인
 const SURVIVE_POINTS = 20; // 라운드를 넘길 때마다
 const TOUCH_BONUS = 50; // 영희를 터치한 사람
-const DOLL_CATCH_POINTS = 30; // 영희가 한 명 잡을 때마다
 
 export function strictnessById(id) {
   return STRICTNESS.find((s) => s.id === id) ?? null;
@@ -111,28 +114,53 @@ export function pointsFor({ outcome, survived, touchedDoll }) {
 }
 
 /**
- * 영희가 이 주자를 추월했는가.
+ * 영희에게 잡힐 '꼴찌' 한 명을 고른다.
  *
- * 도망 구간에서는 둘 다 1(영희 앞) → 0(출발선) 방향으로 달린다. 그래서 영희의
- * 위치가 주자보다 작아지면(더 출발선에 가까워지면) 지나쳐 잡은 것이다.
+ * 출발선에 들어온 사람은 들어온 시각 순, 못 들어온 사람은 그보다 뒤다
+ * (못 들어온 사람끼리는 영희에게 가까이 남아 있을수록 뒤). 그중 가장 마지막 한 명.
+ *
+ * @param {number[]} pool 이번 라운드 주자 (빨간불에 잡힌 사람은 빼고 넘긴다)
+ * @param {Map<number, number>} homeAt participantId -> 출발선 도착 시각
+ * @param {Map<number, number>} positions participantId -> 마지막 위치 (0 출발선 ~ 1 영희)
+ * @returns {number|null} 잡힐 사람. 잡을 필요가 없으면 null
  */
-export function overtaken(dollPos, runnerPos) {
-  return clampPos(runnerPos) >= clampPos(dollPos);
+export function lastToArrive(pool, homeAt, positions) {
+  if (!Array.isArray(pool) || pool.length < MIN_RUNNERS_TO_CATCH) return null;
+  let worst = null;
+  let worstKey = null;
+  for (const id of pool) {
+    const arrived = homeAt.get(id);
+    // [못 들어왔는가, 늦은 정도] — 못 들어온 쪽이 언제나 뒤로 간다
+    const key = arrived != null ? [0, arrived] : [1, clampPos(positions.get(id) ?? 1)];
+    if (worstKey == null || key[0] > worstKey[0] || (key[0] === worstKey[0] && key[1] > worstKey[1])) {
+      worst = id;
+      worstKey = key;
+    }
+  }
+  return worst;
 }
 
-/** 영희가 쫓기 시작할 수 있는 시각인지. */
-export function canChaseYet(sprintStartedAt, now) {
-  if (sprintStartedAt == null) return false;
-  return now - sprintStartedAt >= DOLL_CHASE_DELAY_MS;
-}
+// ── 구호 박자 ──────────────────────────────────────────────────────────────
+// "무궁화 꽃이 피었습니다"를 늘 같은 속도로 읽으면 사람들이 박자를 외워버려서,
+// 구호가 끝나기 직전에 딱 멈추는 게 쉬워진다. 매번 속도를 바꾸면 그게 안 된다.
+//
+// 시간을 먼저 뽑고 거기에 맞는 읽기 속도를 구한다 (그 반대가 아니다). 읽기 속도로
+// 시간을 유추하면 기기마다 음성 엔진이 달라 빨간불과 말이 어긋나는데, 이렇게 하면
+// 불이 바뀌는 시각은 서버가 쥐고 말은 거기에 맞춰 따라온다.
+export const CHANT_MIN_MS = 1300;
+export const CHANT_MAX_MS = 3300;
+// 속도 1.0 으로 읽었을 때의 대략적인 길이. 정확할 필요는 없다 — 이 값은 '어느 정도
+// 속도로 읽을지'를 정할 뿐이고, 불이 바뀌는 시점은 서버 타이머가 정한다.
+const CHANT_BASE_MS = 2300;
+export const RATE_MIN = 0.6;
+export const RATE_MAX = 2;
+// 영희가 돌아본 채로 노려보는 시간. 여기는 흔들지 않는다 — 멈춰 있는 시간까지
+// 들쭉날쭉하면 억울한 탈락만 늘어난다.
+export const RED_MS = 1700;
 
-/** 영희가 받을 점수 — 잡은 사람 수만큼. */
-export function dollPoints(catchCount) {
-  return Math.max(0, Math.floor(Number(catchCount) || 0)) * DOLL_CATCH_POINTS;
-}
-
-/** 참가자 중 한 명을 영희로 뽑는다. */
-export function pickDoll(pool, random = Math.random) {
-  if (!Array.isArray(pool) || pool.length === 0) return null;
-  return pool[Math.floor(random() * pool.length)];
+/** 이번 구호의 길이와 읽기 속도. */
+export function rollChant(random = Math.random) {
+  const ms = Math.round(CHANT_MIN_MS + random() * (CHANT_MAX_MS - CHANT_MIN_MS));
+  const rate = Math.min(RATE_MAX, Math.max(RATE_MIN, CHANT_BASE_MS / ms));
+  return { ms, rate: Math.round(rate * 100) / 100 };
 }

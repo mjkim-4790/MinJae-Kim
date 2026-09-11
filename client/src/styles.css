@@ -5375,3 +5375,24 @@ a.role-opt {
   font-weight: 700;
   font-size: clamp(16px, 2vw, 24px);
 }
+
+/* 대형화면 소리 켜기 — 게임과 무관하게 떠 있다.
+   아무도 손대지 않는 TV 라, 작게 두면 영영 안 눌린다. */
+.screen__sound-arm {
+  position: fixed;
+  top: 56px;
+  right: 24px;
+  z-index: 50;
+  font-size: 18px;
+  padding: 12px 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* 도망 구간에 걸리는 한 줄 — 규칙이 바뀌었으니 화면에서도 말해준다 */
+.mg-screen__last {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(14px, 1.6vw, 22px);
+  font-weight: 600;
+  color: var(--muted);
+}

@@ -9,8 +9,7 @@ import { springPop, springSettle } from '../../lib/motionPresets.js';
  * 대형화면 — 닉네임이 원을 돌고, 호루라기가 울리면 의자가 차오른다.
  * 소리는 여기서만 낸다 (참여자 폰마다 나면 시차로 어긋나 들린다).
  */
-export default function ChairsScreenView({ state, serverTime }) {
-  const [soundOn, setSoundOn] = useState(false);
+export default function ChairsScreenView({ state, serverTime, soundOn = false }) {
   const lastStatusRef = useRef(null);
   const [, tick] = useState(0);
 
@@ -34,11 +33,11 @@ export default function ChairsScreenView({ state, serverTime }) {
 
   useEffect(() => () => audio.stopMusic(), []);
 
-  const enableSound = async () => {
-    const ok = await audio.unlock();
-    setSoundOn(ok);
-    if (ok && state.status === 'spinning') audio.startMusic();
-  };
+  // 소리를 뒤늦게 켰을 때 — 이미 음악이 흘러야 하는 중이면 지금이라도 튼다.
+  // (상태가 안 바뀌었으니 위 효과는 아무것도 하지 않는다)
+  useEffect(() => {
+    if (soundOn && state.status === 'spinning') audio.startMusic();
+  }, [soundOn]);
 
   const msLeft = state.grabEndsAt ? Math.max(0, state.grabEndsAt - serverTime()) : 0;
 
@@ -65,11 +64,6 @@ export default function ChairsScreenView({ state, serverTime }) {
         <p className="screen__eyebrow">
           의자 빨리 뺏기 — {state.round}라운드 · 의자 {state.chairCount}개 · {state.players.length}명
         </p>
-        {!soundOn && (
-          <button className="button button--ghost chairs-screen__sound" onClick={enableSound}>
-            🔊 소리 켜기
-          </button>
-        )}
       </div>
 
       <ChairsCircle state={state} serverTime={serverTime} />

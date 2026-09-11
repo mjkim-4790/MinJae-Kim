@@ -1,29 +1,20 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-import DollChase from './DollChase.jsx';
 import { STRICTNESS } from '../../lib/mugunghwa.js';
-import { springPop, springTap } from '../../lib/motionPresets.js';
-
-const DOLL_MODES = [
-  { id: 'operator', name: '내가 영희', desc: '진행자가 직접 돌아본다' },
-  { id: 'random', name: '참가자 중 무작위', desc: '뽑힌 사람은 이번 판 주자에서 빠진다' },
-];
+import { springPop } from '../../lib/motionPresets.js';
 
 const ERROR_MESSAGE = {
   NOT_ENOUGH_PARTICIPANTS: '참여자가 입장해야 시작할 수 있습니다',
-  NOT_ENOUGH_FOR_RANDOM_DOLL: '참가자 중 영희를 뽑으려면 2명 이상이어야 합니다',
   ROUND_IN_PROGRESS: '지금 라운드가 진행 중입니다',
   INVALID_STRICTNESS: '판정 강도를 선택하세요',
   NOT_RESULT: '아직 라운드 결과가 나오지 않았습니다',
   NOT_RUNNING: '진행 중인 라운드가 없습니다',
-  NOT_DOLL: '영희만 조작할 수 있습니다',
   FORBIDDEN: '권한이 없습니다',
 };
 
 export default function MugunghwaOperatorPanel({ game, participants }) {
-  const { state, start, prepare, unprepare, setLight, stop, advance, reset, serverTime } = game;
-  const [dollMode, setDollMode] = useState('operator');
+  const { state, start, prepare, unprepare, stop, advance, reset, serverTime } = game;
   const [strictness, setStrictness] = useState('normal');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -60,16 +51,12 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
   // 시작 전 / 라운드 사이
   if (state.status === 'idle' || state.status === 'ready' || state.status === 'ended') {
     const isNextRound = state.round > 0 && survivorCount > 1;
-    // 혼자서도 해볼 수 있다. '참가자 중 무작위'만 영희가 주자에서 빠지므로 2명이 필요하다.
-    const need = dollMode === 'random' ? 2 : 1;
     const have = isNextRound ? survivorCount : activeCount;
-    const canStart = have >= need;
+    const canStart = have >= 1; // 영희가 자동이라 전원이 주자다 — 혼자서도 해볼 수 있다
     // 버튼만 회색으로 막아두면 왜 안 되는지 알 수가 없다 (실제로 그렇게 막혀 있었다)
     const blockedReason = canStart
       ? null
-      : dollMode === 'random'
-        ? `참가자 중 영희를 뽑으려면 2명 이상이어야 합니다 (지금 ${have}명). 영희가 주자에서 빠져 달릴 사람이 없어져요 — '내가 영희'로 하면 혼자서도 됩니다.`
-        : `참여자가 1명 이상 입장해야 시작할 수 있습니다 (지금 ${have}명).`;
+      : `참여자가 1명 이상 입장해야 시작할 수 있습니다 (지금 ${have}명).`;
 
     return (
       <div className="stack">
@@ -93,27 +80,13 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
 
         <p className="subtitle">
           폰을 <strong>흔들어야</strong> 앞으로 갑니다. 영희가 돌아봤을 때 움직이면 탈락이에요.
-          누군가 영희를 터치하면 전원이 몸을 돌려 <strong>연타로</strong> 출발선까지 도망칩니다.
-          시간 안에 돌아온 사람만 다음 라운드로 갑니다.
+          누군가 영희를 터치하면 전원이 몸을 돌려 <strong>연타로</strong> 출발선까지 도망치고,
+          <strong> 가장 늦게 들어온 한 명</strong>이 영희에게 잡힙니다.
         </p>
-
-        <label className="field">
-          <span className="field__label">영희는 누가 하나요</span>
-        </label>
-        <ul className="typing-difficulty-grid">
-          {DOLL_MODES.map((m) => (
-            <li key={m.id}>
-              <button
-                type="button"
-                className={`typing-difficulty-tile${dollMode === m.id ? ' typing-difficulty-tile--active' : ''}`}
-                onClick={() => setDollMode(m.id)}
-              >
-                {m.name}
-                <span className="maze-control-desc">{m.desc}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <p className="subtitle">
+          영희는 <strong>자동</strong>입니다 — 진행자도 참가자도 맡지 않으니 전원이 달립니다.
+          구호 속도가 매번 달라져서 박자를 외울 수 없어요. 진행자는 시작·중단·종료만 하면 됩니다.
+        </p>
 
         <label className="field">
           <span className="field__label">움직임 판정</span>
@@ -147,7 +120,7 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
         <button
           className="button"
           disabled={busy || !canStart}
-          onClick={() => run(start, { dollMode, strictness })}
+          onClick={() => run(start, { strictness })}
         >
           {busy ? '시작하는 중…' : isNextRound ? `${state.round + 1}라운드 시작` : '시작하기'}
         </button>
@@ -160,7 +133,6 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
     const msLeft = state.sprintEndsAt ? Math.max(0, state.sprintEndsAt - serverTime()) : 0;
     const caught = (state.runners ?? []).filter((r) => r.caught).length;
     const home = (state.runners ?? []).filter((r) => r.home).length;
-    const iAmDoll = state.dollId == null;
 
     return (
       <div className="stack">
@@ -170,37 +142,13 @@ export default function MugunghwaOperatorPanel({ game, participants }) {
             : `도망 중 · ${(msLeft / 1000).toFixed(1)}초 · 복귀 ${home}/${survivorCount}명`}
         </p>
 
-        {iAmDoll && state.status === 'approaching' && (
-          <>
-            <p className={`mg-light ${state.green ? 'mg-light--green' : 'mg-light--red'}`}>
-              {state.green ? '등을 돌린 중 — 다들 다가옵니다' : '돌아본 중 — 움직이면 잡힙니다'}
-            </p>
-            <motion.button
-              className={`button mg-doll-btn${state.green ? ' mg-doll-btn--turn' : ''}`}
-              disabled={busy}
-              onClick={() => run(setLight, !state.green)}
-              whileTap={{ scale: 0.96 }}
-              transition={springTap}
-            >
-              {state.green ? '돌아보기!' : '다시 등 돌리기'}
-            </motion.button>
-            <p className="subtitle">
-              등을 돌리면 대형화면에서 “무궁화 꽃이 피었습니다”가 나갑니다. 타이밍을 바꿔가며
-              속이세요.
-            </p>
-          </>
-        )}
-
-        {/* 도망 구간에서는 진행자가 영희일 때 직접 쫓아간다 */}
-        {iAmDoll && state.status === 'sprinting' && <DollChase game={game} />}
-
-        {!iAmDoll && (
-          <p className="subtitle">
-            영희: <strong>{state.doll?.nickname}</strong> — 그분 폰에서 돌아보기와 쫓기를
-            조작합니다.
-          </p>
-        )}
-
+        <p className={`mg-light ${state.green ? 'mg-light--green' : 'mg-light--red'}`}>
+          {state.status === 'sprinting'
+            ? '도망치는 중 — 꼴찌가 잡힙니다'
+            : state.green
+              ? '영희가 등을 돌렸습니다 — 다들 다가옵니다'
+              : '영희가 돌아봤습니다 — 움직이면 잡힙니다'}
+        </p>
         {error && <p className="error-text">{error}</p>}
 
         <button className="button button--ghost" disabled={busy} onClick={() => run(stop)}>
