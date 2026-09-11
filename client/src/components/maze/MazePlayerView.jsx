@@ -5,6 +5,7 @@ import MazeBoard from './MazeBoard.jsx';
 import { useTilt } from '../../hooks/useTilt.js';
 import { runnerColor } from '../../lib/maze.js';
 import { springPop, springTap } from '../../lib/motionPresets.js';
+import { buzzWallHit } from '../../lib/haptics.js';
 
 const WARN_MS = 5000; // 남은 시간이 이보다 적으면 큰 숫자로 센다
 
@@ -77,7 +78,13 @@ export default function MazePlayerView({ game, participantId }) {
     }
   }, [state.status, calibrate]);
 
-  const handleWallReset = useCallback(() => setResets((n) => n + 1), []);
+  const handleWallReset = useCallback(() => {
+    setResets((n) => n + 1);
+    // 벽을 보면서 굴리는 게 아니라 폰을 기울이며 화면을 보고 있으므로, 되돌아간 걸
+    // 손으로도 알려준다. 아이폰은 진동 API 자체가 없어서 조용히 넘어간다 —
+    // 그래서 아래 화면 표시를 같이 둔다 (haptics.js 주석 참고).
+    buzzWallHit();
+  }, []);
 
   // 허용이 끝나면 진행자가 준비 인원을 볼 수 있게 알린다
   const { granted: tiltGranted } = tilt;

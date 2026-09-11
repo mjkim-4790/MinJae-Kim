@@ -4149,7 +4149,11 @@ a.role-opt {
    (안 그러면 본문이 내용 너비로 쪼그라들어 미로가 손톱만해진다). */
 .maze-live {
   width: 100%;
-  height: 100%;
+  /* height: 100% 를 쓰면 안 된다. 부모(.screen__motion-wrap)의 높이가 flex 로 정해져서
+     퍼센트가 풀리지 않고, 그러면 내용 크기로 쪼그라든다 — 1920x1080 에서 미로가
+     272x374 밖에 안 나왔다. flex 로 늘리면 862px 까지 커진다. */
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -4193,15 +4197,22 @@ a.role-opt {
      내용 크기 아래로 못 줄어들어 캔버스 크기 계산이 어긋난다. */
   /* 미로는 9:13 세로 비율이라 대개 높이에 먼저 묶인다. 가로를 무한정 차지하면
      좌우가 텅 비므로 적당히 잘라두고, 남는 폭은 순위표가 가져간다. */
-  flex: 0 1 clamp(240px, 42vw, 640px);
+  flex: 0 1 clamp(240px, 46vw, 860px);
   min-width: 0;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* 캔버스를 절대배치로 띄운다.
+     흐름 안에 두면 캔버스가 부모를 밀어 올리고, 그 커진 높이를 ResizeObserver 가
+     다시 읽어 캔버스를 또 키운다. 화면을 줄여도 되돌아오지 않아서 1366x768 에서
+     미로가 뷰포트의 112% 가 됐다. 띄워두면 부모 높이는 flex 가 정한 값 그대로다. */
+  position: relative;
+  overflow: hidden;
 }
 
 .maze-race-board .maze-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: var(--surface);
   border-radius: 12px;
 }
@@ -4210,7 +4221,7 @@ a.role-opt {
   list-style: none;
   margin: 0;
   padding: 0;
-  flex: 0 1 clamp(220px, 26vw, 400px);
+  flex: 0 1 clamp(200px, 22vw, 360px);
   min-width: 0;
   display: flex;
   flex-direction: column;
