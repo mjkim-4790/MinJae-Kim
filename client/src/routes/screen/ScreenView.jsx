@@ -17,6 +17,7 @@ import ColorhuntScreenView from '../../components/colorhunt/ColorhuntScreenView.
 import LaterpsScreenView from '../../components/laterps/LaterpsScreenView.jsx';
 import SilhouetteScreenView from '../../components/silhouette/SilhouetteScreenView.jsx';
 import PersonalColorScreenView from '../../components/personalcolor/PersonalColorScreenView.jsx';
+import OutfitScreenView from '../../components/outfit/OutfitScreenView.jsx';
 import MazeScreenView from '../../components/maze/MazeScreenView.jsx';
 import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
@@ -36,6 +37,7 @@ import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
 import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { usePersonalColorGame } from '../../hooks/usePersonalColorGame.js';
+import { useOutfitGame } from '../../hooks/useOutfitGame.js';
 import { socket } from '../../lib/socket.js';
 import { arm as armSound } from '../../lib/screenSound.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
@@ -72,6 +74,7 @@ export default function ScreenView() {
   const laterpsGame = useLaterpsGame({ eventCode: code, initialState: init?.laterps });
   const silhouetteGame = useSilhouetteGame({ eventCode: code, initialState: init?.silhouette });
   const personalColorGame = usePersonalColorGame({ eventCode: code, initialState: init?.personalcolor });
+  const outfitGame = useOutfitGame({ eventCode: code, initialState: init?.outfit });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -131,6 +134,8 @@ export default function ScreenView() {
           answer={personalColorGame.answer}
         />
       )],
+    ['outfit', outfitGame.state.status !== 'idle', outfitGame.state.status,
+      () => <OutfitScreenView state={outfitGame.state} select={outfitGame.select} />],
     ['mugunghwa',
       mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0,
       mugunghwaGame.state.status,

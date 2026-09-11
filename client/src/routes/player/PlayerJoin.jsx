@@ -15,6 +15,7 @@ import ColorhuntPlayerView from '../../components/colorhunt/ColorhuntPlayerView.
 import LaterpsPlayerView from '../../components/laterps/LaterpsPlayerView.jsx';
 import SilhouettePlayerView from '../../components/silhouette/SilhouettePlayerView.jsx';
 import PersonalColorPlayerView from '../../components/personalcolor/PersonalColorPlayerView.jsx';
+import OutfitPlayerView from '../../components/outfit/OutfitPlayerView.jsx';
 import MazePlayerView from '../../components/maze/MazePlayerView.jsx';
 import WordcloudPlayerView from '../../components/wordcloud/WordcloudPlayerView.jsx';
 import YabawiPlayerView from '../../components/yabawi/YabawiPlayerView.jsx';
@@ -29,6 +30,7 @@ import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
 import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { usePersonalColorGame } from '../../hooks/usePersonalColorGame.js';
+import { useOutfitGame } from '../../hooks/useOutfitGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
@@ -79,6 +81,7 @@ export default function PlayerJoin() {
     laterps: initialLaterps,
     silhouette: initialSilhouette,
     personalcolor: initialPersonalcolor,
+    outfit: initialOutfit,
     colorhunt: initialColorhunt,
     yourColorhunt: initialYourColorhunt,
     scoreboard: initialScoreboard,
@@ -142,6 +145,7 @@ export default function PlayerJoin() {
   const laterpsGame = useLaterpsGame({ eventCode: code, initialState: initialLaterps });
   const silhouetteGame = useSilhouetteGame({ eventCode: code, initialState: initialSilhouette });
   const personalColorGame = usePersonalColorGame({ eventCode: code, initialState: initialPersonalcolor });
+  const outfitGame = useOutfitGame({ eventCode: code, initialState: initialOutfit });
   const scoreboard = useScoreboard(initialScoreboard);
   // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
   const myRankIndex = scoreboard.participants.findIndex((p) => p.id === participant?.id);
@@ -196,6 +200,7 @@ export default function PlayerJoin() {
     laterpsGame,
     silhouetteGame,
     personalColorGame,
+    outfitGame,
   ].some(
     (g) => g.state.status !== 'idle' && !g.dismissed,
   );
@@ -246,6 +251,7 @@ export default function PlayerJoin() {
         <LaterpsPlayerView game={laterpsGame} participantId={participant?.id} />
         <SilhouettePlayerView game={silhouetteGame} participantId={participant?.id} />
         <PersonalColorPlayerView game={personalColorGame} participantId={participant?.id} />
+        <OutfitPlayerView game={outfitGame} participantId={participant?.id} />
 
         {!gameRunning && (
           <>

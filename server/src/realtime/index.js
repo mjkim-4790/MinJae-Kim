@@ -21,6 +21,7 @@ import { getColorhuntSnapshot, registerColorhuntHandlers } from './colorhunt.js'
 import { getLaterpsSnapshot, registerLaterpsHandlers } from './laterps.js';
 import { getSilhouetteSnapshot, registerSilhouetteHandlers } from './silhouette.js';
 import { getPersonalColorSnapshot, registerPersonalColorHandlers } from './personalcolor.js';
+import { getOutfitSnapshot, registerOutfitHandlers } from './outfit.js';
 import { buildScoreboard } from './scoreboard.js';
 import {
   countInRoom,
@@ -68,6 +69,7 @@ export function createRealtime(httpServer) {
     registerLaterpsHandlers(io, socket);
     registerSilhouetteHandlers(io, socket);
     registerPersonalColorHandlers(io, socket);
+    registerOutfitHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -127,6 +129,7 @@ export function createRealtime(httpServer) {
         response.laterps = getLaterpsSnapshot(code);
         response.silhouette = getSilhouetteSnapshot(code);
         response.personalcolor = getPersonalColorSnapshot(code);
+        response.outfit = getOutfitSnapshot(code, role);
         if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {

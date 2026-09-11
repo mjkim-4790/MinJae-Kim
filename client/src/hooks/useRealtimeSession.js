@@ -40,6 +40,7 @@ export function useRealtimeSession(role, eventCode) {
             laterps: res.laterps,
             silhouette: res.silhouette,
             personalcolor: res.personalcolor,
+            outfit: res.outfit,
             scoreboard: res.scoreboard,
             event: res.event,
           });

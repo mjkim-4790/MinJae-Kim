@@ -37,6 +37,7 @@ export function usePlayerConnection(eventCode) {
   const [laterps, setLaterps] = useState(null);
   const [silhouette, setSilhouette] = useState(null);
   const [personalcolor, setPersonalcolor] = useState(null);
+  const [outfit, setOutfit] = useState(null);
   const [colorhunt, setColorhunt] = useState(null);
   const [yourColorhunt, setYourColorhunt] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
@@ -76,6 +77,7 @@ export function usePlayerConnection(eventCode) {
             setLaterps(res.laterps);
             setSilhouette(res.silhouette);
             setPersonalcolor(res.personalcolor);
+            setOutfit(res.outfit);
             setColorhunt(res.colorhunt);
             setYourColorhunt(res.yourColorhunt ?? null);
             setScoreboard(res.scoreboard);
@@ -160,6 +162,7 @@ export function usePlayerConnection(eventCode) {
     laterps,
     silhouette,
     personalcolor,
+    outfit,
     colorhunt,
     yourColorhunt,
     scoreboard,

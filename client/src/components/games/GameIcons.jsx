@@ -203,6 +203,17 @@ function MugunghwaIcon() {
   );
 }
 
+function OutfitIcon() {
+  // 옷걸이에 걸린 상의 — 이 코너의 전부가 '옷을 걸쳐본다'는 동작이다
+  return (
+    <>
+      <path d="M50 16v10" {...LINE} strokeWidth={5} />
+      <circle cx="50" cy="14" r="4" fill={STROKE} />
+      <path d="M50 26l-34 20 10 12 8-6v32h32v-32l8 6 10-12z" {...LINE} strokeWidth={5} />
+    </>
+  );
+}
+
 function PersonalColorIcon() {
   // 얼굴 옆에 색천을 대보는 그림 — 이 코너의 전부가 그 동작이다
   return (
@@ -291,6 +302,7 @@ const ICONS = {
   laterps: LaterpsIcon,
   silhouette: SilhouetteIcon,
   personalcolor: PersonalColorIcon,
+  outfit: OutfitIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란
