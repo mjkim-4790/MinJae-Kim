@@ -76,66 +76,70 @@ export default function ScreenView() {
   }, []);
 
   const event = init?.event;
-  const rpsActive = rpsGame.state.status !== 'idle';
-  const liarActive = liarGame.state.status !== 'idle';
-  const typingActive = typingGame.state.status !== 'idle';
-  const acrosticActive = acrosticGame.state.status !== 'idle';
-  const valuesActive = valuesGame.state.status !== 'idle';
-  const yabawiActive = yabawiGame.state.status !== 'idle';
-  const wordcloudActive = wordcloudGame.state.status !== 'idle';
-  const mazeActive = mazeGame.state.status !== 'idle';
-  const chairsActive = chairsGame.state.status !== 'idle' || chairsGame.state.round > 0;
-  const mugunghwaActive = mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0;
-  const colorhuntActive = colorhuntGame.state.status !== 'idle';
-  const gameActive =
-    rpsActive ||
-    liarActive ||
-    typingActive ||
-    acrosticActive ||
-    valuesActive ||
-    yabawiActive ||
-    wordcloudActive ||
-    mazeActive ||
-    chairsActive ||
-    mugunghwaActive ||
-    colorhuntActive;
+
+  // 지금 화면에 걸 게임을 고른다.
+  //
+  // 예전에는 위에서부터 "idle 이 아닌 첫 게임"을 골랐는데, 그러면 **끝난 게임이
+  // 새로 시작한 게임을 가린다**. 색깔 사냥을 끝내고(상태 ended) 다음 게임을 시작해도
+  // 대형화면에는 "색깔 사냥 종료"만 남아 있었다. 목록에서 앞자리인 게임일수록
+  // 뒷자리 게임을 가리는 문제라 색깔 사냥만의 일이 아니었다.
+  //
+  // 그래서 두 단계로 고른다: **돌아가는 게임이 끝난 게임을 이긴다.**
+  // 아무것도 안 돌아갈 때만 마지막 결과 화면을 계속 띄운다 (우승자를 보여줘야 하니까).
+  // 활성 조건은 게임마다 다르다. 의자·무궁화는 라운드 사이에 잠깐 idle 로
+  // 돌아가므로 round 까지 봐야 한다 — 기존 판정을 그대로 쓴다.
+  const entries = [
+    ['rps', rpsGame.state.status !== 'idle', rpsGame.state.status,
+      () => <RpsScreenView state={rpsGame.state} />],
+    ['liar', liarGame.state.status !== 'idle', liarGame.state.status,
+      () => <LiarScreenView state={liarGame.state} participants={scoreboard.participants} />],
+    ['typing', typingGame.state.status !== 'idle', typingGame.state.status,
+      () => <TypingScreenView state={typingGame.state} />],
+    ['acrostic', acrosticGame.state.status !== 'idle', acrosticGame.state.status,
+      () => <AcrosticScreenView state={acrosticGame.state} />],
+    ['values', valuesGame.state.status !== 'idle', valuesGame.state.status,
+      () => <ValuesScreenView state={valuesGame.state} />],
+    ['yabawi', yabawiGame.state.status !== 'idle', yabawiGame.state.status,
+      () => <YabawiScreenView state={yabawiGame.state} />],
+    ['wordcloud', wordcloudGame.state.status !== 'idle', wordcloudGame.state.status,
+      () => <WordcloudScreenView state={wordcloudGame.state} />],
+    ['colorhunt', colorhuntGame.state.status !== 'idle', colorhuntGame.state.status,
+      () => <ColorhuntScreenView state={colorhuntGame.state} />],
+    ['mugunghwa',
+      mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0,
+      mugunghwaGame.state.status,
+      () => (
+        <MugunghwaScreenView
+          state={mugunghwaGame.state}
+          serverTime={mugunghwaGame.serverTime}
+          livePositions={mugunghwaGame.livePositions}
+        />
+      )],
+    ['chairs',
+      chairsGame.state.status !== 'idle' || chairsGame.state.round > 0,
+      chairsGame.state.status,
+      () => <ChairsScreenView state={chairsGame.state} serverTime={chairsGame.serverTime} />],
+    ['maze', mazeGame.state.status !== 'idle', mazeGame.state.status,
+      () => (
+        <MazeScreenView
+          state={mazeGame.state}
+          serverTime={mazeGame.serverTime}
+          livePositions={mazeGame.livePositions}
+        />
+      )],
+  ];
+
+  const shown =
+    entries.find(([, active, status]) => active && status !== 'ended') ??
+    entries.find(([, active]) => active) ??
+    null;
+
+  const gameActive = !!shown;
   const contentKey = gameActive ? 'game' : (mode ?? 'code');
 
   let content;
-  if (rpsActive) {
-    content = <RpsScreenView state={rpsGame.state} />;
-  } else if (liarActive) {
-    content = <LiarScreenView state={liarGame.state} participants={scoreboard.participants} />;
-  } else if (typingActive) {
-    content = <TypingScreenView state={typingGame.state} />;
-  } else if (acrosticActive) {
-    content = <AcrosticScreenView state={acrosticGame.state} />;
-  } else if (valuesActive) {
-    content = <ValuesScreenView state={valuesGame.state} />;
-  } else if (yabawiActive) {
-    content = <YabawiScreenView state={yabawiGame.state} />;
-  } else if (wordcloudActive) {
-    content = <WordcloudScreenView state={wordcloudGame.state} />;
-  } else if (colorhuntActive) {
-    content = <ColorhuntScreenView state={colorhuntGame.state} />;
-  } else if (mugunghwaActive) {
-    content = (
-      <MugunghwaScreenView
-        state={mugunghwaGame.state}
-        serverTime={mugunghwaGame.serverTime}
-        livePositions={mugunghwaGame.livePositions}
-      />
-    );
-  } else if (chairsActive) {
-    content = <ChairsScreenView state={chairsGame.state} serverTime={chairsGame.serverTime} />;
-  } else if (mazeActive) {
-    content = (
-      <MazeScreenView
-        state={mazeGame.state}
-        serverTime={mazeGame.serverTime}
-        livePositions={mazeGame.livePositions}
-      />
-    );
+  if (shown) {
+    content = shown[3]();
   } else if (mode === 'logo') {
     content = (
       <div className="screen__frame">
