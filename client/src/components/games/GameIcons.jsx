@@ -203,6 +203,19 @@ function MugunghwaIcon() {
   );
 }
 
+function ColorhuntIcon() {
+  // 카메라 + 렌즈 안에 꽉 찬 색 한 덩이 — "카메라로 색을 담아 온다"
+  return (
+    <>
+      <path d="M36 30l6-10h16l6 10" {...LINE} strokeWidth={5} />
+      <rect x="12" y="30" width="76" height="50" rx="10" {...LINE} strokeWidth={5} />
+      <circle cx="50" cy="55" r="17" {...LINE} strokeWidth={5} />
+      <circle cx="50" cy="55" r="9" fill={STROKE} />
+      <circle cx="74" cy="42" r="3.5" fill={STROKE} />
+    </>
+  );
+}
+
 function TouchIcon() {
   // 화면을 누르는 손가락 + 터치 파동
   return (
@@ -236,6 +249,7 @@ const ICONS = {
   maze: MazeIcon,
   chairs: ChairsIcon,
   mugunghwa: MugunghwaIcon,
+  colorhunt: ColorhuntIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란
