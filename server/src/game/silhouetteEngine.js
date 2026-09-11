@@ -246,9 +246,52 @@ export function clampThreshold(v) {
   return Math.min(THRESHOLD_MAX, Math.max(THRESHOLD_MIN, n));
 }
 
+// ── 두 가지 방식 ──────────────────────────────────────────────────────────
+// single : 자세 하나를 골라 제한시간 안에 맞춘다 (연습용)
+// wall   : 사람 모양으로 뚫린 벽이 다가온다. 닿는 순간의 자세로 판정하고,
+//          40초 동안 몇 장을 통과했는지로 점수를 낸다 (본 게임)
+export const MODES = [
+  { id: 'single', name: '자세 연습', desc: '고른 자세 하나를 제한시간 안에' },
+  { id: 'wall', name: '벽 넘기', desc: '40초 동안 다가오는 벽을 최대한 많이' },
+];
+
+export function modeById(id) {
+  return MODES.find((m) => m.id === id) ?? null;
+}
+
 // 한 판 길이 (운영 결정: 3~10초).
 // 팔을 오래 들고 있게 만들지 않는다 — 자세를 맞추는 순간 바로 끝난다.
 export const ROUND_MS = 8000;
+
+// ── 벽 넘기 ────────────────────────────────────────────────────────────────
+export const WALL_SESSION_MS = 40000; // 한 사람에게 주어지는 전체 시간
+export const WALL_GAP_MS = 700; // 벽과 벽 사이 숨 돌리는 시간
+
+// 벽은 올수록 빨라진다. 처음엔 여유롭게 지켜보다가 뒤로 갈수록 손이 급해진다.
+const WALL_FIRST_MS = 6000;
+const WALL_FASTER_PER_WALL = 450;
+const WALL_FLOOR_MS = 2400; // 이보다 빠르면 사람이 반응할 수 없다
+
+/** n 번째 벽이 다가오는 데 걸리는 시간 (0부터 셈). */
+export function wallTravelMs(n) {
+  const i = Math.max(0, Math.floor(Number(n) || 0));
+  return Math.max(WALL_FLOOR_MS, WALL_FIRST_MS - i * WALL_FASTER_PER_WALL);
+}
+
+/**
+ * 벽이 닿기 직전 이만큼의 구간에서 가장 잘 맞춘 순간으로 판정한다.
+ *
+ * 닿는 순간 딱 한 프레임만 보면 인식이 한 번 튀는 것만으로 억울하게 실패한다.
+ * 그렇다고 처음부터 다 보면 "순간"의 맛이 사라진다. 마지막 1초가 그 사이다.
+ */
+export const WALL_JUDGE_MS = 1000;
+
+// 점수 — 40초 안에 통과한 장수로만 매긴다 (운영 결정).
+const POINTS_PER_WALL = 25;
+
+export function wallPoints(passCount) {
+  return Math.max(0, Math.floor(Number(passCount) || 0)) * POINTS_PER_WALL;
+}
 export const READY_MS = 2500; // 카메라 앞에 서서 전신이 잡힐 시간
 // 이만큼 유지해야 인정한다. 팔을 흔들다 스쳐 지나간 순간을 통과로 쳐주면 안 된다.
 export const HOLD_MS = 500;

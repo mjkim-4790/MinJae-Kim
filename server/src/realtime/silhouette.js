@@ -7,6 +7,11 @@ import {
   POSES,
   READY_MS,
   ROUND_MS,
+  WALL_GAP_MS,
+  WALL_JUDGE_MS,
+  WALL_SESSION_MS,
+  wallPoints,
+  wallTravelMs,
   THRESHOLD_DEFAULT,
   THRESHOLD_MAX,
   THRESHOLD_MIN,
@@ -29,6 +34,11 @@ import { broadcastScoreboard } from './scoreboard.js';
 // 맞았는지는 여기서 계산한다 (아이패드가 보낸 점수는 받지 않는다).
 //
 // 팔을 오래 들고 있게 만들지 않는다 (운영 결정). 자세가 맞는 순간 바로 끝난다.
+//
+// ── 벽 넘기 ────────────────────────────────────────────────────────────────
+// 진행자가 '무작위'를 고르면 일본 예능처럼 사람 모양으로 뚫린 벽이 다가온다.
+// 닿는 순간의 자세로 판정하고, 틀리면 벽이 물러났다 같은 모양으로 다시 온다.
+// 40초 동안 몇 장을 통과했는지가 점수다 (운영 결정).
 
 const games = new Map();
 const timers = new Map();
@@ -47,14 +57,22 @@ function clearPhaseTimer(code) {
 function createInitialState() {
   return {
     status: 'idle', // idle | ready | playing | result | ended
+    mode: 'wall', // single(자세 하나) | wall(40초 벽 넘기)
     threshold: THRESHOLD_DEFAULT,
     currentId: null,
     poseId: null,
-    phase: null, // ready | posing
+    phase: null, // ready | posing | wall
     phaseEndsAt: null,
     startedAt: null,
     live: { match: 0, best: 0, holding: false }, // 지금 얼마나 닮았는지 (화면 표시용)
     holdStartedAt: null,
+    // 벽 넘기 전용
+    wallIndex: 0,
+    sessionEndsAt: null,
+    passCount: 0,
+    attemptCount: 0,
+    windowBest: 0, // 벽이 닿기 직전 구간에서 가장 잘 맞춘 값
+    lastWall: null, // 방금 벽의 결과 (화면 연출용)
     lastResult: null,
     history: [],
     earned: new Map(),
@@ -80,6 +98,7 @@ function publicState(state) {
   const pose = poseById(state.poseId);
   return {
     status: state.status,
+    mode: state.mode,
     threshold: state.threshold,
     currentId: state.currentId,
     currentNickname: nicknameOf(state.currentId),
@@ -89,6 +108,11 @@ function publicState(state) {
     // 따라 할 모양은 숨길 이유가 없다 — 보고 따라 하는 게 이 게임이다
     pose: pose ? { id: pose.id, name: pose.name, hint: pose.hint, points: pose.points } : null,
     live: state.live,
+    wallIndex: state.wallIndex,
+    sessionEndsAt: state.sessionEndsAt,
+    passCount: state.passCount,
+    attemptCount: state.attemptCount,
+    lastWall: state.lastWall,
     lastResult: state.lastResult,
     playedCount: state.history.length,
     poseList: POSES.map((p) => ({ id: p.id, name: p.name })),
@@ -127,13 +151,18 @@ function finishTurn(io, code, { passed, matchValue, elapsedMs }) {
   const state = getState(code);
   clearPhaseTimer(code);
 
+  const wall = state.mode === 'wall';
   const pose = poseById(state.poseId);
-  const points = pointsFor(passed, matchValue, elapsedMs);
+  // 벽 넘기는 '40초에 몇 장'이 전부다. 마지막 한 장의 정확도는 점수에 안 들어간다.
+  const points = wall ? wallPoints(state.passCount) : pointsFor(passed, matchValue, elapsedMs);
   const result = {
     participantId: state.currentId,
     nickname: nicknameOf(state.currentId),
+    mode: state.mode,
     poseName: pose?.name ?? '?',
-    passed,
+    passed: wall ? state.passCount > 0 : passed,
+    passCount: state.passCount,
+    attemptCount: state.attemptCount,
     match: Math.round((matchValue ?? 0) * 100),
     elapsedMs,
     points,
@@ -150,15 +179,18 @@ function finishTurn(io, code, { passed, matchValue, elapsedMs }) {
     }
   }
 
-  // 난이도 조절 — 첫 시도가 따로 없는 게임이라 '지나간 사람들의 실패율'을 쓴다.
-  // 최근 사람들만 본다: 행사 앞부분 성적이 뒤까지 끌고 가면 조절이 굼떠진다.
+  // 난이도 조절.
+  // 벽 넘기는 한 사람이 여러 장을 치므로 '벽 단위 실패율'이 훨씬 촘촘한 신호다.
+  // 자세 연습은 사람 단위로밖에 잴 수 없어 최근 몇 명을 본다.
   const recent = state.history.slice(-6);
-  const failRate = recent.length ? recent.filter((r) => !r.passed).length / recent.length : null;
+  const failRate = wall
+    ? (state.attemptCount ? (state.attemptCount - state.passCount) / state.attemptCount : null)
+    : (recent.length ? recent.filter((r) => !r.passed).length / recent.length : null);
   state.threshold = adjust(state.threshold, failRate, {
     step: THRESHOLD_STEP,
     min: THRESHOLD_MIN,
     max: THRESHOLD_MAX,
-    sampleSize: recent.length,
+    sampleSize: wall ? state.attemptCount : recent.length,
     // 기준이 높아질수록 어려워진다 (색 허용 배율과 반대 방향)
     easierIsHigher: false,
   });
@@ -166,11 +198,72 @@ function finishTurn(io, code, { passed, matchValue, elapsedMs }) {
   state.phase = null;
   state.phaseEndsAt = null;
   state.holdStartedAt = null;
+  state.sessionEndsAt = null;
   state.live = { match: 0, best: state.live.best, holding: false };
   state.status = 'result';
 
   const event = getEventByCode(code);
   if (event && points > 0) broadcastScoreboard(io, code, event.id);
+  broadcast(io, code);
+}
+
+/**
+ * 벽 한 장을 보낸다.
+ *
+ * 벽이 닿는 시각(phaseEndsAt)만 정해서 내려주고, 화면은 그 시각까지 남은 비율로
+ * 벽을 키운다. 서버가 매 프레임 위치를 쏘지 않아도 되고, 기기가 느려도 닿는
+ * 시각은 어긋나지 않는다.
+ */
+function sendWall(io, code) {
+  const state = getState(code);
+  if (state.status !== 'playing' || state.mode !== 'wall') return;
+  clearPhaseTimer(code);
+
+  const now = Date.now();
+  // 남은 시간이 벽 한 장도 안 되면 더 보내지 않는다 — 닿기도 전에 끝나면 허무하다
+  const travel = wallTravelMs(state.wallIndex);
+  if (state.sessionEndsAt != null && now + travel > state.sessionEndsAt + travel / 2) {
+    finishTurn(io, code, { passed: state.passCount > 0, matchValue: state.live.best, elapsedMs: WALL_SESSION_MS });
+    return;
+  }
+
+  state.phase = 'wall';
+  state.phaseEndsAt = now + travel;
+  state.windowBest = 0;
+  state.live = { ...state.live, best: 0, holding: false };
+
+  timers.set(
+    code,
+    setTimeout(() => {
+      timers.delete(code);
+      const cur = getState(code);
+      if (cur.status !== 'playing' || cur.phase !== 'wall') return;
+
+      // 닿았다 — 마지막 구간의 최고점으로 판정한다
+      const best = cur.windowBest;
+      const passed = best >= cur.threshold;
+      cur.attemptCount += 1;
+      if (passed) cur.passCount += 1;
+      cur.lastWall = {
+        index: cur.wallIndex,
+        poseName: poseById(cur.poseId)?.name ?? '?',
+        passed,
+        match: Math.round(best * 100),
+      };
+      cur.wallIndex += 1;
+      // 통과하면 새 모양, 틀리면 **같은 모양으로 한 번 더** (운영 결정 — 기회를 더 준다)
+      if (passed) cur.poseId = pickPose(cur.poseId).id;
+      cur.phase = null;
+      cur.phaseEndsAt = null;
+      broadcast(io, code);
+
+      timers.set(code, setTimeout(() => {
+        timers.delete(code);
+        sendWall(io, code);
+      }, WALL_GAP_MS));
+    }, travel),
+  );
+
   broadcast(io, code);
 }
 
@@ -189,6 +282,11 @@ function setPhase(io, code, phase, durationMs) {
       if (phase === 'ready') {
         s.startedAt = Date.now();
         s.live = { match: 0, best: 0, holding: false };
+        if (s.mode === 'wall') {
+          s.sessionEndsAt = s.startedAt + WALL_SESSION_MS;
+          sendWall(io, code);
+          return;
+        }
         setPhase(io, code, 'posing', ROUND_MS);
       } else {
         // 시간 종료 — 가장 닮았던 순간으로 기록을 남긴다
@@ -257,17 +355,25 @@ export function registerSilhouetteHandlers(io, socket) {
     if (state.status === 'playing') return reply({ ok: false, error: 'TURN_IN_PROGRESS' });
     if (state.currentId == null) return reply({ ok: false, error: 'NOBODY_CALLED' });
 
-    // 진행자가 고르거나, 비워두면 서버가 뽑는다 (직전 포즈는 피한다)
+    // 자세를 고르면 '연습'(하나를 제한시간 안에), 무작위면 '벽 넘기'(40초 서바이벌).
+    // 진행자 화면의 무작위 버튼이 곧 본 게임 버튼이다.
     const chosen = payload.poseId ? poseById(String(payload.poseId)) : pickPose(state.poseId);
     if (!chosen) return reply({ ok: false, error: 'INVALID_POSE' });
 
+    state.mode = payload.poseId ? 'single' : 'wall';
     state.poseId = chosen.id;
     state.status = 'playing';
     state.lastResult = null;
     state.holdStartedAt = null;
     state.live = { match: 0, best: 0, holding: false };
+    state.wallIndex = 0;
+    state.passCount = 0;
+    state.attemptCount = 0;
+    state.windowBest = 0;
+    state.sessionEndsAt = null;
+    state.lastWall = null;
 
-    reply({ ok: true, poseId: chosen.id });
+    reply({ ok: true, poseId: chosen.id, mode: state.mode });
     setPhase(io, code, 'ready', READY_MS);
   });
 
@@ -281,7 +387,8 @@ export function registerSilhouetteHandlers(io, socket) {
     if (!canSubmitPose(socket, code)) return reply({ ok: false, error: 'FORBIDDEN' });
 
     const state = getState(code);
-    if (state.status !== 'playing' || state.phase !== 'posing') {
+    const posing = state.phase === 'posing' || state.phase === 'wall';
+    if (state.status !== 'playing' || !posing) {
       return reply({ ok: false, error: 'NOT_POSING' });
     }
 
@@ -294,6 +401,25 @@ export function registerSilhouetteHandlers(io, socket) {
     if (!scored) return reply({ ok: false, error: 'CANNOT_SCORE' });
 
     const now = Date.now();
+
+    // ── 벽 넘기 ── 닿기 직전 구간에서 가장 잘 맞춘 값만 남긴다.
+    // 한 프레임만 보면 인식이 한 번 튀는 것으로 억울하게 떨어지고, 처음부터 다 보면
+    // "순간"의 맛이 사라진다.
+    if (state.phase === 'wall') {
+      const msToHit = (state.phaseEndsAt ?? now) - now;
+      const inWindow = msToHit <= WALL_JUDGE_MS;
+      if (inWindow && scored.match > state.windowBest) state.windowBest = scored.match;
+      state.live = {
+        match: scored.match,
+        best: state.windowBest,
+        holding: inWindow && scored.match >= state.threshold,
+        inWindow,
+      };
+      reply({ ok: true, match: scored.match, inWindow });
+      broadcastLive(io, code);
+      return;
+    }
+
     const hit = scored.match >= state.threshold;
     // 스쳐 지나간 한순간을 통과로 쳐주지 않는다. 잠깐이라도 유지해야 인정한다.
     if (hit) {
@@ -331,7 +457,11 @@ export function registerSilhouetteHandlers(io, socket) {
 
     const state = getState(code);
     if (state.status !== 'playing') return reply({ ok: false, error: 'NOT_PLAYING' });
-    finishTurn(io, code, { passed: false, matchValue: state.live.best, elapsedMs: ROUND_MS });
+    finishTurn(io, code, {
+      passed: state.mode === 'wall' ? state.passCount > 0 : false,
+      matchValue: state.live.best,
+      elapsedMs: ROUND_MS,
+    });
     reply({ ok: true });
   });
 
@@ -368,7 +498,14 @@ export function registerSilhouetteHandlers(io, socket) {
           played: state.history.length,
           finalThreshold: state.threshold,
           turns: state.history.map((h) => ({
-            nickname: h.nickname, pose: h.poseName, passed: h.passed, match: h.match, points: h.points,
+            nickname: h.nickname,
+            mode: h.mode,
+            pose: h.poseName,
+            passed: h.passed,
+            passCount: h.passCount,
+            attemptCount: h.attemptCount,
+            match: h.match,
+            points: h.points,
           })),
           totals: [...state.earned.entries()]
             .map(([participantId, points]) => ({ participantId, nickname: nicknameOf(participantId), points }))

@@ -21,12 +21,21 @@ export default function SilhouetteScreenView({ state, sendAngles }) {
   const [, tick] = useState(0);
 
   const posing = state.phase === 'posing';
+  const walling = state.phase === 'wall';
+  const wallMode = state.mode === 'wall';
 
+  // 벽이 언제 출발해서 언제 닿는지 — 화면은 이 두 시각만으로 벽을 그린다
+  const wallStartRef = useRef(null);
   useEffect(() => {
-    if (!state.phase) return undefined;
+    wallStartRef.current = walling ? Date.now() : null;
+  }, [walling, state.wallIndex]);
+
+  // 남은 시간·게이지를 위해 진행 중에는 자주 다시 그린다 (벽 사이 간격 포함)
+  useEffect(() => {
+    if (state.status !== 'playing') return undefined;
     const id = setInterval(() => tick((n) => n + 1), 100);
     return () => clearInterval(id);
-  }, [state.phase]);
+  }, [state.status]);
 
   const onFrame = useCallback(
     (video, ts) => {
@@ -37,14 +46,14 @@ export default function SilhouetteScreenView({ state, sendAngles }) {
       const ok = fullBodyVisible(pts);
       setInFrame((prev) => (prev === ok ? prev : ok));
 
-      if (!posing || !ok) return;
+      if ((!posing && !walling) || !ok) return;
       // 각도만 보낸다. 관절 위치조차 서버로 넘기지 않는다.
       if (ts - lastSentRef.current < SEND_MS) return;
       lastSentRef.current = ts;
       const angles = anglesFrom(pts);
       if (angles) sendAngles(angles);
     },
-    [landmarker, posing, sendAngles],
+    [landmarker, posing, walling, sendAngles],
   );
 
   if (state.status === 'ended') {
@@ -90,7 +99,16 @@ export default function SilhouetteScreenView({ state, sendAngles }) {
       {camOn && (
         <>
           <div className="sil-screen__row">
-            <PoseStage pose={state.pose} pointsRef={pointsRef} holding={state.live?.holding} />
+            <PoseStage
+              pose={state.pose}
+              pointsRef={pointsRef}
+              holding={state.live?.holding}
+              wall={
+                walling && state.phaseEndsAt
+                  ? { startedAt: wallStartRef.current ?? Date.now(), hitsAt: state.phaseEndsAt }
+                  : null
+              }
+            />
 
             <div className="sil-screen__side">
               <AnimatePresence mode="wait">
@@ -108,8 +126,50 @@ export default function SilhouetteScreenView({ state, sendAngles }) {
                 {state.phase === 'ready' && (
                   <motion.div key="count" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }} transition={springPop}>
                     <p className="sil-screen__count">{Math.max(1, Math.ceil(msLeft / 1000))}</p>
-                    <p className="screen__hint">이 모양을 따라 하세요</p>
+                    <p className="screen__hint">
+                      {wallMode ? '벽이 다가옵니다 — 40초 동안 최대한 많이!' : '이 모양을 따라 하세요'}
+                    </p>
                     {state.pose?.hint && <p className="sil-screen__hint">{state.pose.hint}</p>}
+                  </motion.div>
+                )}
+
+                {walling && (
+                  <motion.div key={`wall-${state.wallIndex}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <p className="sil-screen__hint">{state.pose?.hint}</p>
+                    <p className={`sil-screen__match${state.live?.holding ? ' sil-screen__match--hit' : ''}`}>
+                      {pct}%
+                    </p>
+                    <div className="sil-gauge">
+                      <div className="sil-gauge__need" style={{ left: `${need}%` }} />
+                      <div
+                        className={`sil-gauge__fill${state.live?.holding ? ' sil-gauge__fill--hit' : ''}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    {/* 마지막 1초에 들어오면 알려준다 — 여기서 잡힌 최고점으로 판정한다 */}
+                    <p className={`sil-wall__now${state.live?.inWindow ? ' sil-wall__now--on' : ''}`}>
+                      {state.live?.inWindow ? '지금!' : `벽이 온다 — ${(msLeft / 1000).toFixed(1)}초`}
+                    </p>
+                    <p className="screen__hint">
+                      {state.passCount}장 통과 · 남은 시간 {Math.max(0, Math.ceil(((state.sessionEndsAt ?? 0) - Date.now()) / 1000))}초
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* 벽과 벽 사이 — 방금 결과를 잠깐 보여준다.
+                    status 까지 봐야 한다: 세션이 끝나도 lastWall 은 남아 있어서,
+                    이 조건만으로는 최종 결과 화면과 겹쳐 떴다. */}
+                {wallMode && state.status === 'playing' && !walling && state.phase === null && state.lastWall && (
+                  <motion.div key={`gap-${state.lastWall.index}`} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={springPop}>
+                    <p className={`sil-screen__verdict ${state.lastWall.passed ? 'sil-screen__verdict--ok' : 'sil-screen__verdict--no'}`}>
+                      {state.lastWall.passed ? '통과!' : '쿵!'}
+                    </p>
+                    <p className="screen__hint">
+                      {state.lastWall.passed
+                        ? `${state.passCount}장째`
+                        : '같은 모양으로 한 번 더'}
+                      {' · '}{state.lastWall.match}%
+                    </p>
                   </motion.div>
                 )}
 
@@ -134,10 +194,16 @@ export default function SilhouetteScreenView({ state, sendAngles }) {
                 {state.status === 'result' && result && (
                   <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={springSettle}>
                     <p className={`sil-screen__verdict ${result.passed ? 'sil-screen__verdict--ok' : 'sil-screen__verdict--no'}`}>
-                      {result.passed ? '통과!' : '아쉬워요'}
+                      {result.mode === 'wall'
+                        ? `${result.passCount}장!`
+                        : result.passed ? '통과!' : '아쉬워요'}
                     </p>
                     <p className="sil-screen__big">{result.nickname}</p>
-                    <p className="screen__hint">{result.poseName} · 최고 {result.match}%</p>
+                    <p className="screen__hint">
+                      {result.mode === 'wall'
+                        ? `벽 ${result.passCount}/${result.attemptCount}장 통과`
+                        : `${result.poseName} · 최고 ${result.match}%`}
+                    </p>
                     {result.points > 0 && <p className="sil-screen__points">+{result.points}점</p>}
                   </motion.div>
                 )}
@@ -146,7 +212,7 @@ export default function SilhouetteScreenView({ state, sendAngles }) {
           </div>
 
           {/* 전신이 안 잡히면 각도를 못 재므로 먼저 알려준다 */}
-          {!inFrame && (state.phase === 'ready' || posing) && (
+          {!inFrame && (state.phase === 'ready' || posing || walling) && (
             <p className="sil-screen__warn">전신이 보이게 뒤로 물러나 주세요</p>
           )}
         </>

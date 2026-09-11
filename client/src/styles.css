@@ -5396,3 +5396,27 @@ a.role-opt {
   font-weight: 600;
   color: var(--muted);
 }
+
+/* 벽이 닿기 직전 — 이 구간의 최고점으로 판정한다. 여기 들어왔다는 걸 알려야
+   "지금 자세를 잡아야 하는구나"를 몸이 안다. */
+.sil-wall__now {
+  margin: 0;
+  font-size: clamp(20px, 2.8vw, 40px);
+  font-weight: 800;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sil-wall__now--on {
+  color: var(--rainbow-red);
+  animation: sil-wall-pulse 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes sil-wall-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sil-wall__now--on { animation: none; }
+}

@@ -75,7 +75,11 @@ export default function SilhouetteOperatorPanel({ game, participants }) {
       <div className="stack">
         <p className="badge badge--info">
           {state.currentNickname} 차례 · {state.pose?.name}
-          {state.phase === 'ready' ? ' · 준비 중' : ` · ${Math.round((state.live?.match ?? 0) * 100)}%`}
+          {state.phase === 'ready'
+            ? ' · 준비 중'
+            : state.mode === 'wall'
+              ? ` · ${state.passCount}장 통과 (${state.attemptCount}장 중)`
+              : ` · ${Math.round((state.live?.match ?? 0) * 100)}%`}
         </p>
         <p className="subtitle">아이패드 화면에서 진행됩니다. 자세가 안 나오면 건너뛰세요.</p>
         {error && <p className="error-text">{error}</p>}
@@ -91,7 +95,9 @@ export default function SilhouetteOperatorPanel({ game, participants }) {
     return (
       <div className="stack">
         <p className={`chairs-verdict ${r?.passed ? 'chairs-verdict--safe' : 'chairs-verdict--out'}`}>
-          {r?.nickname} · {r?.poseName} · 최고 {r?.match}% {r?.passed ? `→ +${r.points}점` : '→ 실패'}
+          {r?.mode === 'wall'
+            ? `${r?.nickname} · 벽 ${r?.passCount}/${r?.attemptCount}장 통과 → +${r?.points}점`
+            : `${r?.nickname} · ${r?.poseName} · 최고 ${r?.match}% ${r?.passed ? `→ +${r.points}점` : '→ 실패'}`}
         </p>
         {error && <p className="error-text">{error}</p>}
         <div className="operator-topbar__actions operator-topbar__actions--split">
@@ -117,11 +123,21 @@ export default function SilhouetteOperatorPanel({ game, participants }) {
         세워두세요.
       </p>
       <p className="subtitle">
+        <strong>무작위</strong>를 고르면 사람 모양으로 뚫린 벽이 다가옵니다. 닿는 순간의 자세로
+        판정하고, 틀리면 벽이 물러났다 같은 모양으로 다시 옵니다. 벽은 올수록 빨라지고,
+        <strong> 40초 동안 통과한 장수</strong>가 점수입니다 (한 장에 25점).
+        자세를 직접 고르면 연습 모드예요.
+      </p>
+      <p className="subtitle">
         지금 난이도 <strong>{levelLabel(state.threshold)}</strong> (통과 기준{' '}
         {Math.round(state.threshold * 100)}%) — 성적에 따라 저절로 조절됩니다.
       </p>
 
-      <label className="field"><span className="field__label">낼 자세</span></label>
+      <label className="field">
+        <span className="field__label">
+          낼 자세 — <strong>무작위</strong>를 고르면 40초 벽 넘기(본 게임)
+        </span>
+      </label>
       <ul className="typing-difficulty-grid">
         <li>
           <button
@@ -129,7 +145,8 @@ export default function SilhouetteOperatorPanel({ game, participants }) {
             className={`typing-difficulty-tile${poseId === null ? ' typing-difficulty-tile--active' : ''}`}
             onClick={() => setPoseId(null)}
           >
-            무작위
+            무작위 (벽 넘기)
+            <span className="maze-control-desc">40초 · 다가오는 벽을 최대한 많이</span>
           </button>
         </li>
         {(state.poseList ?? []).map((p) => (
