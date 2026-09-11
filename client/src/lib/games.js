@@ -20,6 +20,7 @@ export const GAMES = [
   { id: 'maze', name: '미로 찾기', ready: true },
   { id: 'chairs', name: '의자 빨리 뺏기', ready: true },
   { id: 'mugunghwa', name: '무궁화꽃이 피었습니다', ready: true },
+  { id: 'colorhunt', name: '색깔 사냥', ready: true },
 ];
 
 export function gameById(id) {

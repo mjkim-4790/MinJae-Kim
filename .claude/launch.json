@@ -4,8 +4,50 @@
     {
       "name": "recreation-client",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--workspace", "client"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--workspace",
+        "client"
+      ],
       "port": 5173
+    },
+    {
+      "name": "recreation-client-https",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--workspace",
+        "client"
+      ],
+      "env": {
+        "HTTPS": "1"
+      },
+      "port": 5173,
+      "url": "https://localhost:5173"
+    },
+    {
+      "name": "1LL",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "/Users/kimminjae/Desktop/김민재/1LL"
+      ],
+      "port": 5273
+    },
+    {
+      "name": "kimminjae-homepage",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "/Users/kimminjae/Desktop/김민재/kimminjae-homepage"
+      ],
+      "port": 4300
     }
   ]
 }

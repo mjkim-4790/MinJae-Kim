@@ -4755,3 +4755,292 @@ a.role-opt {
   color: var(--muted);
   cursor: default;
 }
+
+/* ── 카메라 무대 (색깔 사냥 · 이후 카메라 게임 공용) ─────────────────────── */
+
+.cam-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.cam-stage--ask {
+  align-items: stretch;
+  text-align: center;
+}
+
+.cam-stage__ask-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* 미리보기는 정사각형으로 고정한다. 폰 방향이 바뀌어도 판정 영역(가운데)이
+   화면에서 같은 자리에 있어야 사람들이 겨냥하는 법을 한 번만 배운다. */
+.cam-stage__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: #171412;
+  box-shadow: var(--shadow-md);
+}
+
+.cam-stage__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 실제로 색을 읽는 범위(가운데 40%)를 그대로 그린다. 눈에 안 보이면
+   화면 구석에 물건을 대고 왜 안 되냐고 묻게 된다. */
+.cam-stage__reticle {
+  position: absolute;
+  inset: 30%;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+
+.cam-stage__veil,
+.cam-stage__fog {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+}
+
+.cam-stage__veil {
+  background: rgba(23, 20, 18, 0.55);
+}
+
+/* 인식 실패를 오류창 대신 안개로 흡수한다 — 게임 안에서 일어난 일처럼 보이게 */
+.cam-stage__fog {
+  background: linear-gradient(
+    160deg,
+    rgba(252, 250, 245, 0.86),
+    rgba(231, 224, 212, 0.92)
+  );
+  backdrop-filter: blur(6px);
+  color: var(--text);
+}
+
+.cam-stage__fog span {
+  max-width: 15em;
+  line-height: 1.5;
+}
+
+.cam-stage__shutter {
+  font-size: 18px;
+  padding-block: 16px;
+}
+
+.cam-stage__hint {
+  margin: 0;
+  text-align: center;
+}
+
+/* 파일 입력은 숨기고 버튼으로 대신 연다 (기본 위젯이 화면과 안 어울린다) */
+.cam-file-input {
+  display: none;
+}
+
+/* ── 색깔 사냥 — 참여자 ──────────────────────────────────────────────────── */
+
+.ch-stage {
+  padding-top: 14px;
+}
+
+.ch-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ch-target__chip {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.ch-target__name {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+/* 폰이 무슨 색으로 봤는지 돌려준다. 이게 없으면 왜 틀렸는지 알 수가 없어서
+   같은 실수를 반복한다 (대개 배경을 찍고 있다). */
+.ch-miss {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.ch-miss__chip {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+/* ── 색깔 사냥 — 진행자 ──────────────────────────────────────────────────── */
+
+.ch-palette {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.ch-swatch {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.ch-swatch--active {
+  border-color: var(--button-bg);
+  box-shadow: inset 0 0 0 1px var(--button-bg);
+}
+
+.ch-swatch__chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+.ch-swatch--random .ch-swatch__name {
+  padding-block: 8px;
+}
+
+.ch-swatch__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ch-lastround {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--line) 18%, var(--surface));
+}
+
+/* ── 색깔 사냥 — 대형화면 ────────────────────────────────────────────────── */
+
+.ch-screen {
+  gap: clamp(12px, 2vh, 28px);
+}
+
+.ch-screen__target {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+}
+
+.ch-screen__chip {
+  width: clamp(48px, 6vw, 96px);
+  height: clamp(48px, 6vw, 96px);
+  border-radius: 50%;
+  border: 4px solid var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.ch-screen__word {
+  font-size: clamp(36px, 6vw, 84px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* 사람이 늘어나면 타일이 저절로 작아진다. 50명까지 한 화면에 들어와야 한다. */
+.ch-screen__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: min(1280px, 92vw);
+  display: grid;
+  /* 크기는 컴포넌트가 인원수에 맞춰 넣어준다 (변수가 없으면 중간값) */
+  grid-template-columns: repeat(auto-fill, minmax(var(--ch-tile, clamp(74px, 8vw, 132px)), 1fr));
+  gap: clamp(8px, 1vw, 16px);
+  justify-items: center;
+}
+
+.ch-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.ch-tile__color {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+}
+
+/* 통과한 타일만 굵은 테두리로 띄운다 — 멀리서도 누가 찾았는지 한눈에 보인다 */
+.ch-tile--passed .ch-tile__color {
+  border: 4px solid var(--ok);
+  box-shadow: var(--shadow-md);
+}
+
+.ch-tile__check {
+  font-size: clamp(20px, 2.6vw, 40px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+.ch-tile__name {
+  font-size: var(--ch-name, clamp(12px, 1.2vw, 18px));
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 미리보기가 없는 상태(카메라 거부 → 사진 폴백)에서 쓰는 안개 안내 */
+.cam-stage__fog-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--line) 40%, var(--surface));
+  color: var(--text);
+  font-weight: 600;
+  text-align: center;
+}

@@ -11,6 +11,7 @@ import TypingPlayerView from '../../components/typing/TypingPlayerView.jsx';
 import ValuesPlayerView from '../../components/values/ValuesPlayerView.jsx';
 import ChairsPlayerView from '../../components/chairs/ChairsPlayerView.jsx';
 import MugunghwaPlayerView from '../../components/mugunghwa/MugunghwaPlayerView.jsx';
+import ColorhuntPlayerView from '../../components/colorhunt/ColorhuntPlayerView.jsx';
 import MazePlayerView from '../../components/maze/MazePlayerView.jsx';
 import WordcloudPlayerView from '../../components/wordcloud/WordcloudPlayerView.jsx';
 import YabawiPlayerView from '../../components/yabawi/YabawiPlayerView.jsx';
@@ -21,6 +22,7 @@ import { useWordcloudGame } from '../../hooks/useWordcloudGame.js';
 import { useMazeGame } from '../../hooks/useMazeGame.js';
 import { useChairsGame } from '../../hooks/useChairsGame.js';
 import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
+import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { usePlayerConnection } from '../../hooks/usePlayerConnection.js';
@@ -68,6 +70,8 @@ export default function PlayerJoin() {
     yourChairsSeat: initialYourChairsSeat,
     mugunghwa: initialMugunghwa,
     yourMugunghwaPos: initialYourMugunghwaPos,
+    colorhunt: initialColorhunt,
+    yourColorhunt: initialYourColorhunt,
     scoreboard: initialScoreboard,
     error,
     join,
@@ -121,6 +125,11 @@ export default function PlayerJoin() {
     initialState: initialMugunghwa,
     initialYourPos: initialYourMugunghwaPos,
   });
+  const colorhuntGame = useColorhuntGame({
+    eventCode: code,
+    initialState: initialColorhunt,
+    initialYours: initialYourColorhunt,
+  });
   const scoreboard = useScoreboard(initialScoreboard);
   // 서버가 이미 점수 내림차순으로 정렬해서 주므로(§ participants.js), 배열 순서 = 순위다.
   const myRankIndex = scoreboard.participants.findIndex((p) => p.id === participant?.id);
@@ -171,6 +180,7 @@ export default function PlayerJoin() {
     mazeGame,
     chairsGame,
     mugunghwaGame,
+    colorhuntGame,
   ].some(
     (g) => g.state.status !== 'idle' && !g.dismissed,
   );
@@ -217,6 +227,7 @@ export default function PlayerJoin() {
         <MazePlayerView game={mazeGame} participantId={participant?.id} />
         <ChairsPlayerView game={chairsGame} participantId={participant?.id} />
         <MugunghwaPlayerView game={mugunghwaGame} participantId={participant?.id} />
+        <ColorhuntPlayerView game={colorhuntGame} />
 
         {!gameRunning && (
           <>

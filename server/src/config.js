@@ -30,11 +30,16 @@ function collectBootstrapOperators() {
 // 개발 중 스마트폰 테스트용 — 이 노트북의 LAN IP 를 전부 허용 출처에 넣는다.
 // Wi-Fi 가 바뀌어 IP 가 달라져도 .env 를 고칠 필요가 없다. 운영에서는 쓰지 않는다
 // (서버가 클라이언트 빌드를 함께 서빙해 동일 출처가 되므로).
+//
+// http 와 https 를 둘 다 넣는다. 카메라·센서를 폰에서 테스트하려면 개발 서버를
+// HTTPS 로 띄워야 하는데(client/vite.config.js 의 HTTPS=1), 그때 출처가
+// https://192.168.x.x:5173 로 바뀌어 http 만 허용하면 CORS 에 막힌다.
 function lanDevOrigins() {
   const origins = [];
   for (const nets of Object.values(os.networkInterfaces())) {
     for (const net of nets ?? []) {
-      if (net.family === 'IPv4' && !net.internal) origins.push(`http://${net.address}:5173`);
+      if (net.family !== 'IPv4' || net.internal) continue;
+      origins.push(`http://${net.address}:5173`, `https://${net.address}:5173`);
     }
   }
   return origins;
@@ -50,7 +55,13 @@ export const config = {
     ? originsFromEnv
     : env === 'production'
       ? ['http://localhost:5173', 'http://127.0.0.1:5173']
-      : ['http://localhost:5173', 'http://127.0.0.1:5173', ...lanDevOrigins()],
+      : [
+          'http://localhost:5173',
+          'http://127.0.0.1:5173',
+          'https://localhost:5173',
+          'https://127.0.0.1:5173',
+          ...lanDevOrigins(),
+        ],
 
   // 테스트 등에서 별도 DB 파일을 쓰고 싶을 때만 지정. 기본은 server/data/recreation.sqlite.
   // 영구 디스크(볼륨)를 붙인 배포에서는 그 마운트 경로 아래를 가리키도록 지정한다

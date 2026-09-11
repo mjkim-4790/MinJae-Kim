@@ -36,6 +36,7 @@ export function useRealtimeSession(role, eventCode) {
             maze: res.maze,
             chairs: res.chairs,
             mugunghwa: res.mugunghwa,
+            colorhunt: res.colorhunt,
             scoreboard: res.scoreboard,
             event: res.event,
           });
