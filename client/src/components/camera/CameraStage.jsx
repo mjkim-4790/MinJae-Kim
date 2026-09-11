@@ -29,6 +29,8 @@ export default function CameraStage({
   // 영상을 화면에 띄우지 않는다. 큰 화면 앞에서 하는 게임은 얼굴이 그대로 걸리므로,
   // 카메라는 돌리되 보여주는 건 인식 결과(손 뼈대 등)만으로 대신한다.
   hideVideo = false,
+  // 미리보기 위에 겹칠 것 (얼굴 맞출 동그라미 등). children 은 프리뷰 '아래'에 놓인다.
+  overlay = null,
   fog = null,
   busy = false,
   shutterLabel = '찍기',
@@ -180,6 +182,8 @@ export default function CameraStage({
         {!hideVideo && <div className="cam-stage__reticle" aria-hidden="true" />}
 
         {!ready && !hideVideo && <div className="cam-stage__veil">카메라 맞추는 중…</div>}
+
+        {overlay}
 
         {fog && (
           <motion.div

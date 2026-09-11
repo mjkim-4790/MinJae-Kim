@@ -23,6 +23,8 @@ export const GAMES = [
   { id: 'colorhunt', name: '색깔 사냥', ready: true },
   { id: 'laterps', name: '후출 가위바위보', ready: true },
   { id: 'silhouette', name: '실루엣 통과', ready: true },
+  // 게임이 아니라 쉬어가는 코너 — 점수도 승패도 없다 (운영 결정)
+  { id: 'personalcolor', name: '퍼스널컬러 찾아보기', ready: true },
 ];
 
 export function gameById(id) {

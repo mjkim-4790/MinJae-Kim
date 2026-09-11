@@ -36,6 +36,7 @@ export function usePlayerConnection(eventCode) {
   const [yourMugunghwaPos, setYourMugunghwaPos] = useState(null);
   const [laterps, setLaterps] = useState(null);
   const [silhouette, setSilhouette] = useState(null);
+  const [personalcolor, setPersonalcolor] = useState(null);
   const [colorhunt, setColorhunt] = useState(null);
   const [yourColorhunt, setYourColorhunt] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
@@ -74,6 +75,7 @@ export function usePlayerConnection(eventCode) {
             setYourMugunghwaPos(res.yourMugunghwaPos ?? null);
             setLaterps(res.laterps);
             setSilhouette(res.silhouette);
+            setPersonalcolor(res.personalcolor);
             setColorhunt(res.colorhunt);
             setYourColorhunt(res.yourColorhunt ?? null);
             setScoreboard(res.scoreboard);
@@ -157,6 +159,7 @@ export function usePlayerConnection(eventCode) {
     yourMugunghwaPos,
     laterps,
     silhouette,
+    personalcolor,
     colorhunt,
     yourColorhunt,
     scoreboard,

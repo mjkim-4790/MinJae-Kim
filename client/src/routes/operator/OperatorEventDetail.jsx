@@ -15,6 +15,7 @@ import MugunghwaOperatorPanel from '../../components/mugunghwa/MugunghwaOperator
 import ColorhuntOperatorPanel from '../../components/colorhunt/ColorhuntOperatorPanel.jsx';
 import LaterpsOperatorPanel from '../../components/laterps/LaterpsOperatorPanel.jsx';
 import SilhouetteOperatorPanel from '../../components/silhouette/SilhouetteOperatorPanel.jsx';
+import PersonalColorOperatorPanel from '../../components/personalcolor/PersonalColorOperatorPanel.jsx';
 import MazeOperatorPanel from '../../components/maze/MazeOperatorPanel.jsx';
 import WordcloudOperatorPanel from '../../components/wordcloud/WordcloudOperatorPanel.jsx';
 import YabawiOperatorPanel from '../../components/yabawi/YabawiOperatorPanel.jsx';
@@ -30,6 +31,7 @@ import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
 import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
 import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
 import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
+import { usePersonalColorGame } from '../../hooks/usePersonalColorGame.js';
 import { useChat } from '../../hooks/useChat.js';
 import { useLiarGame } from '../../hooks/useLiarGame.js';
 import { useRealtimeSession } from '../../hooks/useRealtimeSession.js';
@@ -38,7 +40,7 @@ import { useScoreboard } from '../../hooks/useScoreboard.js';
 import { useTypingGame } from '../../hooks/useTypingGame.js';
 import { socket } from '../../lib/socket.js';
 import { api } from '../../lib/api.js';
-import { isLocalOnlyOrigin, joinUrlFor, publicOrigin } from '../../lib/joinUrl.js';
+import { isLocalOnlyOrigin, joinUrlFor } from '../../lib/joinUrl.js';
 
 const STATUS_LABEL = { scheduled: '대기', active: '진행중', ended: '종료' };
 const MODE_LABEL = { individual: '개인전', team: '팀전' };
@@ -89,6 +91,7 @@ export default function OperatorEventDetail() {
   const colorhuntGame = useColorhuntGame({ eventCode: event?.code, initialState: init?.colorhunt });
   const laterpsGame = useLaterpsGame({ eventCode: event?.code, initialState: init?.laterps });
   const silhouetteGame = useSilhouetteGame({ eventCode: event?.code, initialState: init?.silhouette });
+  const personalColorGame = usePersonalColorGame({ eventCode: event?.code, initialState: init?.personalcolor });
   const scoreboard = useScoreboard(init?.scoreboard);
 
   const [teamCount, setTeamCount] = useState(2);
@@ -125,6 +128,7 @@ export default function OperatorEventDetail() {
       ['colorhunt', colorhuntGame],
       ['laterps', laterpsGame],
       ['silhouette', silhouetteGame],
+      ['personalcolor', personalColorGame],
     ].find(([, g]) => g.state.status !== 'idle')?.[0] ?? null;
   // 새로고침/재접속 시 진행 중인 게임이 있으면 그 화면으로 바로 들어간다.
   useEffect(() => {
@@ -347,6 +351,9 @@ export default function OperatorEventDetail() {
             )}
             {selectedGameId === 'silhouette' && (
               <SilhouetteOperatorPanel game={silhouetteGame} participants={participants} />
+            )}
+            {selectedGameId === 'personalcolor' && (
+              <PersonalColorOperatorPanel game={personalColorGame} participants={participants} />
             )}
           </>
         ) : (

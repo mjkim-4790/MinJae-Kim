@@ -20,6 +20,7 @@ import { getMugunghwaSnapshot, registerMugunghwaHandlers } from './mugunghwa.js'
 import { getColorhuntSnapshot, registerColorhuntHandlers } from './colorhunt.js';
 import { getLaterpsSnapshot, registerLaterpsHandlers } from './laterps.js';
 import { getSilhouetteSnapshot, registerSilhouetteHandlers } from './silhouette.js';
+import { getPersonalColorSnapshot, registerPersonalColorHandlers } from './personalcolor.js';
 import { buildScoreboard } from './scoreboard.js';
 import {
   countInRoom,
@@ -66,6 +67,7 @@ export function createRealtime(httpServer) {
     registerColorhuntHandlers(io, socket);
     registerLaterpsHandlers(io, socket);
     registerSilhouetteHandlers(io, socket);
+    registerPersonalColorHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -124,6 +126,7 @@ export function createRealtime(httpServer) {
         response.colorhunt = getColorhuntSnapshot(code);
         response.laterps = getLaterpsSnapshot(code);
         response.silhouette = getSilhouetteSnapshot(code);
+        response.personalcolor = getPersonalColorSnapshot(code);
         if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {

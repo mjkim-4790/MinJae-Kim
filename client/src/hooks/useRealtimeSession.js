@@ -39,6 +39,7 @@ export function useRealtimeSession(role, eventCode) {
             colorhunt: res.colorhunt,
             laterps: res.laterps,
             silhouette: res.silhouette,
+            personalcolor: res.personalcolor,
             scoreboard: res.scoreboard,
             event: res.event,
           });

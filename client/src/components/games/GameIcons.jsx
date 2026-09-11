@@ -203,6 +203,18 @@ function MugunghwaIcon() {
   );
 }
 
+function PersonalColorIcon() {
+  // 얼굴 옆에 색천을 대보는 그림 — 이 코너의 전부가 그 동작이다
+  return (
+    <>
+      <circle cx="38" cy="34" r="16" {...LINE} strokeWidth={5} />
+      <path d="M14 84a24 24 0 0 1 48 0" {...LINE} strokeWidth={5} />
+      <rect x="66" y="18" width="22" height="30" rx="4" {...LINE} strokeWidth={5} />
+      <rect x="66" y="54" width="22" height="30" rx="4" fill={STROKE} />
+    </>
+  );
+}
+
 function SilhouetteIcon() {
   // 사람 모양 실루엣과 그 위에 겹친 사람 — "이 모양에 몸을 맞춰라"
   return (
@@ -278,6 +290,7 @@ const ICONS = {
   colorhunt: ColorhuntIcon,
   laterps: LaterpsIcon,
   silhouette: SilhouetteIcon,
+  personalcolor: PersonalColorIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

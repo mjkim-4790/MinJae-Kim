@@ -5431,3 +5431,171 @@ a.role-opt {
 @media (prefers-reduced-motion: reduce) {
   .sil-wall__now--on { animation: none; }
 }
+
+/* ── 퍼스널컬러 찾아보기 ──────────────────────────────────────────────────── */
+
+.pc-screen {
+  gap: clamp(10px, 1.6vh, 22px);
+}
+
+.pc-screen__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.4vh, 18px);
+  text-align: center;
+}
+
+.pc-screen__big {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 48px);
+  font-weight: 800;
+}
+
+.pc-screen__q {
+  margin: 0;
+  font-size: clamp(20px, 2.6vw, 38px);
+  font-weight: 700;
+}
+
+/* 얼굴을 맞출 자리. 이 안쪽만 피부톤으로 읽으므로 눈에 보여야 한다 —
+   안 보이면 사람들이 화면 구석에 서서 왜 안 되냐고 묻는다 (색깔 사냥과 같은 이유). */
+.pc-facering {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border: 4px dashed rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+}
+
+/* 두 색 중 하나 고르기 — 얼굴 옆에 대보는 천이라 크게 둔다 */
+.pc-choices {
+  display: flex;
+  gap: clamp(16px, 3vw, 48px);
+}
+
+.pc-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pc-choice__swatch {
+  width: clamp(70px, 11vw, 160px);
+  height: clamp(70px, 11vw, 160px);
+  border-radius: var(--radius-md);
+  background: var(--pc-swatch);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+.pc-choice__label {
+  font-size: clamp(16px, 1.8vw, 26px);
+  font-weight: 700;
+}
+
+.pc-screen__type {
+  margin: 0;
+  font-size: clamp(34px, 5.4vw, 80px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.pc-screen__desc {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 30px);
+}
+
+/* 어울리는 색 — 결과의 알맹이라 크게 */
+.pc-palette {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pc-palette__chip {
+  width: clamp(40px, 5vw, 76px);
+  height: clamp(40px, 5vw, 76px);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.pc-palette--small .pc-palette__chip {
+  width: 34px;
+  height: 34px;
+}
+
+/* 전문 진단이 아니라는 걸 결과 옆에 붙여둔다 */
+.pc-screen__note {
+  margin: 0;
+  font-size: clamp(13px, 1.3vw, 18px);
+  color: var(--muted);
+}
+
+.pc-screen__warn {
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rainbow-orange) 14%, var(--surface));
+  color: var(--rainbow-orange);
+  font-weight: 700;
+}
+
+/* 다 끝나고 보여주는 유형별 모임 */
+.pc-tally {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(900px, 80vw);
+}
+
+.pc-tally__row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: clamp(15px, 1.7vw, 24px);
+}
+
+.pc-tally__name { font-weight: 800; }
+.pc-tally__count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.pc-tally__who { color: var(--muted); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 얼굴과 색천을 나란히. 좁은 화면에서는 위아래로 쌓인다. */
+.pc-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 48px);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+/* 카메라는 적당한 크기로 묶는다 — 안 묶으면 화면을 다 먹고 색천이 아래로 밀려난다 */
+.pc-cam {
+  flex: 0 1 min(44vw, 52vh);
+  min-width: 260px;
+}
