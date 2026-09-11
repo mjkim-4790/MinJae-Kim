@@ -203,6 +203,19 @@ function MugunghwaIcon() {
   );
 }
 
+function LaterpsIcon() {
+  // 화면 밖으로 내민 손 + 그 앞에 뜬 물음표 — "무엇을 내야 하지?"
+  return (
+    <>
+      <rect x="8" y="16" width="50" height="68" rx="9" {...LINE} strokeWidth={5} />
+      <path d="M22 60V38a6 6 0 0 1 12 0v18" {...LINE} strokeWidth={5} />
+      <path d="M34 52a6 6 0 0 1 12 0v12a16 16 0 0 1-16 16h-2a13 13 0 0 1-10-5l-6-8a6 6 0 0 1 9-7l3 4" {...LINE} strokeWidth={5} />
+      <path d="M70 30a8 8 0 1 1 10 8v6" {...LINE} strokeWidth={5} />
+      <circle cx="80" cy="56" r="3.5" fill={STROKE} />
+    </>
+  );
+}
+
 function ColorhuntIcon() {
   // 카메라 + 렌즈 안에 꽉 찬 색 한 덩이 — "카메라로 색을 담아 온다"
   return (
@@ -250,6 +263,7 @@ const ICONS = {
   chairs: ChairsIcon,
   mugunghwa: MugunghwaIcon,
   colorhunt: ColorhuntIcon,
+  laterps: LaterpsIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

@@ -8,3 +8,6 @@ dist/
 **/uploads/*
 !**/uploads/.gitkeep
 .claude/settings.local.json
+
+# MediaPipe wasm 은 빌드할 때 node_modules 에서 복사한다 (vite.config.js). 커밋하지 않는다.
+client/public/mediapipe/

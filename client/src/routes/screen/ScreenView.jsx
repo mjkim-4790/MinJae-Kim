@@ -14,6 +14,7 @@ import ValuesScreenView from '../../components/values/ValuesScreenView.jsx';
 import ChairsScreenView from '../../components/chairs/ChairsScreenView.jsx';
 import MugunghwaScreenView from '../../components/mugunghwa/MugunghwaScreenView.jsx';
 import ColorhuntScreenView from '../../components/colorhunt/ColorhuntScreenView.jsx';
+import LaterpsScreenView from '../../components/laterps/LaterpsScreenView.jsx';
 import MazeScreenView from '../../components/maze/MazeScreenView.jsx';
 import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
@@ -30,6 +31,7 @@ import { useMazeGame } from '../../hooks/useMazeGame.js';
 import { useChairsGame } from '../../hooks/useChairsGame.js';
 import { useMugunghwaGame } from '../../hooks/useMugunghwaGame.js';
 import { useColorhuntGame } from '../../hooks/useColorhuntGame.js';
+import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
 import { socket } from '../../lib/socket.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
 
@@ -62,6 +64,7 @@ export default function ScreenView() {
   const chairsGame = useChairsGame({ eventCode: code, initialState: init?.chairs });
   const mugunghwaGame = useMugunghwaGame({ eventCode: code, initialState: init?.mugunghwa });
   const colorhuntGame = useColorhuntGame({ eventCode: code, initialState: init?.colorhunt });
+  const laterpsGame = useLaterpsGame({ eventCode: code, initialState: init?.laterps });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -105,6 +108,8 @@ export default function ScreenView() {
       () => <WordcloudScreenView state={wordcloudGame.state} />],
     ['colorhunt', colorhuntGame.state.status !== 'idle', colorhuntGame.state.status,
       () => <ColorhuntScreenView state={colorhuntGame.state} />],
+    ['laterps', laterpsGame.state.status !== 'idle', laterpsGame.state.status,
+      () => <LaterpsScreenView state={laterpsGame.state} sendGesture={laterpsGame.sendGesture} />],
     ['mugunghwa',
       mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0,
       mugunghwaGame.state.status,

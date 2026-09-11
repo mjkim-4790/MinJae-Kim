@@ -37,6 +37,7 @@ export function useRealtimeSession(role, eventCode) {
             chairs: res.chairs,
             mugunghwa: res.mugunghwa,
             colorhunt: res.colorhunt,
+            laterps: res.laterps,
             scoreboard: res.scoreboard,
             event: res.event,
           });

@@ -26,12 +26,16 @@ export default function CameraStage({
   onCapture,
   onFrame,
   onActive, // 카메라가 실제로 켜졌을 때 한 번 부른다 (진행자에게 준비 인원을 알릴 때 쓴다)
+  // 영상을 화면에 띄우지 않는다. 큰 화면 앞에서 하는 게임은 얼굴이 그대로 걸리므로,
+  // 카메라는 돌리되 보여주는 건 인식 결과(손 뼈대 등)만으로 대신한다.
+  hideVideo = false,
   fog = null,
   busy = false,
   shutterLabel = '찍기',
   hint = null,
   permissionTitle = '카메라를 켜주세요',
-  permissionBody = '카메라로 본 색만 사용하고, 사진은 어디에도 저장되거나 전송되지 않습니다.',
+  // 게임마다 덮어쓴다. 기본값은 어느 게임에나 맞는 말로 둔다.
+  permissionBody = '카메라 영상은 이 기기 안에서만 처리되고, 어디에도 저장되거나 전송되지 않습니다.',
   children,
 }) {
   const camera = useCamera({ facingMode });
@@ -168,14 +172,14 @@ export default function CameraStage({
 
   return (
     <div className="cam-stage">
-      <div className="cam-stage__frame">
+      <div className={`cam-stage__frame${hideVideo ? ' cam-stage__frame--hidden' : ''}`}>
         <video ref={videoRef} className="cam-stage__video" playsInline muted autoPlay />
 
         {/* 가운데 사각형 — 여기 든 색만 본다. 판정 범위를 눈으로 알려주지 않으면
             사람들이 화면 구석에 물건을 대고 왜 안 되냐고 묻는다. */}
-        <div className="cam-stage__reticle" aria-hidden="true" />
+        {!hideVideo && <div className="cam-stage__reticle" aria-hidden="true" />}
 
-        {!ready && <div className="cam-stage__veil">카메라 맞추는 중…</div>}
+        {!ready && !hideVideo && <div className="cam-stage__veil">카메라 맞추는 중…</div>}
 
         {fog && (
           <motion.div

@@ -18,6 +18,7 @@ import { getMazeSnapshot, registerMazeHandlers } from './maze.js';
 import { getChairsSnapshot, registerChairsHandlers } from './chairs.js';
 import { getMugunghwaSnapshot, registerMugunghwaHandlers } from './mugunghwa.js';
 import { getColorhuntSnapshot, registerColorhuntHandlers } from './colorhunt.js';
+import { getLaterpsSnapshot, registerLaterpsHandlers } from './laterps.js';
 import { buildScoreboard } from './scoreboard.js';
 import {
   countInRoom,
@@ -62,6 +63,7 @@ export function createRealtime(httpServer) {
     registerChairsHandlers(io, socket);
     registerMugunghwaHandlers(io, socket);
     registerColorhuntHandlers(io, socket);
+    registerLaterpsHandlers(io, socket);
 
     // 클라이언트가 자기 역할과 이벤트 코드를 알린다.
     socket.on('session:hello', async (payload = {}, ack) => {
@@ -118,6 +120,7 @@ export function createRealtime(httpServer) {
         response.chairs = getChairsSnapshot(code);
         response.mugunghwa = getMugunghwaSnapshot(code);
         response.colorhunt = getColorhuntSnapshot(code);
+        response.laterps = getLaterpsSnapshot(code);
         if (event) response.scoreboard = buildScoreboard(event.id);
         if (role === 'screen' && event) {
           response.event = {

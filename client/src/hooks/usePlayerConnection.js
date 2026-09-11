@@ -34,6 +34,7 @@ export function usePlayerConnection(eventCode) {
   const [yourChairsSeat, setYourChairsSeat] = useState(null);
   const [mugunghwa, setMugunghwa] = useState(null);
   const [yourMugunghwaPos, setYourMugunghwaPos] = useState(null);
+  const [laterps, setLaterps] = useState(null);
   const [colorhunt, setColorhunt] = useState(null);
   const [yourColorhunt, setYourColorhunt] = useState(null);
   const [scoreboard, setScoreboard] = useState(null);
@@ -70,6 +71,7 @@ export function usePlayerConnection(eventCode) {
             setYourChairsSeat(res.yourChairsSeat ?? null);
             setMugunghwa(res.mugunghwa);
             setYourMugunghwaPos(res.yourMugunghwaPos ?? null);
+            setLaterps(res.laterps);
             setColorhunt(res.colorhunt);
             setYourColorhunt(res.yourColorhunt ?? null);
             setScoreboard(res.scoreboard);
@@ -151,6 +153,7 @@ export function usePlayerConnection(eventCode) {
     yourChairsSeat,
     mugunghwa,
     yourMugunghwaPos,
+    laterps,
     colorhunt,
     yourColorhunt,
     scoreboard,
