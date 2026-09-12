@@ -47,11 +47,11 @@ export function isCorrect(characterHand, instruction, playerHand) {
 }
 
 // 난이도.
-// '상'은 한 사람에게 두 번 연달아 지시한다 ("이긴 다음에 져"). 한 번은 몸이 따라와도
-// 연속으로는 잘 안 된다 — 앞 지시의 잔상이 남아서다. 시간도 조금 짧다.
+// '상'은 한 사람에게 열 번 연달아 지시한다. 한두 번은 몸이 따라와도 열 번을 쉬지 않고
+// 갈아타면 앞 지시의 잔상이 쌓여서 중간부터 손이 제멋대로 나간다. 시간도 조금 짧다.
 export const DIFFICULTIES = [
   { id: 'normal', name: '보통', desc: '한 번 지시', beatCount: 1, answerMs: 2600 },
-  { id: 'hard', name: '상', desc: '연속 두 번 지시', beatCount: 2, answerMs: 2200 },
+  { id: 'hard', name: '상', desc: '연속 10번 · 이겨/져 섞어서', beatCount: 10, answerMs: 2200 },
 ];
 
 export function difficultyById(id) {
@@ -85,18 +85,30 @@ export function rollBeat(random = Math.random) {
   };
 }
 
+// 같은 지시가 이 횟수를 넘겨 이어지지 않게 막는다
+export const MAX_SAME_RUN = 2;
+
 /**
  * 한 사람의 차례를 통째로 뽑는다.
  *
- * '상'에서 같은 지시가 두 번 연달아 나오면 두 번째가 너무 쉬워진다("또 이기라고?").
- * 그래서 두 번째는 앞과 다른 지시로 강제한다 — "이긴 다음에 져"가 이 놀이의 그림이다.
+ * ── 지시를 섞는 방식 ──────────────────────────────────────────────────────
+ * 꼬박꼬박 번갈아 내면("이겨-져-이겨-져") 서너 번 만에 박자를 외워버려서 안 어렵다.
+ * 그렇다고 완전 무작위로 두면 같은 지시가 네댓 번 이어지는 구간이 생기는데, 거기서
+ * 몸이 적응해버려 역시 쉬워진다. 그래서 무작위로 뽑되 **같은 지시가 세 번 연달아
+ * 나오지는 않게** 막는다 — 언제 갈아탈지 모르니 잔상이 가시질 않는다.
+ *
+ * 열 번이면 이 규칙만으로 '이겨'와 '져'가 반드시 둘 다 나온다 (세 번째에서 강제로
+ * 갈아타므로).
  */
 export function rollTurn(difficulty, random = Math.random) {
-  const beats = [rollBeat(random)];
-  for (let i = 1; i < difficulty.beatCount; i += 1) {
-    const prev = beats[i - 1];
+  const beats = [];
+  for (let i = 0; i < difficulty.beatCount; i += 1) {
     const next = rollBeat(random);
-    next.instruction = prev.instruction === 'win' ? 'lose' : 'win';
+    const a = beats[i - 1];
+    const b = beats[i - 2];
+    if (a && b && a.instruction === b.instruction) {
+      next.instruction = a.instruction === 'win' ? 'lose' : 'win';
+    }
     beats.push(next);
   }
   return beats;

@@ -5145,13 +5145,15 @@ a.role-opt {
 }
 
 /* 비트별 결과 (캐릭터 손 · 지시 → 낸 손 · ⭕/❌) */
+/* 상 난이도는 한 차례가 10번이라 세로로 쌓으면 화면을 넘긴다. 여러 칸으로 접는다. */
 .lr-beats {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 8px;
+  max-width: min(90vw, 900px);
 }
 
 .lr-beat {
@@ -5169,12 +5171,26 @@ a.role-opt {
   border-color: var(--ok);
 }
 
+/* 10번 중 몇 번째인지 — 끝이 보여야 버틸 마음이 생긴다 */
+.lr-screen__progress {
+  margin: 0;
+  font-size: clamp(18px, 2.4vw, 30px);
+  font-weight: 800;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .lr-beat__order {
   font-weight: 700;
 }
 
 .lr-beat__arrow {
   color: var(--muted);
+}
+
+/* 진행자 패널은 폭이 좁다. 10개가 한 줄씩 쌓이면 패널이 길어지므로 칸을 더 잘게 준다. */
+.lr-beats--compact {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
 }
 
 .lr-beats--compact .lr-beat {

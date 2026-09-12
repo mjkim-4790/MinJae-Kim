@@ -149,10 +149,15 @@ export default function LaterpsScreenView({ state, sendGesture }) {
             <p className={`lr-screen__order lr-screen__order--${turn.instruction}`}>
               {turn.instruction === 'win' ? '이겨!' : '져!'}
             </p>
+            {turn.total > 1 && (
+              <p className="lr-screen__progress">
+                {turn.index + 1} / {turn.total}
+              </p>
+            )}
             <div className="lr-screen__bar">
               <div
                 className="lr-screen__bar-fill"
-                style={{ width: `${Math.max(0, Math.min(100, (msLeft / 2600) * 100))}%` }}
+                style={{ width: `${Math.max(0, Math.min(100, (msLeft / (turn.answerMs || 2600)) * 100))}%` }}
               />
             </div>
             {seen && <p className="screen__hint">{HAND_EMOJI[seen]} {HAND_NAME[seen]}</p>}

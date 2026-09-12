@@ -91,6 +91,9 @@ function publicState(state) {
           index: turn.index,
           total: turn.beats.length,
           phaseEndsAt: turn.phaseEndsAt,
+          // 진행 바가 이 값으로 눈금을 잡는다. 난이도마다 다르므로 화면이
+          // 임의로 정하게 두면 안 된다 (상 난이도에서 바가 끝까지 안 차던 원인).
+          answerMs: difficultyById(state.difficultyId)?.answerMs ?? null,
           // 캐릭터 손은 reveal 부터, 지시는 answer 부터만 보인다
           hand: revealed ? beat.hand : null,
           instruction: turn.phase === 'answer' ? beat.instruction : null,
