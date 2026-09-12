@@ -12,11 +12,15 @@ const MODEL_PATH = '/models/gesture_recognizer.task';
 
 // 인식기는 한 번만 만들어 페이지 안에서 돌려쓴다. 8MB 모델을 화면 옮길 때마다
 // 다시 읽으면 아이패드가 몇 초씩 멈춘다.
-let sharedPromise = null;
+//
+// 손 개수별로 따로 둔다 — 후출 가위바위보는 한 손이면 되고(빠르다), 과일 자르기는
+// 양손을 써야 한다. 개수는 인식기를 만들 때 고정되는 값이라 하나로 못 돌려쓴다.
+// 모델 파일 자체는 브라우저가 캐시하므로 두 번째 인식기는 내려받지 않는다.
+const sharedByHands = new Map();
 
-async function loadRecognizer() {
-  if (sharedPromise) return sharedPromise;
-  sharedPromise = (async () => {
+async function loadRecognizer(numHands) {
+  if (sharedByHands.has(numHands)) return sharedByHands.get(numHands);
+  const promise = (async () => {
     // 이 게임을 열 때만 불러온다. 첫 화면부터 들고 있으면 모든 참가자 폰이
     // 쓰지도 않을 큰 묶음을 받게 된다.
     const { FilesetResolver, GestureRecognizer } = await import('@mediapipe/tasks-vision');
@@ -24,21 +28,24 @@ async function loadRecognizer() {
     return GestureRecognizer.createFromOptions(fileset, {
       baseOptions: { modelAssetPath: MODEL_PATH, delegate: 'GPU' },
       runningMode: 'VIDEO',
-      numHands: 1, // 한 명씩 나와서 하는 게임이라 한 손이면 된다 (인식도 빨라진다)
+      numHands,
     });
   })().catch((err) => {
-    sharedPromise = null; // 실패하면 다음에 다시 시도할 수 있게
+    sharedByHands.delete(numHands); // 실패하면 다음에 다시 시도할 수 있게
     throw err;
   });
-  return sharedPromise;
+  sharedByHands.set(numHands, promise);
+  return promise;
 }
 
 /**
  * @param {boolean} active 이 화면이 인식기를 쓰는 중인지 (false 면 불러오지 않는다)
+ * @param {{ numHands?: number }} [options] 기본 1. 양손이 필요한 게임만 2 로 준다.
  * @returns {{ ready, loading, error, recognize(video, timestampMs) }}
- *   recognize 는 { gesture, score, landmarks } 를 돌려준다. 손이 없으면 gesture 가 null.
+ *   recognize 는 { gesture, score, landmarks, hands } 를 돌려준다.
+ *   landmarks 는 첫 손, hands 는 잡힌 손 전부. 손이 없으면 gesture 가 null.
  */
-export function useGestureRecognizer(active = true) {
+export function useGestureRecognizer(active = true, { numHands = 1 } = {}) {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -49,7 +56,7 @@ export function useGestureRecognizer(active = true) {
     if (!active) return undefined;
     let cancelled = false;
     setLoading(true);
-    loadRecognizer()
+    loadRecognizer(numHands)
       .then((r) => {
         if (cancelled) return;
         ref.current = r;
@@ -66,7 +73,7 @@ export function useGestureRecognizer(active = true) {
     return () => {
       cancelled = true;
     };
-  }, [active]);
+  }, [active, numHands]);
 
   const recognize = useCallback((video, timestampMs) => {
     const r = ref.current;
@@ -82,6 +89,7 @@ export function useGestureRecognizer(active = true) {
         gesture: top?.categoryName ?? null,
         score: top?.score ?? 0,
         landmarks: res.landmarks?.[0] ?? null,
+        hands: res.landmarks ?? [],
       };
     } catch {
       // 한 프레임 실패는 무시한다 — 다음 프레임이 곧 온다

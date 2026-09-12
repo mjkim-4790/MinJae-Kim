@@ -203,6 +203,17 @@ function MugunghwaIcon() {
   );
 }
 
+function FruitIcon() {
+  // 과일 하나를 가른 칼자국 — 이 게임의 동작 그 자체
+  return (
+    <>
+      <circle cx="46" cy="58" r="26" {...LINE} strokeWidth={5} />
+      <path d="M18 34L82 20" {...LINE} strokeWidth={5} strokeLinecap="round" />
+      <path d="M46 32v52" {...LINE} strokeWidth={4} />
+    </>
+  );
+}
+
 function OutfitIcon() {
   // 옷걸이에 걸린 상의 — 이 코너의 전부가 '옷을 걸쳐본다'는 동작이다
   return (
@@ -303,6 +314,7 @@ const ICONS = {
   silhouette: SilhouetteIcon,
   personalcolor: PersonalColorIcon,
   outfit: OutfitIcon,
+  fruit: FruitIcon,
 };
 
 // 자체 둥근 타일 배경을 이미 그려서 들고 있는 아이콘 — 그리드가 씌우는 기본 파란

@@ -27,6 +27,7 @@ export const GAMES = [
   { id: 'personalcolor', name: '퍼스널컬러 찾아보기', ready: true },
   // 게임이 아니라 쉬어가는 코너 — 점수도 판정도 없다 (운영 결정)
   { id: 'outfit', name: '옷 입어보기', ready: true },
+  { id: 'fruit', name: '리듬 과일 자르기', ready: true },
 ];
 
 export function gameById(id) {

@@ -5706,3 +5706,131 @@ a.role-opt {
   border-radius: 10px;
   border: 1px solid var(--line);
 }
+
+/* ── 리듬 과일 자르기 ─────────────────────────────────────────────────────── */
+
+.fruit-screen {
+  gap: clamp(8px, 1.4vh, 18px);
+}
+
+/* 경기장은 크게. 멀리서 구경하는 사람도 과일이 보여야 한다.
+   캔버스는 absolute 로 띄운다 — 부모 크기를 재서 캔버스를 키우는 구조라
+   캔버스가 부모를 밀어 올리면 ResizeObserver 가 무한히 커진다 (미로에서 겪었다). */
+.fruit-stage {
+  position: relative;
+  flex: 1;
+  width: min(86vw, 150vh);
+  min-height: 280px;
+  border-radius: var(--radius-lg);
+  background: #171412;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.fruit-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fruit-hud {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 24px);
+  width: min(86vw, 150vh);
+}
+
+.fruit-hud__score {
+  font-size: clamp(24px, 3.4vw, 48px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.fruit-hud__combo {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rainbow-orange) 18%, var(--surface));
+  color: var(--rainbow-orange);
+  font-weight: 800;
+  font-size: clamp(16px, 2vw, 28px);
+  font-variant-numeric: tabular-nums;
+}
+
+.fruit-hud__bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fruit-hud__bar-fill {
+  height: 100%;
+  background: var(--button-bg);
+  border-radius: 999px;
+}
+
+.fruit-ready,
+.fruit-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.fruit-result__score {
+  margin: 0;
+  font-size: clamp(36px, 6vw, 84px);
+  font-weight: 900;
+  color: var(--ok);
+  font-variant-numeric: tabular-nums;
+}
+
+.fruit-warn {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rainbow-orange) 14%, var(--surface));
+  color: var(--rainbow-orange);
+  font-weight: 700;
+}
+
+.fruit-rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: min(70vw, 520px);
+}
+
+.fruit-rank__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: clamp(16px, 2vw, 26px);
+}
+
+.fruit-rank__no {
+  font-weight: 900;
+  color: var(--muted);
+  min-width: 1.6em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fruit-rank__name {
+  flex: 1;
+  font-weight: 700;
+  text-align: left;
+}
+
+.fruit-rank__pt {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}

@@ -41,6 +41,7 @@ export function useRealtimeSession(role, eventCode) {
             silhouette: res.silhouette,
             personalcolor: res.personalcolor,
             outfit: res.outfit,
+            fruit: res.fruit,
             scoreboard: res.scoreboard,
             event: res.event,
           });

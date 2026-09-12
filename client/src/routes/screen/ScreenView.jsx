@@ -18,6 +18,7 @@ import LaterpsScreenView from '../../components/laterps/LaterpsScreenView.jsx';
 import SilhouetteScreenView from '../../components/silhouette/SilhouetteScreenView.jsx';
 import PersonalColorScreenView from '../../components/personalcolor/PersonalColorScreenView.jsx';
 import OutfitScreenView from '../../components/outfit/OutfitScreenView.jsx';
+import FruitScreenView from '../../components/fruit/FruitScreenView.jsx';
 import MazeScreenView from '../../components/maze/MazeScreenView.jsx';
 import WordcloudScreenView from '../../components/wordcloud/WordcloudScreenView.jsx';
 import YabawiScreenView from '../../components/yabawi/YabawiScreenView.jsx';
@@ -38,6 +39,7 @@ import { useLaterpsGame } from '../../hooks/useLaterpsGame.js';
 import { useSilhouetteGame } from '../../hooks/useSilhouetteGame.js';
 import { usePersonalColorGame } from '../../hooks/usePersonalColorGame.js';
 import { useOutfitGame } from '../../hooks/useOutfitGame.js';
+import { useFruitGame } from '../../hooks/useFruitGame.js';
 import { socket } from '../../lib/socket.js';
 import { arm as armSound } from '../../lib/screenSound.js';
 import { joinUrlFor } from '../../lib/joinUrl.js';
@@ -75,6 +77,7 @@ export default function ScreenView() {
   const silhouetteGame = useSilhouetteGame({ eventCode: code, initialState: init?.silhouette });
   const personalColorGame = usePersonalColorGame({ eventCode: code, initialState: init?.personalcolor });
   const outfitGame = useOutfitGame({ eventCode: code, initialState: init?.outfit });
+  const fruitGame = useFruitGame({ eventCode: code, initialState: init?.fruit });
   const scoreboard = useScoreboard(init?.scoreboard);
   const joinUrl = joinUrlFor(code);
 
@@ -136,6 +139,16 @@ export default function ScreenView() {
       )],
     ['outfit', outfitGame.state.status !== 'idle', outfitGame.state.status,
       () => <OutfitScreenView state={outfitGame.state} select={outfitGame.select} />],
+    ['fruit', fruitGame.state.status !== 'idle', fruitGame.state.status,
+      () => (
+        <FruitScreenView
+          state={fruitGame.state}
+          live={fruitGame.live}
+          sendChart={fruitGame.sendChart}
+          sendHit={fruitGame.sendHit}
+          finish={fruitGame.finish}
+        />
+      )],
     ['mugunghwa',
       mugunghwaGame.state.status !== 'idle' || mugunghwaGame.state.round > 0,
       mugunghwaGame.state.status,
